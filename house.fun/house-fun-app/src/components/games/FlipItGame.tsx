@@ -1,31 +1,111 @@
-"use client";
+'use client';
 
 import React, { useState } from 'react';
-import { colors } from '~/lib/design-tokens';
 import { cn } from '~/lib/utils';
 import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
+import { useGameState } from '~/hooks/useGameState';
+import { GameErrorBoundary } from '~/components/error-boundaries';
+import { ButtonLoader, TransactionLoader } from '~/components/loading';
+
+const MIN_BET = 0.001; // 0.001 SOL
+const MAX_BET = 100;   // 100 SOL
 
 export const FlipItGame: React.FC = () => {
+    return (
+        <GameErrorBoundary>
+            <FlipItGameContent />
+        </GameErrorBoundary>
+    );
+};
+
+const FlipItGameContent: React.FC = () => {
     const [side, setSide] = useState<'HEADS' | 'TAILS'>('HEADS');
     const [amount, setAmount] = useState<number>(1.5);
-    const [isFlipping, setIsFlipping] = useState(false);
     const { setIsUsingRollup } = useMagicBlock();
+    const { 
+        isLoading, 
+        error, 
+        txStatus, 
+        setTxStatus, 
+        reset,
+        executeGameAction 
+    } = useGameState();
 
-    const handleFlip = () => {
-        setIsFlipping(true);
-        setIsUsingRollup(true); // Switch to high-speed rollup connection
-        // Simulate flip animation
-        setTimeout(() => {
-            setIsFlipping(false);
-            setIsUsingRollup(false); // Return to standard L1
-        }, 2000);
+    const handleFlip = async () => {
+        // Validate bet amount
+        if (amount < MIN_BET || amount > MAX_BET) {
+            return;
+        }
+
+        setTxStatus('pending');
+        setIsUsingRollup(true);
+
+        try {
+            // Simulate blockchain interaction
+            await executeGameAction(async () => {
+                // Step 1: Generate commitment
+                const nonce = Math.floor(Math.random() * 1000000);
+                const choice = side === 'HEADS' ? 0 : 1;
+                
+                // Step 2: Place bet (would call smart contract here)
+                setTxStatus('confirming');
+                
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Step 3: Reveal and resolve
+                const outcome = Math.random() > 0.5 ? 'HEADS' : 'TAILS';
+                const won = side === outcome;
+                
+                return { outcome, won, nonce };
+            }, {
+                onSuccess: (result) => {
+                    setTxStatus('confirmed');
+                    console.log('Flip result:', result);
+                },
+                onError: (err) => {
+                    setTxStatus('failed');
+                    console.error('Flip failed:', err);
+                }
+            });
+        } finally {
+            setIsUsingRollup(false);
+        }
     };
+
+    const isFlipping = isLoading || txStatus === 'pending' || txStatus === 'confirming';
 
     return (
         <div className="flex flex-1 relative overflow-hidden">
             {/* Game Area (Center) */}
             <div className="flex-1 flex flex-col items-center justify-center p-4 lg:p-10 relative z-10 overflow-y-auto">
-                <div className="w-full max-w-lg flex flex-col items-center gap-12">
+                <div className="w-full max-w-lg flex flex-col items-center gap-8">
+
+                    {/* Transaction Status */}
+                    {txStatus !== 'idle' && (
+                        <div className="w-full">
+                            <TransactionLoader 
+                                status={txStatus} 
+                                message={txStatus === 'pending' ? 'Waiting for wallet approval...' : undefined}
+                            />
+                        </div>
+                    )}
+
+                    {/* Error Display */}
+                    {error && (
+                        <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                            <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-red-500 text-sm">error</span>
+                                <p className="text-red-400 text-sm">{error}</p>
+                            </div>
+                            <button 
+                                onClick={reset}
+                                className="mt-2 text-xs text-red-400/60 hover:text-red-400 underline"
+                            >
+                                Dismiss
+                            </button>
+                        </div>
+                    )}
 
                     {/* 3D Coin Display */}
                     <div className="relative group cursor-pointer perspective-1000">
@@ -50,9 +130,10 @@ export const FlipItGame: React.FC = () => {
                         {/* Heads / Tails Toggle */}
                         <div className="grid grid-cols-2 gap-4 p-1.5 bg-black/40 rounded-2xl">
                             <button
-                                onClick={() => setSide('HEADS')}
+                                onClick={() => !isFlipping && setSide('HEADS')}
+                                disabled={isFlipping}
                                 className={cn(
-                                    "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider",
+                                    "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
                                     side === 'HEADS'
                                         ? "bg-primary border-primary/50 text-black shadow-[0_0_20px_-5px_rgba(7,204,0,0.5)]"
                                         : "border-transparent text-white/50 hover:text-white"
@@ -61,9 +142,10 @@ export const FlipItGame: React.FC = () => {
                                 HEADS
                             </button>
                             <button
-                                onClick={() => setSide('TAILS')}
+                                onClick={() => !isFlipping && setSide('TAILS')}
+                                disabled={isFlipping}
                                 className={cn(
-                                    "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider",
+                                    "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
                                     side === 'TAILS'
                                         ? "bg-danger border-danger/50 text-white shadow-[0_0_20px_-5px_rgba(255,63,51,0.5)]"
                                         : "border-transparent text-white/50 hover:text-white"
@@ -77,43 +159,65 @@ export const FlipItGame: React.FC = () => {
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between items-center text-xs font-bold text-gray-400 px-1 tracking-widest uppercase">
                                 <span>Wager Amount</span>
-                                <span>Balance: <span className="text-white">145.20 SOL</span></span>
+                                <span>Min: {MIN_BET} SOL | Max: {MAX_BET} SOL</span>
                             </div>
                             <div className="flex items-stretch gap-3">
                                 <button
-                                    onClick={() => setAmount(Math.max(0.1, amount - 0.5))}
-                                    className="size-14 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all"
+                                    onClick={() => setAmount(Math.max(MIN_BET, amount - 0.5))}
+                                    disabled={isFlipping}
+                                    className="size-14 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
                                 >-</button>
                                 <div className="flex-1 relative">
                                     <input
                                         type="number"
                                         value={amount}
-                                        onChange={(e) => setAmount(parseFloat(e.target.value))}
-                                        className="w-full h-14 bg-black/40 border border-white/10 rounded-xl pl-4 pr-12 text-white font-mono text-xl font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center"
+                                        onChange={(e) => {
+                                            const val = parseFloat(e.target.value);
+                                            if (!isNaN(val) && val >= 0) {
+                                                setAmount(Math.min(MAX_BET, Math.max(MIN_BET, val)));
+                                            }
+                                        }}
+                                        min={MIN_BET}
+                                        max={MAX_BET}
+                                        step={0.1}
+                                        disabled={isFlipping}
+                                        className="w-full h-14 bg-black/40 border border-white/10 rounded-xl pl-4 pr-12 text-white font-mono text-xl font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center disabled:opacity-50"
                                     />
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-500 pointer-events-none tracking-tighter">SOL</div>
                                 </div>
                                 <button
-                                    onClick={() => setAmount(amount + 0.5)}
-                                    className="size-14 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all"
+                                    onClick={() => setAmount(Math.min(MAX_BET, amount + 0.5))}
+                                    disabled={isFlipping}
+                                    className="size-14 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
                                 >+</button>
                             </div>
+                            {amount < MIN_BET && (
+                                <p className="text-red-400 text-xs">Minimum bet is {MIN_BET} SOL</p>
+                            )}
+                            {amount > MAX_BET && (
+                                <p className="text-red-400 text-xs">Maximum bet is {MAX_BET} SOL</p>
+                            )}
                         </div>
 
                         {/* Action Button */}
                         <button
-                            disabled={isFlipping}
+                            disabled={isFlipping || amount < MIN_BET || amount > MAX_BET}
                             onClick={handleFlip}
                             className={cn(
-                                "w-full h-16 text-xl font-black tracking-[0.1em] uppercase rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(7,204,0,0.3)]",
-                                isFlipping ? "bg-gray-700 cursor-not-allowed text-gray-400" : "bg-primary hover:bg-primaryHover text-[#0A0A0F] hover:shadow-[0_0_40px_rgba(7,204,0,0.5)]"
+                                "w-full h-16 text-xl font-black tracking-[0.1em] uppercase rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(7,204,0,0.3)] disabled:shadow-none",
+                                isFlipping 
+                                    ? "bg-gray-700 cursor-not-allowed text-gray-400" 
+                                    : "bg-primary hover:bg-primaryHover text-[#0A0A0F] hover:shadow-[0_0_40px_rgba(7,204,0,0.5)]"
                             )}
                         >
-                            <span>{isFlipping ? 'FLIPPING...' : 'FLIP NOW'}</span>
-                            <span className={cn(
-                                "material-symbols-outlined transition-transform duration-700",
-                                isFlipping ? "animate-spin" : "group-hover:rotate-180"
-                            )}>sync</span>
+                            {isFlipping ? (
+                                <ButtonLoader text="FLIPPING..." />
+                            ) : (
+                                <>
+                                    <span>FLIP NOW</span>
+                                    <span className="material-symbols-outlined transition-transform duration-700 group-hover:rotate-180">sync</span>
+                                </>
+                            )}
                         </button>
 
                         <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] px-1">
