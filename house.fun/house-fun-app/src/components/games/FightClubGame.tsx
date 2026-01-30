@@ -1,11 +1,144 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '~/lib/utils';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useGameState } from '~/hooks/useGameState';
+import { GameErrorBoundary } from '~/components/error-boundaries';
+import { ButtonLoader, TransactionLoader } from '~/components/loading';
+import { useFightClubProgram } from '~/lib/anchor/fight-club-client';
+
+// Temporary interface for mock data until real matches are fetched
+interface MatchData {
+    tokenA: string;
+    tokenB: string;
+    totalBetA: number;
+    totalBetB: number;
+    playerCountA: number;
+    playerCountB: number;
+    status: string;
+}
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+
+const MIN_BET = 0.001;
+const MAX_BET = 100;
 
 export const FightClubGame: React.FC = () => {
-    const [selectedSide, setSelectedSide] = useState<'RED' | 'GREEN' | null>(null);
+    return (
+        <GameErrorBoundary>
+            <FightClubGameContent />
+        </GameErrorBoundary>
+    );
+};
+
+const FightClubGameContent: React.FC = () => {
+    const [selectedSide, setSelectedSide] = useState<'A' | 'B' | null>(null);
     const [wager, setWager] = useState(1.5);
+    const [currentMatch, setCurrentMatch] = useState<MatchData | null>(null);
+    const [userBet, setUserBet] = useState<{ side: 'A' | 'B'; amount: number } | null>(null);
+    
+    const { connected } = useWallet();
+    const { 
+        isLoading, 
+        error, 
+        txStatus, 
+        setTxStatus, 
+        reset,
+        executeGameAction 
+    } = useGameState();
+    
+    const { 
+        isReady, 
+        placeBet, 
+        claimWinnings, 
+        fetchMatch,
+        calculatePotentialWinnings 
+    } = useFightClubProgram();
+
+    // Mock current match - in production, fetch from database
+    useEffect(() => {
+        setCurrentMatch({
+            tokenA: 'BONK',
+            tokenB: 'WIF',
+            totalBetA: 2500 * LAMPORTS_PER_SOL,
+            totalBetB: 2000 * LAMPORTS_PER_SOL,
+            playerCountA: 45,
+            playerCountB: 38,
+            status: 'Open',
+        });
+    }, []);
+
+    const handlePlaceBet = async () => {
+        if (!selectedSide || !connected || !isReady || !currentMatch) return;
+        if (wager < MIN_BET || wager > MAX_BET) return;
+
+        setTxStatus('pending');
+
+        try {
+            // In production, get actual match PDA from database
+            // For now, we'll simulate the flow
+            await executeGameAction(async () => {
+                // Simulate blockchain call
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                setUserBet({
+                    side: selectedSide,
+                    amount: wager
+                });
+                
+                return { success: true };
+            }, {
+                onSuccess: () => {
+                    setTxStatus('confirmed');
+                },
+                onError: (err) => {
+                    setTxStatus('failed');
+                    console.error('Bet failed:', err);
+                }
+            });
+        } catch (err) {
+            setTxStatus('failed');
+        }
+    };
+
+    const handleClaim = async () => {
+        if (!userBet || !connected || !isReady) return;
+
+        setTxStatus('pending');
+
+        try {
+            await executeGameAction(async () => {
+                // In production: await claimWinnings(matchPDA);
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                return { success: true };
+            }, {
+                onSuccess: () => {
+                    setTxStatus('confirmed');
+                    setUserBet(null);
+                    setSelectedSide(null);
+                },
+                onError: () => {
+                    setTxStatus('failed');
+                }
+            });
+        } catch (err) {
+            setTxStatus('failed');
+        }
+    };
+
+    const isBetting = isLoading || txStatus === 'pending' || txStatus === 'confirming';
+    const canBet = connected && isReady && !isBetting && selectedSide && wager >= MIN_BET && wager <= MAX_BET && !userBet;
+
+    // Calculate odds dynamically based on pool
+    const getOdds = (side: 'A' | 'B') => {
+        if (!currentMatch) return 2.0;
+        const totalPool = currentMatch.totalBetA + currentMatch.totalBetB;
+        const sidePool = side === 'A' ? currentMatch.totalBetB : currentMatch.totalBetA;
+        if (sidePool === 0) return 2.0;
+        return (totalPool / (side === 'A' ? currentMatch.totalBetA : currentMatch.totalBetB)) * 0.99; // 1% house fee
+    };
+
+    const potentialWinnings = selectedSide ? wager * getOdds(selectedSide) : 0;
 
     return (
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 w-full max-w-[1400px] mx-auto">
@@ -13,62 +146,125 @@ export const FightClubGame: React.FC = () => {
             <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#FF3F33] opacity-[0.08] blur-[150px] pointer-events-none z-0"></div>
             <div className="fixed top-[10%] right-[-10%] w-[50%] h-[60%] rounded-full bg-[#08CB00] opacity-[0.06] blur-[150px] pointer-events-none z-0"></div>
 
+            {/* Wallet Not Connected */}
+            {!connected && (
+                <div className="w-full max-w-[960px] mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-yellow-500 text-sm">wallet</span>
+                        <p className="text-yellow-400 text-sm">Connect your wallet to place bets</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Transaction Status */}
+            {txStatus !== 'idle' && (
+                <div className="w-full max-w-[960px] mb-6">
+                    <TransactionLoader 
+                        status={txStatus} 
+                        message={txStatus === 'pending' ? 'Confirm in wallet...' : undefined}
+                    />
+                </div>
+            )}
+
+            {/* Error Display */}
+            {error && (
+                <div className="w-full max-w-[960px] mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-red-500 text-sm">error</span>
+                        <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                    <button 
+                        onClick={reset}
+                        className="mt-2 text-xs text-red-400/60 hover:text-red-400 underline"
+                    >
+                        Dismiss
+                    </button>
+                </div>
+            )}
+
+            {/* User Bet Status */}
+            {userBet && currentMatch?.status === 'Resolved' && (
+                <div className="w-full max-w-[960px] mb-6 p-6 bg-primary/10 border border-primary/30 rounded-2xl text-center">
+                    <h3 className="text-xl font-black text-white mb-2">Match Resolved!</h3>
+                    <p className="text-white/60 mb-4">
+                        You bet {userBet.amount.toFixed(2)} SOL on {userBet.side === 'A' ? currentMatch.tokenA : currentMatch.tokenB}
+                    </p>
+                    <button
+                        onClick={handleClaim}
+                        disabled={isBetting}
+                        className="px-8 py-3 bg-primary hover:bg-primaryHover text-black font-black rounded-xl transition-colors disabled:opacity-50"
+                    >
+                        {isBetting ? <ButtonLoader text="Claiming..." /> : 'Claim Winnings'}
+                    </button>
+                </div>
+            )}
+
             {/* Page Heading */}
             <div className="w-full max-w-[960px] flex flex-col md:flex-row justify-between items-center gap-4 mb-8 md:mb-12">
                 <div className="flex flex-col gap-1 text-center md:text-left">
                     <div className="flex items-center justify-center md:justify-start gap-2 text-accentGold mb-1">
                         <span className="material-symbols-outlined text-sm">stars</span>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Middleweight Championship Bout</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Memecoin Battle Arena</span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-[-0.04em] italic uppercase">
-                        MAIN EVENT: <span className="text-danger">BONK</span> <span className="text-white/20 px-2 not-italic font-sans">vs</span> <span className="text-primary">WIF</span>
+                        {currentMatch ? (
+                            <>
+                                <span className="text-danger">{currentMatch.tokenA}</span>
+                                <span className="text-white/20 px-2 not-italic font-sans">vs</span>
+                                <span className="text-primary">{currentMatch.tokenB}</span>
+                            </>
+                        ) : (
+                            'Loading...'
+                        )}
                     </h1>
                 </div>
                 <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
                     <span className="material-symbols-outlined text-gray-400 text-sm">info</span>
-                    <span className="text-gray-300 text-[10px] font-bold uppercase tracking-wider">Rules: 24h Volume Battle</span>
+                    <span className="text-gray-300 text-[10px] font-bold uppercase tracking-wider">
+                        Status: {currentMatch?.status || 'Loading'}
+                    </span>
                 </div>
             </div>
 
             {/* Fight Card Layout */}
             <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-12 items-center mb-10">
 
-                {/* RED CORNER (Left) */}
+                {/* RED CORNER (Token A) */}
                 <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-b from-danger to-transparent rounded-2xl opacity-30 blur-md group-hover:opacity-60 transition duration-500"></div>
                     <div className="glass-panel bg-gradient-to-b from-danger/5 to-black/60 rounded-2xl p-8 border-t-2 border-t-danger relative flex flex-col items-center text-center h-full">
                         <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-black/40 border border-danger/30 px-2.5 py-1 rounded-md">
                             <span className="w-2 h-2 rounded-full bg-danger animate-pulse"></span>
-                            <span className="text-[10px] font-bold text-danger uppercase tracking-widest">Red Corner</span>
+                            <span className="text-[10px] font-bold text-danger uppercase tracking-widest">Token A</span>
                         </div>
                         <div className="relative mb-6 mt-4">
                             <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-b from-danger to-black/50 shadow-[0_0_30px_rgba(255,63,51,0.2)]">
-                                <div className="w-full h-full rounded-full overflow-hidden bg-black">
-                                    <img alt="Bonk" className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkEN9TEBWwzunKeH88u9avcuL06alXS_kG1_m8dxAKv-obbUzcbvGUELjulHm5YA17NfTB7-PXZLccIk497ydIl8lHtlksgCSRwFdyrlBq-h2EsnuINzgnFp_r8eEjJFvk3XMFTph-PQ3tOBrXgEDB6rFI5H-l_mWHAmq3GL0QmEzj2Umov5pd9st2H8vM3lFsBXKwrvF0_LmWXGxWOfC1hfBtE_QuYb_0glnh9H01Rwa7Dv37KR0VYJKCphXWCuK3qjeWf7yHqBU" />
+                                <div className="w-full h-full rounded-full overflow-hidden bg-black flex items-center justify-center">
+                                    <span className="text-4xl font-black text-danger">{currentMatch?.tokenA?.[0] || '?'}</span>
                                 </div>
                             </div>
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-danger text-white text-[10px] font-black px-3 py-1 rounded uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,63,51,0.5)]">
-                                Underdog
-                            </div>
                         </div>
-                        <h2 className="text-4xl font-black italic tracking-tighter mb-1 text-white group-hover:text-danger transition-colors uppercase">BONK</h2>
+                        <h2 className="text-4xl font-black italic tracking-tighter mb-1 text-white group-hover:text-danger transition-colors uppercase">
+                            {currentMatch?.tokenA || 'Loading'}
+                        </h2>
                         <div className="flex flex-col items-center gap-1 mb-8">
-                            <span className="text-2xl font-black text-white/90 tracking-tighter">$0.00002341</span>
+                            <span className="text-2xl font-black text-white/90 tracking-tighter">
+                                {(currentMatch?.totalBetA || 0) / LAMPORTS_PER_SOL} SOL
+                            </span>
                             <div className="flex items-center gap-1 text-danger bg-danger/10 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">
-                                <span className="material-symbols-outlined text-xs">trending_down</span>
-                                <span>-4.2% (24h)</span>
+                                <span className="material-symbols-outlined text-xs">group</span>
+                                <span>{currentMatch?.playerCountA || 0} bettors</span>
                             </div>
                         </div>
-                        {/* Health Bar */}
+                        {/* Odds */}
                         <div className="w-full space-y-2">
                             <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-                                <span>Power</span>
-                                <span className="text-white">100/100</span>
+                                <span>Odds</span>
+                                <span className="text-white">{getOdds('A').toFixed(2)}x</span>
                             </div>
                             <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
-                                <div className="absolute inset-0 opacity-20 bg-scanlines"></div>
-                                <div className="h-full bg-gradient-to-r from-danger/60 to-danger shadow-[0_0_15px_rgba(255,63,51,0.4)] relative w-full">
-                                    <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50"></div>
+                                <div className="h-full bg-gradient-to-r from-danger/60 to-danger shadow-[0_0_15px_rgba(255,63,51,0.4)] relative"
+                                    style={{ width: `${(currentMatch?.totalBetA || 0) / ((currentMatch?.totalBetA || 0) + (currentMatch?.totalBetB || 1)) * 100}%` }}>
                                 </div>
                             </div>
                         </div>
@@ -82,53 +278,56 @@ export const FightClubGame: React.FC = () => {
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-accentGold opacity-20 blur-[60px] -z-10 animate-pulse"></div>
                     </div>
                     <div className="flex flex-col items-center gap-3">
-                        <span className="text-accentGold font-bold tracking-[0.3em] text-[10px] uppercase">Round Ends In</span>
+                        <span className="text-accentGold font-bold tracking-[0.3em] text-[10px] uppercase">Total Pool</span>
                         <div className="text-4xl font-mono font-bold text-white tabular-nums bg-black/60 border border-white/10 px-6 py-3 rounded-2xl shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-                            04:59
+                            {((currentMatch?.totalBetA || 0) + (currentMatch?.totalBetB || 0)) / LAMPORTS_PER_SOL} SOL
                         </div>
                     </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-gray-500 text-[9px] uppercase font-bold tracking-[0.3em] mb-1">Total Pool</span>
-                        <span className="text-white font-black text-2xl tracking-tighter">4,502 SOL</span>
-                    </div>
+                    {userBet && (
+                        <div className="flex flex-col items-center p-4 bg-white/5 rounded-xl border border-white/10">
+                            <span className="text-gray-500 text-[9px] uppercase font-bold tracking-[0.3em] mb-1">Your Bet</span>
+                            <span className="text-white font-black text-xl">{userBet.amount.toFixed(2)} SOL</span>
+                            <span className="text-primary text-sm">on {userBet.side === 'A' ? currentMatch?.tokenA : currentMatch?.tokenB}</span>
+                        </div>
+                    )}
                 </div>
 
-                {/* GREEN CORNER (Right) */}
+                {/* GREEN CORNER (Token B) */}
                 <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-b from-primary to-transparent rounded-2xl opacity-30 blur-md group-hover:opacity-60 transition duration-500"></div>
                     <div className="glass-panel bg-gradient-to-b from-primary/5 to-black/60 rounded-2xl p-8 border-t-2 border-t-primary relative flex flex-col items-center text-center h-full">
                         <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-black/40 border border-primary/30 px-2.5 py-1 rounded-md">
-                            <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Blue Corner</span>
+                            <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Token B</span>
                             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                         </div>
                         <div className="relative mb-6 mt-4">
                             <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-b from-primary to-black/50 shadow-[0_0_30px_rgba(7,204,0,0.2)]">
-                                <div className="w-full h-full rounded-full overflow-hidden bg-black">
-                                    <img alt="WIF" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk7KmrWg872_sn8gPbp0HHJg2G0Y1rqcpu5NMk9u86i-DPnm3GAIKk9D_EAMVtTJeHMwa9kyUff0qeAYdGuqynLNqNJbr4YS4EptbVWtFR958f8h_ZsN9a0Lv7MJ_xD8i3D7MWrWAuDhdlWqbADUclO1rhhEDMNp-FDyzyGFvwE0J-Y7iy6M6Kolhsh3Mxftiw8RB58rhxfYj8FsjuwR263DKQnAMtnasyGWkdj4f0jC64GEjakikUvbe_JpxMn4u3KeKvOL20aEo" />
+                                <div className="w-full h-full rounded-full overflow-hidden bg-black flex items-center justify-center">
+                                    <span className="text-4xl font-black text-primary">{currentMatch?.tokenB?.[0] || '?'}</span>
                                 </div>
                             </div>
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-primary text-black text-[10px] font-black px-3 py-1 rounded uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(7,204,0,0.5)]">
-                                Favorite
-                            </div>
                         </div>
-                        <h2 className="text-4xl font-black italic tracking-tighter mb-1 text-white group-hover:text-primary transition-colors uppercase">WIF</h2>
+                        <h2 className="text-4xl font-black italic tracking-tighter mb-1 text-white group-hover:text-primary transition-colors uppercase">
+                            {currentMatch?.tokenB || 'Loading'}
+                        </h2>
                         <div className="flex flex-col items-center gap-1 mb-8">
-                            <span className="text-2xl font-black text-white/90 tracking-tighter">$2.45</span>
+                            <span className="text-2xl font-black text-white/90 tracking-tighter">
+                                {(currentMatch?.totalBetB || 0) / LAMPORTS_PER_SOL} SOL
+                            </span>
                             <div className="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">
-                                <span className="material-symbols-outlined text-xs">trending_up</span>
-                                <span>+12.5% (24h)</span>
+                                <span className="material-symbols-outlined text-xs">group</span>
+                                <span>{currentMatch?.playerCountB || 0} bettors</span>
                             </div>
                         </div>
-                        {/* Health Bar */}
+                        {/* Odds */}
                         <div className="w-full space-y-2">
                             <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-                                <span>Power</span>
-                                <span className="text-white">85/100</span>
+                                <span>Odds</span>
+                                <span className="text-white">{getOdds('B').toFixed(2)}x</span>
                             </div>
                             <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
-                                <div className="absolute inset-0 opacity-20 bg-scanlines"></div>
-                                <div className="h-full bg-gradient-to-r from-primary/60 to-primary shadow-[0_0_15px_rgba(7,204,0,0.4)] relative w-[85%]">
-                                    <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50"></div>
+                                <div className="h-full bg-gradient-to-r from-primary/60 to-primary shadow-[0_0_15px_rgba(7,204,0,0.4)] relative"
+                                    style={{ width: `${(currentMatch?.totalBetB || 0) / ((currentMatch?.totalBetA || 0) + (currentMatch?.totalBetB || 1)) * 100}%` }}>
                                 </div>
                             </div>
                         </div>
@@ -137,117 +336,146 @@ export const FightClubGame: React.FC = () => {
             </div>
 
             {/* Betting Console (Bottom) */}
-            <div className="w-full max-w-[960px] glass-panel rounded-3xl p-8 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                <div className="flex flex-col gap-8">
-                    {/* Betting Selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Bet Red Option */}
-                        <button
-                            onClick={() => setSelectedSide('RED')}
-                            className={cn(
-                                "relative overflow-hidden rounded-2xl p-6 flex items-center justify-between group transition-all duration-300 border-2 active:scale-[0.98]",
-                                selectedSide === 'RED'
-                                    ? "bg-danger/20 border-danger shadow-[0_0_30px_rgba(255,63,51,0.2)]"
-                                    : "bg-danger/5 border-transparent hover:bg-danger/10 text-white/80"
-                            )}>
-                            <div className="flex flex-col items-start gap-1 z-10">
-                                <span className="text-gray-500 text-[9px] font-black uppercase tracking-[0.3em]">Bet on Bonk</span>
-                                <span className={cn(
-                                    "font-black text-3xl tracking-tighter italic transition-transform group-hover:scale-105",
-                                    selectedSide === 'RED' ? "text-danger" : "text-white/40"
-                                )}>BET RED</span>
-                            </div>
-                            <div className="flex flex-col items-end z-10">
-                                <span className={cn(
-                                    "text-sm font-black px-4 py-1.5 rounded-lg shadow-xl",
-                                    selectedSide === 'RED' ? "bg-danger text-white shadow-danger/40" : "bg-neutral-800 text-gray-400"
-                                )}>1.85x</span>
-                                <span className="text-[9px] text-gray-500 mt-2 font-black uppercase tracking-widest italic opacity-60">Payout 1.85:1</span>
-                            </div>
-                            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-4 translate-y-4 rotate-[-15deg]">
-                                <span className="material-symbols-outlined text-[100px] text-danger">local_fire_department</span>
-                            </div>
-                        </button>
-
-                        {/* Bet Green Option */}
-                        <button
-                            onClick={() => setSelectedSide('GREEN')}
-                            className={cn(
-                                "relative overflow-hidden rounded-2xl p-6 flex items-center justify-between group transition-all duration-300 border-2 active:scale-[0.98]",
-                                selectedSide === 'GREEN'
-                                    ? "bg-primary/20 border-primary shadow-[0_0_30px_rgba(7,204,0,0.2)]"
-                                    : "bg-primary/5 border-transparent hover:bg-primary/10 text-white/80"
-                            )}>
-                            <div className="absolute top-3 left-3 text-primary opacity-0 transition-opacity peer-checked:opacity-100">
-                                <span className="material-symbols-outlined text-lg">check_circle</span>
-                            </div>
-                            <div className="flex flex-col items-start gap-1 z-10">
-                                <span className="text-gray-500 text-[9px] font-black uppercase tracking-[0.3em]">Bet on WIF</span>
-                                <span className={cn(
-                                    "font-black text-3xl tracking-tighter italic transition-transform group-hover:scale-105",
-                                    selectedSide === 'GREEN' ? "text-primary" : "text-white/40"
-                                )}>BET GREEN</span>
-                            </div>
-                            <div className="flex flex-col items-end z-10">
-                                <span className={cn(
-                                    "text-sm font-black px-4 py-1.5 rounded-lg shadow-xl",
-                                    selectedSide === 'GREEN' ? "bg-primary text-black shadow-primary/40" : "bg-neutral-800 text-gray-400"
-                                )}>2.10x</span>
-                                <span className="text-[9px] text-gray-500 mt-2 font-black uppercase tracking-widest italic opacity-60">Payout 2.10:1</span>
-                            </div>
-                            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-4 translate-y-4 rotate-[-15deg]">
-                                <span className="material-symbols-outlined text-[100px] text-primary">trending_up</span>
-                            </div>
-                        </button>
-                    </div>
-
-                    {/* Input & Action */}
-                    <div className="flex flex-col lg:flex-row gap-8 items-center pt-8 border-t border-white/5">
-                        <div className="flex-1 w-full space-y-6">
-                            <div className="flex justify-between items-end">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Bet Amount</label>
-                                <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl px-4 py-1.5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
-                                    <span className="text-white font-mono font-bold text-lg">{wager}</span>
-                                    <span className="text-[10px] text-gray-500 font-bold tracking-widest">SOL</span>
-                                </div>
-                            </div>
-                            <div className="relative group/slider">
-                                <input
-                                    type="range"
-                                    min="0.1"
-                                    max="10"
-                                    step="0.1"
-                                    value={wager}
-                                    onChange={(e) => setWager(parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-neutral-800 rounded-full appearance-none cursor-pointer accent-primary group-hover/slider:accent-primaryHover transition-all"
-                                />
-                            </div>
-                            <div className="flex justify-between text-[9px] text-gray-600 font-mono font-black uppercase tracking-[0.3em]">
-                                <span>0.1 SOL</span>
-                                <span>5.0 SOL</span>
-                                <span>10.0 SOL</span>
-                            </div>
-                        </div>
-                        <div className="w-full lg:w-auto flex flex-col gap-3 min-w-[280px]">
+            {!userBet && currentMatch?.status === 'Open' && (
+                <div className="w-full max-w-[960px] glass-panel rounded-3xl p-8 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                    <div className="flex flex-col gap-8">
+                        {/* Betting Selection */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Bet Token A */}
                             <button
-                                disabled={!selectedSide}
+                                onClick={() => !isBetting && setSelectedSide('A')}
+                                disabled={isBetting}
                                 className={cn(
-                                    "h-16 rounded-2xl shadow-xl transition-all transform active:translate-y-0.5 flex items-center justify-center gap-3 group border-b-4",
-                                    selectedSide
-                                        ? "bg-primary border-[#058a00] hover:bg-primaryHover text-[#0A0A0F] shadow-[0_10px_30px_rgba(7,204,0,0.4)]"
-                                        : "bg-neutral-800 border-neutral-900 text-gray-500 cursor-not-allowed opacity-50"
+                                    "relative overflow-hidden rounded-2xl p-6 flex items-center justify-between group transition-all duration-300 border-2 active:scale-[0.98] disabled:opacity-50",
+                                    selectedSide === 'A'
+                                        ? "bg-danger/20 border-danger shadow-[0_0_30px_rgba(255,63,51,0.2)]"
+                                        : "bg-danger/5 border-transparent hover:bg-danger/10 text-white/80"
                                 )}>
-                                <span className="text-lg font-black tracking-widest uppercase">PLACE BET</span>
-                                <span className="material-symbols-outlined text-2xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                <div className="flex flex-col items-start gap-1 z-10">
+                                    <span className="text-gray-500 text-[9px] font-black uppercase tracking-[0.3em]">Bet on {currentMatch?.tokenA}</span>
+                                    <span className={cn(
+                                        "font-black text-3xl tracking-tighter italic transition-transform group-hover:scale-105",
+                                        selectedSide === 'A' ? "text-danger" : "text-white/40"
+                                    )}>BET {currentMatch?.tokenA}</span>
+                                </div>
+                                <div className="flex flex-col items-end z-10">
+                                    <span className={cn(
+                                        "text-sm font-black px-4 py-1.5 rounded-lg shadow-xl",
+                                        selectedSide === 'A' ? "bg-danger text-white shadow-danger/40" : "bg-neutral-800 text-gray-400"
+                                    )}>{getOdds('A').toFixed(2)}x</span>
+                                    <span className="text-[9px] text-gray-500 mt-2 font-black uppercase tracking-widest italic opacity-60">
+                                        Potential: {potentialWinnings.toFixed(2)} SOL
+                                    </span>
+                                </div>
                             </button>
-                            <div className="text-center">
-                                <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest italic tracking-widest italic opacity-60">Estimated gas: 0.00005 SOL</span>
+
+                            {/* Bet Token B */}
+                            <button
+                                onClick={() => !isBetting && setSelectedSide('B')}
+                                disabled={isBetting}
+                                className={cn(
+                                    "relative overflow-hidden rounded-2xl p-6 flex items-center justify-between group transition-all duration-300 border-2 active:scale-[0.98] disabled:opacity-50",
+                                    selectedSide === 'B'
+                                        ? "bg-primary/20 border-primary shadow-[0_0_30px_rgba(7,204,0,0.2)]"
+                                        : "bg-primary/5 border-transparent hover:bg-primary/10 text-white/80"
+                                )}>
+                                <div className="flex flex-col items-start gap-1 z-10">
+                                    <span className="text-gray-500 text-[9px] font-black uppercase tracking-[0.3em]">Bet on {currentMatch?.tokenB}</span>
+                                    <span className={cn(
+                                        "font-black text-3xl tracking-tighter italic transition-transform group-hover:scale-105",
+                                        selectedSide === 'B' ? "text-primary" : "text-white/40"
+                                    )}>BET {currentMatch?.tokenB}</span>
+                                </div>
+                                <div className="flex flex-col items-end z-10">
+                                    <span className={cn(
+                                        "text-sm font-black px-4 py-1.5 rounded-lg shadow-xl",
+                                        selectedSide === 'B' ? "bg-primary text-black shadow-primary/40" : "bg-neutral-800 text-gray-400"
+                                    )}>{getOdds('B').toFixed(2)}x</span>
+                                    <span className="text-[9px] text-gray-500 mt-2 font-black uppercase tracking-widest italic opacity-60">
+                                        Potential: {potentialWinnings.toFixed(2)} SOL
+                                    </span>
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* Input & Action */}
+                        <div className="flex flex-col lg:flex-row gap-8 items-center pt-8 border-t border-white/5">
+                            <div className="flex-1 w-full space-y-6">
+                                <div className="flex justify-between items-end">
+                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Bet Amount</label>
+                                    <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl px-4 py-1.5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                                        <input
+                                            type="number"
+                                            value={wager}
+                                            onChange={(e) => {
+                                                const val = parseFloat(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    setWager(Math.min(MAX_BET, Math.max(MIN_BET, val)));
+                                                }
+                                            }}
+                                            min={MIN_BET}
+                                            max={MAX_BET}
+                                            step={0.1}
+                                            disabled={isBetting}
+                                            className="bg-transparent text-white font-mono font-bold text-lg w-24 text-right outline-none disabled:opacity-50"
+                                        />
+                                        <span className="text-[10px] text-gray-500 font-bold tracking-widest">SOL</span>
+                                    </div>
+                                </div>
+                                <div className="relative group/slider">
+                                    <input
+                                        type="range"
+                                        min={MIN_BET}
+                                        max={MAX_BET}
+                                        step="0.1"
+                                        value={wager}
+                                        onChange={(e) => setWager(parseFloat(e.target.value))}
+                                        disabled={isBetting}
+                                        className="w-full h-2 bg-neutral-800 rounded-full appearance-none cursor-pointer accent-primary group-hover/slider:accent-primaryHover transition-all disabled:opacity-50"
+                                    />
+                                </div>
+                                <div className="flex justify-between text-[9px] text-gray-600 font-mono font-black uppercase tracking-[0.3em]">
+                                    <span>{MIN_BET} SOL</span>
+                                    <span>{MAX_BET / 2} SOL</span>
+                                    <span>{MAX_BET} SOL</span>
+                                </div>
+                                {wager < MIN_BET && (
+                                    <p className="text-red-400 text-xs">Minimum bet is {MIN_BET} SOL</p>
+                                )}
+                                {wager > MAX_BET && (
+                                    <p className="text-red-400 text-xs">Maximum bet is {MAX_BET} SOL</p>
+                                )}
+                            </div>
+                            <div className="w-full lg:w-auto flex flex-col gap-3 min-w-[280px]">
+                                <button
+                                    onClick={handlePlaceBet}
+                                    disabled={!canBet}
+                                    className={cn(
+                                        "h-16 rounded-2xl shadow-xl transition-all transform active:translate-y-0.5 flex items-center justify-center gap-3 group border-b-4 disabled:shadow-none",
+                                        canBet
+                                            ? "bg-primary border-[#058a00] hover:bg-primaryHover text-[#0A0A0F] shadow-[0_10px_30px_rgba(7,204,0,0.4)]"
+                                            : "bg-neutral-800 border-neutral-900 text-gray-500 cursor-not-allowed opacity-50"
+                                    )}>
+                                    {isBetting ? (
+                                        <ButtonLoader text="Placing Bet..." />
+                                    ) : (
+                                        <>
+                                            <span className="text-lg font-black tracking-widest uppercase">PLACE BET</span>
+                                            <span className="material-symbols-outlined text-2xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                        </>
+                                    )}
+                                </button>
+                                <div className="text-center">
+                                    <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest italic opacity-60">
+                                        {selectedSide ? `Win ${potentialWinnings.toFixed(2)} SOL` : 'Select a side to bet'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
