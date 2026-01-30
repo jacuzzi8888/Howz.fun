@@ -167,7 +167,7 @@ export function parseFightClubError(error: any): string {
   if (codeMatch) {
     const code = parseInt(codeMatch[1], codeMatch[1].startsWith('0x') ? 16 : 10);
     if (FightClubErrors[code]) {
-      return FightClubErrors[code]!;
+      return FightClubErrors[code];
     }
   }
   
@@ -177,7 +177,7 @@ export function parseFightClubError(error: any): string {
     const numericCode = Object.keys(FightClubErrors).find(
       key => {
         const errorMsg = FightClubErrors[parseInt(key)];
-        return errorMsg && errorMsg.includes(anchorCode);
+        return errorMsg?.includes(anchorCode);
       }
     );
     if (numericCode) {
@@ -246,7 +246,7 @@ export function validateBetAmount(amount: number): { valid: boolean; error?: str
 /**
  * Format token amount for display
  */
-export function formatTokenAmount(amount: number, decimals: number = 2): string {
+export function formatTokenAmount(amount: number, decimals = 2): string {
   return amount.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -256,7 +256,7 @@ export function formatTokenAmount(amount: number, decimals: number = 2): string 
 /**
  * Format percentage for display
  */
-export function formatPercentage(value: number, decimals: number = 1): string {
+export function formatPercentage(value: number, decimals = 1): string {
   return `${value.toFixed(decimals)}%`;
 }
 

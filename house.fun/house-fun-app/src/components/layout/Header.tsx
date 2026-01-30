@@ -62,6 +62,18 @@ export const Header: React.FC = () => {
                             <span className="text-2xl font-black tracking-tighter text-white group-hover:text-glow transition-all">house.fun</span>
                         </Link>
 
+                        {/* Navigation */}
+                        <nav className="hidden md:flex items-center gap-6 ml-8">
+                            <Link href="/profile" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+                                <span className="material-symbols-outlined text-sm">account_circle</span>
+                                Profile
+                            </Link>
+                            <Link href="/leaderboard" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+                                <span className="material-symbols-outlined text-sm">emoji_events</span>
+                                Leaderboard
+                            </Link>
+                        </nav>
+
                         {/* Network Status */}
                         <div className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">

@@ -115,7 +115,7 @@ export const gameRouter = createTRPCRouter({
       const [bet] = await ctx.db.insert(bets).values({
         betPda: input.betPda,
         transactionSignature: input.transactionSignature,
-        playerId: player!.id,
+        playerId: player.id,
         gameId: game.id,
         amount: input.amount,
         status: "COMMITTED",
@@ -127,7 +127,7 @@ export const gameRouter = createTRPCRouter({
       await ctx.db.update(players).set({
         totalBets: sql`${players.totalBets} + 1`,
         totalWagered: sql`${players.totalWagered} + ${input.amount}`,
-      }).where(eq(players.id, player!.id));
+      }).where(eq(players.id, player.id));
 
       // Update game stats
       await ctx.db.update(games).set({
