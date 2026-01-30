@@ -1,0 +1,45 @@
+import "~/styles/globals.css";
+
+import { type Metadata } from "next";
+import { Inter } from "next/font/google";
+
+import { TRPCReactProvider } from "~/trpc/react";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+
+export const metadata: Metadata = {
+  title: "house.fun | The House Always Wins. So Can You.",
+  description:
+    "The ultimate on-chain casino where memecoins battle, flip, race, and bluff — all provably fair on Solana.",
+  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  openGraph: {
+    title: "house.fun",
+    description: "On-chain casino on Solana",
+    siteName: "house.fun",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "house.fun",
+    description: "The ultimate on-chain casino on Solana",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en" className={inter.variable}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-[#0A0A0F] font-sans text-white antialiased">
+        <TRPCReactProvider>{children}</TRPCReactProvider>
+      </body>
+    </html>
+  );
+}

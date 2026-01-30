@@ -1,0 +1,23 @@
+{
+  "name": "stitch",
+  "description": "Google Stitch MCP Server for AI Design Integration",
+  "type": "remote",
+  "url": "https://stitch.withgoogle.com/mcp",
+  "auth": {
+    "type": "api-key",
+    "header": "Authorization",
+    "prefix": "Bearer"
+  },
+  "capabilities": [
+    "stitch_list_designs",
+    "stitch_get_design",
+    "stitch_create_design",
+    "stitch_export_code",
+    "stitch_get_styles"
+  ],
+  "config": {
+    "projectId": "house-fun",
+    "defaultPlatform": "web",
+    "defaultFramework": "react-tailwind"
+  }
+}

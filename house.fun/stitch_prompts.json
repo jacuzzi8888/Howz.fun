@@ -1,0 +1,87 @@
+{
+    "project_context": "house.fun — High-stakes crypto casino on Solana. Features: encrypted coin flips, memecoin UFC battles, virtual horse racing with sponsorships, and Arcium-encrypted poker. Primary: #08CB00 (Money Green), Secondary: #B4E50D (Lime), Danger: #FF3F33 (Red). Background: #0A0A0F. Accent: #F59E0B (Gold for wins/jackpots). Surface: #141420. Text: #FFFFFF, #A1A1AA (secondary). Style: Glassmorphism, neon glow, zero purple, luxury casino meets web3 degen culture.",
+    "global_rules": {
+        "background": "#0A0A0F",
+        "surface_cards": "#141420 with border rgba(255,255,255,0.1)",
+        "glassmorphism": "bg-white/5, backdrop-blur-xl, border-white/10",
+        "text_primary": "#FFFFFF",
+        "text_secondary": "#A1A1AA",
+        "font": "Inter or system-ui",
+        "border_radius": "16px for cards, 8px for buttons",
+        "forbidden_colors": [
+            "#8B5CF6",
+            "#7C3AED",
+            "any purple/violet"
+        ]
+    },
+    "screens": [
+        {
+            "id": "flip-main",
+            "title": "Flip It - Main Game",
+            "prompt": "Dark casino coin flip interface. Background #0A0A0F. Header: 'FLIP IT' title with gold coin icon, wallet balance (SOL), win streak with fire emoji. Center: Large 3D gold coin (180px) with embossed 'H', subtle golden glow (#F59E0B at 30% opacity). Below coin: Toggle buttons 'HEADS' (#08CB00 bg) and 'TAILS' (#FF3F33 bg), both with white text. Bet controls: Slider with #B4E50D handle, SOL amount input with +/- buttons, min 0.1 max 100. Large 'FLIP NOW' button full width #08CB00. Right sidebar: 'Recent Flips' glassmorphism panel showing last 10 results with H/T icon, amount, green/red profit. Mobile: Stack vertically, hide sidebar. No purple anywhere."
+        },
+        {
+            "id": "flip-win",
+            "title": "Flip It - Win State",
+            "prompt": "Victory celebration overlay on dark #0A0A0F. Lime (#B4E50D) and gold (#F59E0B) confetti particles falling. Large gold coin in center with winning side showing. 'YOU WON!' text 48px bold #08CB00 with subtle glow. Payout amount '+2.5 SOL' in gold #F59E0B. Two buttons: 'DOUBLE OR NOTHING' #08CB00 bg, 'COLLECT' outline #B4E50D. Sound wave visualization hint. No purple."
+        },
+        {
+            "id": "flip-loss",
+            "title": "Flip It - Loss State",
+            "prompt": "Loss state on dark #0A0A0F. Coin showing losing side with red tint. 'TOUGH LUCK' text in #FF3F33. Amount lost '-1.0 SOL'. 'TRY AGAIN' button #08CB00, 'CHANGE BET' outline button. Subtle, not depressing — encouraging retry. No purple."
+        },
+        {
+            "id": "mfc-card",
+            "title": "Memecoin Fight Club - Fight Card",
+            "prompt": "UFC-style memecoin battle card. Dark #0A0A0F bg. Two fighter panels 45% width each. LEFT (Red Corner): Red glow border #FF3F33, token logo circle 80px, name 'BONK' 32px bold, price '$0.00002341', 24h change badge, health bar 100/100 in #08CB00. RIGHT (Blue Corner): Green glow border #08CB00, token logo 80px, name 'WIF', price '$2.45', health bar. CENTER: 'VS' 48px white with #B4E50D glow, weight class badge 'MIDDLEWEIGHT', fight timer. BOTTOM betting panel: glassmorphism card, 'BET RED' and 'BET GREEN' buttons with dynamic odds (1.85x, 2.10x), bet amount slider, 'PLACE BET' #08CB00. Stats row: Total pool, your position, time remaining. No purple."
+        },
+        {
+            "id": "mfc-battle",
+            "title": "Memecoin Fight Club - Live Battle",
+            "prompt": "Real-time battle view. Same layout as fight card but health bars depleted: Left 67/100 (yellow #F59E0B), Right 45/100 (orange). Floating damage numbers '-8 HP' in red, 'CRITICAL!' sparks. Price tickers updating. Battle log sidebar scrolling events. Screen border pulsing with tension. Timer urgently counting. 'BATTLE ENDS IN 23s'. Live odds shifting. Crowd energy meter. No purple."
+        },
+        {
+            "id": "derby-betting",
+            "title": "Degen Derby - Betting Screen",
+            "prompt": "Pre-race betting hub. Header: 'RACE #42 — Memecoin Championship', countdown 'GATES OPEN IN 2:34' in #B4E50D digital font. 2x4 grid of horse cards. Each card: HIGH-QUALITY REALISTIC 3D HORSE render (side profile, dynamic pose), horse number badge, name 'BONK BLAZER', current odds '8.5x', form dots, sponsor logo slot. Selected card has #B4E50D glow border. Right panel: Bet builder with bet type tabs (WIN/PLACE/SHOW/EXACTA), selected horses list, stake input, potential payout calc, 'PLACE BET' #08CB00. Pool size display. No icons, realistic horses only. No purple."
+        },
+        {
+            "id": "derby-track",
+            "title": "Degen Derby - Race Track",
+            "prompt": "Top-down oval race track. Dark outer area #0A0A0F. Track surface dark green #1a2f1a. 8 lanes with neon #B4E50D dividers and lane numbers. 8 REALISTIC 3D HORSES mid-race, different positions showing competition. Start/finish line. 'RACE IN PROGRESS' banner top. Position markers on each horse. Right leaderboard: positions 1-8, horse name, jockey colors, odds, green/red arrows for position changes. Bottom: Your bet status, potential payout. Race timer. Dust/motion effects. No purple."
+        },
+        {
+            "id": "poker-table",
+            "title": "Shadow Poker - Table View",
+            "prompt": "Luxury encrypted poker table. Bird's eye view. Oval table with dark green felt (#1a3d1a), dark wood mahogany edge. 6 player positions evenly spaced. Each seat: glassmorphism info panel, avatar circle, username, chip stack, 2 face-down cards with LOCK icon (Arcium encrypted). Dealer button. CENTER: 5 community cards (3 face up, 2 down), pot display 'POT: 250 USDC', 'ENCRYPTED BY ARCIUM' badge with lock. YOUR POSITION (bottom center): 2 enlarged hole cards revealed to you only. ACTION BAR: 'FOLD' #FF3F33, 'CHECK' white/gray, 'CALL 50' white, 'RAISE' #08CB00 with slider. Timer ring around active player in #B4E50D, 30s countdown. Chat toggle. Zero purple."
+        },
+        {
+            "id": "poker-showdown",
+            "title": "Shadow Poker - Showdown",
+            "prompt": "Hand reveal moment. All remaining players' cards flipping face-up with decryption animation. Winning hand highlighted with gold #F59E0B glow. Hand rank text 'FULL HOUSE — Aces over Kings'. Winner's seat enlarged with gold crown effect. Pot amount animating to winner '+450 USDC'. Losers' cards grayed. 'NEXT HAND IN 5s' countdown. 'LEAVE TABLE' button. Confetti for big wins. No purple."
+        },
+        {
+            "id": "lobby",
+            "title": "Casino Lobby",
+            "prompt": "Main hub screen. Dark #0A0A0F. Header: 'house.fun' logo (house silhouette in #08CB00), wallet connect button #08CB00, balance display. Hero: 'The House Always Wins. So Can You.' tagline, jackpot ticker. 4 game cards in grid: FLIP IT (gold coin icon, 'LIVE' green badge), FIGHT CLUB (boxing gloves, red/green split), DEGEN DERBY (horse silhouette, 'NEXT RACE 2:00'), SHADOW POKER (cards with lock). Each card: glassmorphism, hover glow, player count, 'PLAY NOW' button. Stats bar: Total volume, players online, games today. Footer: socials, hackathon badge. No purple."
+        }
+    ],
+    "components": {
+        "buttons": {
+            "primary": "#08CB00 bg, white text, hover darken 10%",
+            "danger": "#FF3F33 bg, white text",
+            "outline": "transparent bg, #B4E50D border, #B4E50D text",
+            "ghost": "transparent, white text, underline on hover"
+        },
+        "badges": {
+            "live": "#08CB00 bg at 20%, #08CB00 text",
+            "coming": "#F59E0B bg at 20%, #F59E0B text",
+            "encrypted": "#B4E50D bg at 20%, lock icon"
+        },
+        "health_bars": {
+            "full": "#08CB00",
+            "medium": "#F59E0B",
+            "low": "#FF3F33"
+        }
+    }
+}
