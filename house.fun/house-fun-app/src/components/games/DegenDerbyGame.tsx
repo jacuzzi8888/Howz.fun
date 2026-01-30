@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '~/lib/utils';
+import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 import { DerbyTrack } from './_components/DerbyTrack';
 
 interface Horse {
@@ -29,14 +30,17 @@ export const DegenDerbyGame: React.FC = () => {
     const [selectedHorseId, setSelectedHorseId] = useState<number | null>(4);
     const [stake, setStake] = useState(0.5);
     const [winnerId, setWinnerId] = useState<number | null>(null);
+    const { setIsUsingRollup } = useMagicBlock();
 
     const handlePlaceBet = () => {
         if (!selectedHorseId) return;
+        setIsUsingRollup(true); // Switch to high-speed rollup connection
         setGameState('RACING');
     };
 
     const handleRaceEnd = (id: number) => {
         setWinnerId(id);
+        setIsUsingRollup(false); // Return to standard L1
         setGameState('RESULTS');
     };
 

@@ -5,6 +5,8 @@ import { Inter } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { Header } from "~/components/layout/Header";
+import { SolanaWalletProvider } from "~/providers/SolanaWalletProvider";
+import { MagicBlockProvider } from "~/lib/magicblock/MagicBlockContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -40,12 +42,16 @@ export default function RootLayout({
       </head>
       <body className="bg-[#0A0A0F] font-sans text-white antialiased">
         <TRPCReactProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <div className="flex-1 overflow-y-auto">
-              {children}
-            </div>
-          </div>
+          <SolanaWalletProvider>
+            <MagicBlockProvider>
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <div className="flex-1 overflow-y-auto">
+                  {children}
+                </div>
+              </div>
+            </MagicBlockProvider>
+          </SolanaWalletProvider>
         </TRPCReactProvider>
       </body>
     </html>

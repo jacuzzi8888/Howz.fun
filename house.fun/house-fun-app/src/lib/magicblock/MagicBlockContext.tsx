@@ -8,14 +8,15 @@ interface MagicBlockContextState {
     rollupConnection: Connection;
     activeConnection: Connection;
     isUsingRollup: boolean;
+    setIsUsingRollup: (val: boolean) => void;
 }
 
 const MagicBlockContext = createContext<MagicBlockContextState | null>(null);
 
 export const MagicBlockProvider: React.FC<{
     children: React.ReactNode;
-    useRollup?: boolean;
-}> = ({ children, useRollup = false }) => {
+}> = ({ children }) => {
+    const [isUsingRollup, setIsUsingRollup] = useState(false);
     // Standard Mainnet/Devnet Connection
     const standardConnection = useMemo(() =>
         new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com', 'confirmed'),
@@ -30,9 +31,10 @@ export const MagicBlockProvider: React.FC<{
     const value = useMemo(() => ({
         standardConnection,
         rollupConnection,
-        activeConnection: useRollup ? rollupConnection : standardConnection,
-        isUsingRollup: useRollup
-    }), [standardConnection, rollupConnection, useRollup]);
+        activeConnection: isUsingRollup ? rollupConnection : standardConnection,
+        isUsingRollup,
+        setIsUsingRollup
+    }), [standardConnection, rollupConnection, isUsingRollup]);
 
     return (
         <MagicBlockContext.Provider value={value}>

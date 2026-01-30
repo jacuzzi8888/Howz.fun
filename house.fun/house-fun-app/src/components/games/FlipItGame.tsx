@@ -3,16 +3,22 @@
 import React, { useState } from 'react';
 import { colors } from '~/lib/design-tokens';
 import { cn } from '~/lib/utils';
+import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 
 export const FlipItGame: React.FC = () => {
     const [side, setSide] = useState<'HEADS' | 'TAILS'>('HEADS');
     const [amount, setAmount] = useState<number>(1.5);
     const [isFlipping, setIsFlipping] = useState(false);
+    const { setIsUsingRollup } = useMagicBlock();
 
     const handleFlip = () => {
         setIsFlipping(true);
+        setIsUsingRollup(true); // Switch to high-speed rollup connection
         // Simulate flip animation
-        setTimeout(() => setIsFlipping(false), 2000);
+        setTimeout(() => {
+            setIsFlipping(false);
+            setIsUsingRollup(false); // Return to standard L1
+        }, 2000);
     };
 
     return (
