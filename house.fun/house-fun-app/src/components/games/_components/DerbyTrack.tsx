@@ -65,7 +65,7 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
-    }, []);
+    }, [animate]);
 
     useEffect(() => {
         const timer = setInterval(() => {

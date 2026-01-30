@@ -15,6 +15,13 @@ interface PrivacyContextState {
     revealCommitment: (id: string, value: string, salt: string) => boolean;
 }
 
+/**
+ * Helper to safely convert Uint8Array to ArrayBuffer for crypto operations
+ */
+function toArrayBuffer(data: Uint8Array): ArrayBuffer {
+    return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
+}
+
 const PrivacyContext = createContext<PrivacyContextState | null>(null);
 
 export const PrivacyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -27,7 +34,7 @@ export const PrivacyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Simple SHA-256 hash implementation using Web Crypto API
         const encoder = new TextEncoder();
         const data = encoder.encode(value + salt);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', toArrayBuffer(data));
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
