@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import { Header } from "~/components/layout/Header";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -38,7 +39,10 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-[#0A0A0F] font-sans text-white antialiased">
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <Header />
+          {children}
+        </TRPCReactProvider>
       </body>
     </html>
   );
