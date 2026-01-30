@@ -25,7 +25,7 @@ const JupiterTerminal = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full bg-black/40 rounded-3xl overflow-hidden border border-white/5">
+        <div className="w-full h-full overflow-hidden">
             <Script
                 src="https://terminal.jup.ag/main-v3.js"
                 strategy="lazyOnload"

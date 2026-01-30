@@ -18,7 +18,7 @@ export const MagicBlockProvider: React.FC<{
 }> = ({ children, useRollup = false }) => {
     // Standard Mainnet/Devnet Connection
     const standardConnection = useMemo(() =>
-        new Connection('https://api.mainnet-beta.solana.com', 'confirmed'),
+        new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com', 'confirmed'),
         []);
 
     // MagicBlock Ephemeral Rollup Connection
