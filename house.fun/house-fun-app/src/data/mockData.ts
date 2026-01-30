@@ -1,4 +1,17 @@
-export const LOBBY_GAMES = [
+interface LobbyGame {
+    id: string;
+    title: string;
+    description: string;
+    status: string;
+    players: number | string;
+    maxBet: string;
+    image: string;
+    icon: string;
+    href: string;
+    accent: 'gold' | 'red' | 'white';
+}
+
+export const LOBBY_GAMES: LobbyGame[] = [
     {
         id: "flip-it",
         title: "FLIP IT",

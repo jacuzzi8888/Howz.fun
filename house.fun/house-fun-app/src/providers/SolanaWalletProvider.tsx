@@ -15,7 +15,7 @@ export const SolanaWalletProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // You can also provide a custom RPC endpoint.
     const endpoint = useMemo(() =>
-        process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl(network),
+        process.env.NEXT_PUBLIC_SOLANA_RPC ?? clusterApiUrl(network),
         [network]);
 
     const wallets = useMemo(

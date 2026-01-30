@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 import { Connection } from '@solana/web3.js';
 
 interface MagicBlockContextState {
@@ -19,7 +19,7 @@ export const MagicBlockProvider: React.FC<{
     const [isUsingRollup, setIsUsingRollup] = useState(false);
     // Standard Mainnet/Devnet Connection
     const standardConnection = useMemo(() =>
-        new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com', 'confirmed'),
+        new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com', 'confirmed'),
         []);
 
     // MagicBlock Ephemeral Rollup Connection

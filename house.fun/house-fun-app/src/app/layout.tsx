@@ -7,6 +7,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import { Header } from "~/components/layout/Header";
 import { SolanaWalletProvider } from "~/providers/SolanaWalletProvider";
 import { MagicBlockProvider } from "~/lib/magicblock/MagicBlockContext";
+import { PrivacyProvider } from "~/lib/arcium/PrivacyContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -44,12 +45,14 @@ export default function RootLayout({
         <TRPCReactProvider>
           <SolanaWalletProvider>
             <MagicBlockProvider>
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <div className="flex-1 overflow-y-auto">
-                  {children}
+              <PrivacyProvider>
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <div className="flex-1 overflow-y-auto">
+                    {children}
+                  </div>
                 </div>
-              </div>
+              </PrivacyProvider>
             </MagicBlockProvider>
           </SolanaWalletProvider>
         </TRPCReactProvider>

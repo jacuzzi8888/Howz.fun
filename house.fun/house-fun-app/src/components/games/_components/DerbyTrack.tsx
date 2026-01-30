@@ -29,7 +29,7 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
     const lastTimeRef = useRef<number>(null);
 
     const animate = (time: number) => {
-        if (lastTimeRef.current !== undefined) {
+        if (lastTimeRef.current !== null) {
             const deltaTime = time - lastTimeRef.current;
 
             setHorseProgress(prev => {
@@ -118,7 +118,7 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
 
                     <div className="flex flex-col h-full justify-between gap-2 relative z-10">
                         {horses.map((horse, idx) => {
-                            const progress = horseProgress.find(hp => hp.id === horse.id)?.progress || 0;
+                            const progress = horseProgress.find(hp => hp.id === horse.id)?.progress ?? 0;
                             return (
                                 <div key={horse.id} className="relative h-12 flex items-center group">
                                     {/* Lane Divider */}
@@ -185,9 +185,9 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
                             <span className="bg-primary/20 text-primary text-[8px] font-black px-1.5 py-0.5 rounded">ACTIVE</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="size-8 rounded bg-white/10 bg-cover bg-center" style={{ backgroundImage: `url('${horses[3].image}')` }} />
+                            <div className="size-8 rounded bg-white/10 bg-cover bg-center" style={{ backgroundImage: `url('${horses[3]?.image}')` }} />
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-white uppercase">{horses[3].name}</span>
+                                <span className="text-[10px] font-black text-white uppercase">{horses[3]?.name}</span>
                                 <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest">1.0 SOL • 8.5x</span>
                             </div>
                         </div>

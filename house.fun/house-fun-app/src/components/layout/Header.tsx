@@ -35,17 +35,19 @@ export const Header: React.FC = () => {
             }
         };
 
-        fetchBalance();
+        void fetchBalance();
         const id = connection.onAccountChange(publicKey, (info) => {
             setBalance(info.lamports / LAMPORTS_PER_SOL);
         });
 
         return () => {
-            connection.removeAccountChangeListener(id);
+            void connection.removeAccountChangeListener(id);
         };
     }, [publicKey, connection]);
 
     const formattedBalance = balance !== null ? balance.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "0.00";
+
+    if (!isMounted) return <div className="h-20 w-full bg-[#0A0A0F]/80 border-b border-white/5" />;
 
     return (
         <>
@@ -92,7 +94,7 @@ export const Header: React.FC = () => {
                             )}
 
                             <div className="custom-wallet-button">
-                                {isMounted && <WalletMultiButton />}
+                                <WalletMultiButton />
                             </div>
                         </div>
                     </div>

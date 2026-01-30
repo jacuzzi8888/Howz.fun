@@ -53,7 +53,7 @@ export default function Home() {
                 image={game.image}
                 icon={game.icon}
                 href={game.href}
-                accent={game.accent as any}
+                accent={game.accent}
               />
             ))}
           </div>
