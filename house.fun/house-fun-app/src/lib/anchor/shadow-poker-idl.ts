@@ -4,7 +4,7 @@
  */
 
 export type ShadowPoker = {
-  "address": "PoKeR5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  "address": "Poker111111111111111111111111111111111111111",
   "metadata": {
     "name": "shadow_poker",
     "version": "0.1.0",
@@ -716,7 +716,7 @@ export type ShadowPoker = {
 };
 
 export const SHADOW_POKER_IDL: ShadowPoker = {
-  "address": "PoKeR5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  "address": "Poker111111111111111111111111111111111111111",
   "metadata": {
     "name": "shadow_poker",
     "version": "0.1.0",

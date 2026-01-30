@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import { type DegenDerby, DEGEN_DERBY_IDL } from './degen-derby-idl';
 
 // Program ID from deployment
-export const DEGEN_DERBY_PROGRAM_ID = new web3.PublicKey('DeGeNr7PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+export const DEGEN_DERBY_PROGRAM_ID = new web3.PublicKey('11111111111111111111111111111111');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;

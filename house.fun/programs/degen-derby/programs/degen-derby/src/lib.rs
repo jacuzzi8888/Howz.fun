@@ -3,7 +3,7 @@ use anchor_lang::solana_program::clock::Clock;
 use anchor_lang::solana_program::hash::hash;
 
 // Program ID - Replace with actual after deployment
-declare_id!("DeGeNr7PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("Derby111111111111111111111111111111111111111");
 
 // Constants
 pub const HOUSE_FEE_BPS: u16 = 100; // 1% house fee

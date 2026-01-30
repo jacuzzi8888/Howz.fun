@@ -54,28 +54,31 @@ export const Header: React.FC = () => {
             <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0A0A0F]/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
-                        {/* Logo */}
-                        <Link href="/" className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
-                            <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20 group-hover:border-primary/50 transition-colors">
-                                <span className="material-symbols-outlined text-primary text-2xl">house</span>
-                            </div>
-                            <span className="text-2xl font-black tracking-tighter text-white group-hover:text-glow transition-all">house.fun</span>
-                        </Link>
-
-                        {/* Navigation */}
-                        <nav className="hidden md:flex items-center gap-6 ml-8">
-                            <Link href="/profile" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">account_circle</span>
-                                Profile
+                    <div className="flex items-center justify-between h-20">
+                        {/* Left Section: Logo + Navigation */}
+                        <div className="flex items-center gap-6">
+                            <Link href="/" className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
+                                <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20 group-hover:border-primary/50 transition-colors">
+                                    <span className="material-symbols-outlined text-primary text-2xl">house</span>
+                                </div>
+                                <span className="text-2xl font-black tracking-tighter text-white group-hover:text-glow transition-all">house.fun</span>
                             </Link>
-                            <Link href="/leaderboard" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">emoji_events</span>
-                                Leaderboard
-                            </Link>
-                        </nav>
 
-                        {/* Network Status */}
-                        <div className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+                            {/* Navigation */}
+                            <nav className="hidden md:flex items-center gap-4">
+                                <Link href="/profile" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">account_circle</span>
+                                    Profile
+                                </Link>
+                                <Link href="/leaderboard" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">emoji_events</span>
+                                    Leaderboard
+                                </Link>
+                            </nav>
+                        </div>
+
+                        {/* Center: Network Status */}
+                        <div className="hidden lg:flex items-center gap-6">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
                                 <span className={`size-1.5 rounded-full ${isUsingRollup ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(7,204,0,0.8)]' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]'}`}></span>
                                 <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">

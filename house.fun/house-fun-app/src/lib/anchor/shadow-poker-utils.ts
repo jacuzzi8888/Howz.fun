@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import { type ShadowPoker, SHADOW_POKER_IDL } from './shadow-poker-idl';
 
 // Program ID from deployment
-export const SHADOW_POKER_PROGRAM_ID = new web3.PublicKey('PoKeR5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+export const SHADOW_POKER_PROGRAM_ID = new web3.PublicKey('11111111111111111111111111111111');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;

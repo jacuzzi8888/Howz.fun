@@ -3,10 +3,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-degen_derby = "DeGeNr7PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+degen_derby = "Derby111111111111111111111111111111111111111"
 
 [programs.devnet]
-degen_derby = "DeGeNr7PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+degen_derby = "Derby111111111111111111111111111111111111111"
 
 [registry]
 url = "https://api.apr.dev"
