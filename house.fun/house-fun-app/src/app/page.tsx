@@ -5,7 +5,7 @@ import { colors } from "~/lib/design-tokens";
 
 export default function Home() {
   return (
-    <main className="min-h-screen text-white flex flex-col relative overflow-x-hidden">
+    <main className="min-h-[calc(100vh-80px)] text-white flex flex-col relative overflow-x-hidden">
       {/* Background Decoration */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-20%] left-[20%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]"></div>

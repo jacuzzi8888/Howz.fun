@@ -44,7 +44,7 @@ export const DegenDerbyGame: React.FC = () => {
     const estPayout = selectedHorse ? (stake * selectedHorse.odds).toFixed(2) : "0.00";
 
     return (
-        <main className="flex-1 w-full max-w-[1800px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col lg:flex-row gap-6">
+        <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 flex flex-col lg:flex-row gap-6">
             {/* Left Column: Race Info & Grid */}
             <div className="flex-1 flex flex-col gap-6 min-w-0">
                 {/* Race Header & Timer */}
