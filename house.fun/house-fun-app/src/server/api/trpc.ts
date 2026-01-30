@@ -104,3 +104,35 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+/**
+ * Protected (authenticated) procedure
+ *
+ * This procedure requires a valid wallet connection. It verifies the user has a wallet address
+ * in the session context before allowing access.
+ */
+const authMiddleware = t.middleware(async ({ ctx, next }) => {
+  // In a real implementation, you'd verify the wallet signature here
+  // For now, we'll check if there's a wallet address in the context
+  // This would be set by your authentication middleware
+  const walletAddress = ctx.headers.get('x-wallet-address');
+  
+  if (!walletAddress) {
+    throw new Error("Unauthorized: Wallet not connected");
+  }
+  
+  return next({
+    ctx: {
+      ...ctx,
+      session: {
+        user: {
+          walletAddress,
+        },
+      },
+    },
+  });
+});
+
+export const protectedProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(authMiddleware);

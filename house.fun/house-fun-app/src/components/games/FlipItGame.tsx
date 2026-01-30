@@ -8,6 +8,8 @@ import { GameErrorBoundary } from '~/components/error-boundaries';
 import { ButtonLoader, TransactionLoader } from '~/components/loading';
 import { useFlipItProgram, type BetResult, type RevealResult } from '~/lib/anchor/flip-it-client';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData';
+import { shortenAddress } from '~/lib/utils';
 
 const MIN_BET = 0.001; // 0.001 SOL
 const MAX_BET = 100;   // 100 SOL
@@ -28,7 +30,7 @@ const FlipItGameContent: React.FC = () => {
     const [showResult, setShowResult] = useState(false);
     
     const { setIsUsingRollup } = useMagicBlock();
-    const { connected } = useWallet();
+    const { connected, publicKey } = useWallet();
     const { 
         isLoading, 
         error, 
@@ -39,6 +41,13 @@ const FlipItGameContent: React.FC = () => {
     } = useGameState();
     
     const { isReady, placeBet, reveal } = useFlipItProgram();
+    
+    // Fetch real recent bets from database
+    const { data: recentBets, isLoading: isLoadingBets } = useRecentBets('FLIP_IT', 10);
+    
+    // Mutations for recording bets
+    const recordBet = useRecordBet();
+    const resolveBet = useResolveBet();
 
     // Reset game state when component mounts
     useEffect(() => {
@@ -63,7 +72,7 @@ const FlipItGameContent: React.FC = () => {
         setShowResult(false);
 
         try {
-            // Step 1: Place bet
+            // Step 1: Place bet on-chain
             const bet = await executeGameAction(async () => {
                 return await placeBet(amount, side);
             });
@@ -75,16 +84,44 @@ const FlipItGameContent: React.FC = () => {
             setBetResult(bet);
             setTxStatus('confirming');
 
-            // Step 2: Wait a moment for commitment to be mined
+            // Step 2: Record bet in database
+            try {
+                await recordBet.mutateAsync({
+                    gameType: 'FLIP_IT',
+                    betPda: bet.betPDA.toString(),
+                    transactionSignature: bet.signature,
+                    amount: amount * 1_000_000_000, // Convert to lamports
+                    playerChoice: side === 'HEADS' ? 0 : 1,
+                    commitmentHash: Buffer.from(bet.commitment).toString('hex'),
+                });
+            } catch (dbError) {
+                console.error('Failed to record bet in database:', dbError);
+                // Continue even if DB fails - bet is on-chain
+            }
+
+            // Step 3: Wait a moment for commitment to be mined
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Step 3: Reveal and resolve
+            // Step 4: Reveal and resolve on-chain
             const result = await executeGameAction(async () => {
                 return await reveal(bet.betPDA, side, bet.nonce);
             });
 
             if (!result) {
                 throw new Error('Failed to reveal bet');
+            }
+
+            // Step 5: Update bet in database with result
+            try {
+                await resolveBet.mutateAsync({
+                    betPda: bet.betPDA.toString(),
+                    outcome: result.outcome,
+                    playerWon: result.playerWon,
+                    payoutAmount: result.playerWon ? result.payout * 1_000_000_000 : 0,
+                    houseFee: amount * 1_000_000_000 * 0.01, // 1% house fee
+                });
+            } catch (dbError) {
+                console.error('Failed to update bet in database:', dbError);
             }
 
             setGameResult(result);
@@ -340,35 +377,49 @@ const FlipItGameContent: React.FC = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {/* Mock Recent Items */}
-                    {[
-                        { id: 1, type: 'win', amount: '+2.00', side: 'HEADS', user: '0x8a...4f2', time: 'Just now' },
-                        { id: 2, type: 'loss', amount: '-0.50', side: 'TAILS', user: '0xb2...9c1', time: '4s ago' },
-                        { id: 3, type: 'win', amount: '+10.5', side: 'HEADS', user: '0x33...a11', time: '12s ago' },
-                    ].map(item => (
-                        <div key={item.id} className="glass-panel rounded-xl p-4 flex items-center justify-between group hover:bg-white/5 transition-all">
-                            <div className="flex items-center gap-3">
-                                <div className={cn(
-                                    "size-10 rounded-lg flex items-center justify-center border",
-                                    item.type === 'win' ? "bg-primary/10 text-primary border-primary/20" : "bg-danger/10 text-danger border-danger/20"
-                                )}>
-                                    <span className="material-symbols-outlined text-sm">
-                                        {item.type === 'win' ? 'check_circle' : 'cancel'}
-                                    </span>
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-mono text-gray-500">{item.user}</span>
-                                    <span className="text-[11px] font-black text-white uppercase tracking-tighter">{item.side}</span>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className={cn("text-sm font-black tracking-tighter", item.type === 'win' ? "text-primary" : "text-gray-500")}>
-                                    {item.amount} SOL
-                                </div>
-                                <div className="text-[9px] font-bold text-gray-500 uppercase">{item.time}</div>
-                            </div>
+                    {/* Real Recent Bets from Database */}
+                    {isLoadingBets ? (
+                        <div className="flex items-center justify-center py-8">
+                            <div className="size-6 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
                         </div>
-                    ))}
+                    ) : recentBets && recentBets.length > 0 ? (
+                        recentBets.map((bet) => (
+                            <div key={bet.id} className="glass-panel rounded-xl p-4 flex items-center justify-between group hover:bg-white/5 transition-all">
+                                <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                        "size-10 rounded-lg flex items-center justify-center border",
+                                        bet.playerWon ? "bg-primary/10 text-primary border-primary/20" : "bg-danger/10 text-danger border-danger/20"
+                                    )}>
+                                        <span className="material-symbols-outlined text-sm">
+                                            {bet.playerWon ? 'check_circle' : 'cancel'}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-mono text-gray-500">
+                                            {shortenAddress(bet.player?.walletAddress || 'Unknown', 4)}
+                                        </span>
+                                        <span className="text-[11px] font-black text-white uppercase tracking-tighter">
+                                            {bet.outcome}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className={cn("text-sm font-black tracking-tighter", bet.playerWon ? "text-primary" : "text-gray-500")}>
+                                        {bet.playerWon ? '+' : '-'}{((bet.payoutAmount || bet.amount) / 1_000_000_000).toFixed(2)} SOL
+                                    </div>
+                                    <div className="text-[9px] font-bold text-gray-500 uppercase">
+                                        {bet.resolvedAt ? new Date(bet.resolvedAt).toLocaleTimeString() : 'Pending'}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            <span className="material-symbols-outlined text-4xl mb-2">casino</span>
+                            <p className="text-sm">No recent flips</p>
+                            <p className="text-xs mt-1">Be the first to play!</p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-4 border-t border-white/5">
