@@ -63,7 +63,31 @@ jobs:
       - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
-          echo "${{ secrets.WALLET_PRIVATE_KEY }}" > ~/.config/solana/id.json
+          
+          # Check if key is base58 (starts with letters/numbers, no brackets) or JSON array
+          KEY="${{ secrets.WALLET_PRIVATE_KEY }}"
+          if echo "$KEY" | grep -q '^\['; then
+            # Already JSON array format
+            echo "$KEY" > ~/.config/solana/id.json
+          else
+            # Convert base58 to JSON array using solana-keygen
+            # First create a temporary keypair from base58
+            echo "Converting base58 private key to Solana format..."
+            # Use Node.js to decode base58 and create proper JSON
+            node -e "
+              const bs58 = require('bs58');
+              const key = '$KEY';
+              try {
+                const decoded = bs58.decode(key);
+                const arr = Array.from(decoded);
+                console.log(JSON.stringify(arr));
+              } catch(e) {
+                // Maybe it's already an array format but as string
+                console.log(key);
+              }
+            " > ~/.config/solana/id.json 2>/dev/null || echo "$KEY" > ~/.config/solana/id.json
+          fi
+          
           solana config set --url ${{ github.event.inputs.network }}
           echo "Wallet configured:"
           solana address
