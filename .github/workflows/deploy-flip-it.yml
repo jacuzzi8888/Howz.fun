@@ -45,22 +45,12 @@ jobs:
             ls -la solana-release/bin/
           fi
           
-          # Copy all binaries
-          mkdir -p ~/.local/share/solana/bin
-          
-          # Use rsync or explicit file copy
-          if [ -d "solana-release/bin" ]; then
-            # Copy only files, skip directories
-            for file in solana-release/bin/*; do
-              if [ -f "$file" ]; then
-                cp "$file" ~/.local/share/solana/bin/
-                echo "Copied: $file"
-              fi
-            done
-          fi
+          # Copy entire solana-release to local share
+          mkdir -p ~/.local/share/solana
+          cp -r solana-release/* ~/.local/share/solana/
           
           # Make sure binaries are executable
-          chmod +x ~/.local/share/solana/bin/*
+          chmod +x ~/.local/share/solana/bin/* 2>/dev/null || true
           
           echo "Installed binaries:"
           ls -la ~/.local/share/solana/bin/

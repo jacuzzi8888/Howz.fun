@@ -2,6 +2,9 @@
 seeds = false
 skip-lint = false
 
+[toolchain]
+anchor_version = "0.30.1"
+
 [programs.localnet]
 flip_it = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 
