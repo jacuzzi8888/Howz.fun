@@ -37,21 +37,30 @@ jobs:
           tar -xjf solana-release.tar.bz2
           
           # Check what was extracted
-          echo "Extracted contents:"
-          ls -la
+          echo "Extracted solana-release contents:"
+          ls -la solana-release/
           
-          # Copy all binaries (files only, not directories)
-          mkdir -p ~/.local/share/solana/bin
           if [ -d "solana-release/bin" ]; then
-            # Copy only executable files from bin directory
-            find solana-release/bin -maxdepth 1 -type f -exec cp {} ~/.local/share/solana/bin/ \;
-          else
-            # Look for any bin directory in extracted folders
-            find . -name "bin" -type d -exec find {} -maxdepth 1 -type f -exec cp {} ~/.local/share/solana/bin/ \; \;
+            echo "Contents of solana-release/bin:"
+            ls -la solana-release/bin/
+          fi
+          
+          # Copy all binaries
+          mkdir -p ~/.local/share/solana/bin
+          
+          # Use rsync or explicit file copy
+          if [ -d "solana-release/bin" ]; then
+            # Copy only files, skip directories
+            for file in solana-release/bin/*; do
+              if [ -f "$file" ]; then
+                cp "$file" ~/.local/share/solana/bin/
+                echo "Copied: $file"
+              fi
+            done
           fi
           
           # Make sure binaries are executable
-          chmod +x ~/.local/share/solana/bin/* 2>/dev/null || true
+          chmod +x ~/.local/share/solana/bin/*
           
           echo "Installed binaries:"
           ls -la ~/.local/share/solana/bin/
