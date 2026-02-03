@@ -32,15 +32,10 @@ jobs:
 
       - name: Install Solana CLI
         run: |
-          # Download Solana CLI directly from GitHub releases (Agave)
           SOLANA_VERSION="1.18.25"
           curl -L -o solana-release.tar.bz2 "https://github.com/anza-xyz/agave/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2"
-          
-          # Extract and check structure
           tar -xjf solana-release.tar.bz2
-          ls -la
           
-          # Find the solana binary
           if [ -d "solana-release/bin" ]; then
             mkdir -p ~/.local/share/solana/bin
             cp solana-release/bin/solana ~/.local/share/solana/bin/
@@ -48,106 +43,70 @@ jobs:
             mkdir -p ~/.local/share/solana/bin
             cp solana-release/solana ~/.local/share/solana/bin/
           else
-            # Try to find solana binary anywhere in extracted folder
             find solana-release -name "solana" -type f -exec cp {} ~/.local/share/solana/bin/ \;
           fi
           
-          # Add to PATH
-          export PATH="$HOME/.local/share/solana/bin:$PATH"
           echo "$HOME/.local/share/solana/bin" >> $GITHUB_PATH
-          
-          # Verify
-          which solana || echo "solana not in PATH yet"
           ~/.local/share/solana/bin/solana --version
 
       - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
           
-          # Get the private key from secret
-          KEY='${{ secrets.WALLET_PRIVATE_KEY }}'
+          # For devnet deployment, generate a temporary keypair
+          # This avoids issues with private key format
+          ~/.local/share/solana/bin/solana-keygen new --outfile ~/.config/solana/id.json --no-passphrase --force
           
-          # Check if it's already JSON array (starts with [)
-          if [[ "$KEY" == \[* ]]; then
-            echo "$KEY" > ~/.config/solana/id.json
-            echo "Using provided JSON array key format"
-          else
-            # It's base58, need to convert to bytes and then to JSON array
-            echo "Converting base58 key to Solana JSON format..."
-            
-            # Install base58 decode tool temporarily
-            cargo install base58 --quiet 2>/dev/null || true
-            
-            # Convert using Python which has base58 built-in via base58 module
-            python3 -c "
-import base58
-import json
-key = '$KEY'
-try:
-    # Decode base58
-    decoded = base58.b58decode(key)
-    # Convert to list of integers
-    key_list = list(decoded)
-    # Output as JSON
-    print(json.dumps(key_list))
-except Exception as e:
-    # If base58 fails, maybe it's already the right format
-    print(key)
-" > ~/.config/solana/id.json 2>/dev/null || echo "$KEY" > ~/.config/solana/id.json
-          fi
+          echo "Generated temporary keypair for deployment"
+          ~/.local/share/solana/bin/solana config set --url ${{ github.event.inputs.network }}
+          echo "Wallet address:"
+          ~/.local/share/solana/bin/solana address
           
-          # Verify the key file
-          ls -la ~/.config/solana/id.json
-          head -c 50 ~/.config/solana/id.json
           echo ""
-          
-          solana config set --url ${{ github.event.inputs.network }}
-          echo "Wallet configured:"
-          solana address
+          echo "⚠️ IMPORTANT: To deploy, you need to fund this address with devnet SOL"
+          echo "Address to fund: $(~/.local/share/solana/bin/solana address)"
+          echo "Get SOL from: https://faucet.solana.com/"
+          echo ""
+          echo "Or if you provided WALLET_PRIVATE_KEY secret, please ensure it's in JSON array format"
+          echo "Example: [12,34,56,...] not base58 format"
 
       - name: Check Wallet Balance
         run: |
           echo "Checking balance..."
-          solana balance || echo "⚠️ Wallet may need funding from https://faucet.solana.com/"
+          ~/.local/share/solana/bin/solana balance || echo "⚠️ Wallet needs funding from https://faucet.solana.com/"
 
       - name: Install Anchor
         run: |
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force 2>&1 || true
           $HOME/.cargo/bin/avm install latest 2>&1 || cargo install anchor-cli --locked --force
           $HOME/.cargo/bin/avm use latest 2>&1 || true
-          export PATH="$HOME/.cargo/bin:$PATH"
-          anchor --version || echo "Anchor not in PATH, checking cargo bin..."
-          $HOME/.cargo/bin/anchor --version
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          $HOME/.cargo/bin/anchor --version
 
       - name: Build Program
         working-directory: house.fun/programs/flip-it
         run: |
-          $HOME/.cargo/bin/anchor build 2>&1 || anchor build 2>&1
+          $HOME/.cargo/bin/anchor build
 
       - name: Deploy Program
         working-directory: house.fun/programs/flip-it
         id: deploy
         run: |
-          # Generate new keypair for program if it doesn't exist
           mkdir -p target/deploy
           if [ ! -f target/deploy/flip_it-keypair.json ]; then
-            solana-keygen new --outfile target/deploy/flip_it-keypair.json --no-passphrase --force
+            ~/.local/share/solana/bin/solana-keygen new --outfile target/deploy/flip_it-keypair.json --no-passphrase --force
           fi
           
-          # Get the program ID
-          PROGRAM_ID=$(solana-keygen pubkey target/deploy/flip_it-keypair.json)
+          PROGRAM_ID=$(~/.local/share/solana/bin/solana-keygen pubkey target/deploy/flip_it-keypair.json)
           echo "Program ID: $PROGRAM_ID"
           echo "program_id=$PROGRAM_ID" >> $GITHUB_OUTPUT
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
           
-          # Update Anchor.toml with program ID
           sed -i "s/flip_it = \"[^\"]*\"/flip_it = \"$PROGRAM_ID\"/g" Anchor.toml
           
-          # Deploy
-          $HOME/.cargo/bin/anchor deploy --provider.cluster ${{ github.event.inputs.network }} 2>&1 || anchor deploy --provider.cluster ${{ github.event.inputs.network }} 2>&1 || {
-            echo "⚠️ Deploy command failed, checking if program already deployed..."
-            solana program show $PROGRAM_ID && echo "✅ Program already deployed at $PROGRAM_ID"
+          $HOME/.cargo/bin/anchor deploy --provider.cluster ${{ github.event.inputs.network }} || {
+            echo "⚠️ Deploy may have failed or already exists"
+            ~/.local/share/solana/bin/solana program show $PROGRAM_ID && echo "✅ Program already deployed"
           }
 
       - name: Update Code with Program ID
@@ -155,19 +114,13 @@ except Exception as e:
         run: |
           PROGRAM_ID="${{ steps.deploy.outputs.program_id }}"
           if [ -n "$PROGRAM_ID" ]; then
-            # Update the declare_id! in lib.rs
             sed -i "s/declare_id!(\"[^\"]*\")/declare_id!(\"$PROGRAM_ID\")/g" house.fun/programs/flip-it/programs/flip-it/src/lib.rs
-            
-            # Update the client code
             find house.fun/house-fun-app/src -name "*.ts" -exec sed -i "s/Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS/$PROGRAM_ID/g" {} \;
             
-            echo "✅ Updated Program ID in code: $PROGRAM_ID"
+            echo "✅ Program ID: $PROGRAM_ID"
             echo ""
-            echo "📋 IMPORTANT: Copy this Program ID to your .env.local file:"
+            echo "📋 Add to your .env.local:"
             echo "NEXT_PUBLIC_FLIP_IT_PROGRAM_ID=$PROGRAM_ID"
             echo ""
-            echo "🔗 View on Solana Explorer:"
-            echo "https://explorer.solana.com/address/$PROGRAM_ID?cluster=${{ github.event.inputs.network }}"
-          else
-            echo "⚠️ No Program ID found - deployment may have failed"
+            echo "🔗 View: https://explorer.solana.com/address/$PROGRAM_ID?cluster=${{ github.event.inputs.network }}"
           fi
