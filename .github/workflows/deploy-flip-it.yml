@@ -32,10 +32,25 @@ jobs:
 
       - name: Install Solana CLI
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          # Download Solana CLI directly from GitHub releases (Agave)
+          SOLANA_VERSION="1.18.25"
+          curl -L -o solana-release.tar.bz2 "https://github.com/anza-xyz/agave/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" || \
+          curl -L -o solana-release.tar.bz2 "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2"
+          
+          # Extract
+          tar -xjf solana-release.tar.bz2
+          
+          # Move to local bin
+          mkdir -p ~/.local/share/solana
+          mv solana-release/bin/* ~/.local/share/solana/ 2>/dev/null || mv solana-release/* ~/.local/share/solana/ 2>/dev/null || cp -r solana-release/* ~/.local/share/solana/
+          
+          # Add to PATH
+          export PATH="$HOME/.local/share/solana/bin:$PATH"
+          echo "$HOME/.local/share/solana/bin" >> $GITHUB_PATH
+          
+          # Verify
+          which solana
           solana --version
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Setup Solana Wallet
         run: |
