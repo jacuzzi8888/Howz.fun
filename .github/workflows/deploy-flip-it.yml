@@ -64,29 +64,42 @@ jobs:
         run: |
           mkdir -p ~/.config/solana
           
-          # Check if key is base58 (starts with letters/numbers, no brackets) or JSON array
-          KEY="${{ secrets.WALLET_PRIVATE_KEY }}"
-          if echo "$KEY" | grep -q '^\['; then
-            # Already JSON array format
+          # Get the private key from secret
+          KEY='${{ secrets.WALLET_PRIVATE_KEY }}'
+          
+          # Check if it's already JSON array (starts with [)
+          if [[ "$KEY" == \[* ]]; then
             echo "$KEY" > ~/.config/solana/id.json
+            echo "Using provided JSON array key format"
           else
-            # Convert base58 to JSON array using solana-keygen
-            # First create a temporary keypair from base58
-            echo "Converting base58 private key to Solana format..."
-            # Use Node.js to decode base58 and create proper JSON
-            node -e "
-              const bs58 = require('bs58');
-              const key = '$KEY';
-              try {
-                const decoded = bs58.decode(key);
-                const arr = Array.from(decoded);
-                console.log(JSON.stringify(arr));
-              } catch(e) {
-                // Maybe it's already an array format but as string
-                console.log(key);
-              }
-            " > ~/.config/solana/id.json 2>/dev/null || echo "$KEY" > ~/.config/solana/id.json
+            # It's base58, need to convert to bytes and then to JSON array
+            echo "Converting base58 key to Solana JSON format..."
+            
+            # Install base58 decode tool temporarily
+            cargo install base58 --quiet 2>/dev/null || true
+            
+            # Convert using Python which has base58 built-in via base58 module
+            python3 -c "
+import base58
+import json
+key = '$KEY'
+try:
+    # Decode base58
+    decoded = base58.b58decode(key)
+    # Convert to list of integers
+    key_list = list(decoded)
+    # Output as JSON
+    print(json.dumps(key_list))
+except Exception as e:
+    # If base58 fails, maybe it's already the right format
+    print(key)
+" > ~/.config/solana/id.json 2>/dev/null || echo "$KEY" > ~/.config/solana/id.json
           fi
+          
+          # Verify the key file
+          ls -la ~/.config/solana/id.json
+          head -c 50 ~/.config/solana/id.json
+          echo ""
           
           solana config set --url ${{ github.event.inputs.network }}
           echo "Wallet configured:"
