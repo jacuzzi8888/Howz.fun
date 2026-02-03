@@ -40,17 +40,18 @@ jobs:
           echo "Extracted contents:"
           ls -la
           
-          # Copy all binaries
+          # Copy all binaries (files only, not directories)
           mkdir -p ~/.local/share/solana/bin
           if [ -d "solana-release/bin" ]; then
-            cp solana-release/bin/* ~/.local/share/solana/bin/
+            # Copy only executable files from bin directory
+            find solana-release/bin -maxdepth 1 -type f -exec cp {} ~/.local/share/solana/bin/ \;
           else
             # Look for any bin directory in extracted folders
-            find . -name "bin" -type d -exec cp -r {}/* ~/.local/share/solana/bin/ \;
+            find . -name "bin" -type d -exec find {} -maxdepth 1 -type f -exec cp {} ~/.local/share/solana/bin/ \; \;
           fi
           
           # Make sure binaries are executable
-          chmod +x ~/.local/share/solana/bin/*
+          chmod +x ~/.local/share/solana/bin/* 2>/dev/null || true
           
           echo "Installed binaries:"
           ls -la ~/.local/share/solana/bin/
