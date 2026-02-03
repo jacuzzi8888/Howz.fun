@@ -182,7 +182,7 @@ export const gameRouter = createTRPCRouter({
             ? sql`${players.totalLost}` 
             : sql`${players.totalLost} + ${bet.amount}`,
           netProfit: sql`${players.netProfit} + ${netProfit}`,
-          favoriteGame: bet.game?.type || null,
+          favoriteGame: bet.game?.type ?? null,
         }).where(eq(players.id, bet.playerId));
       }
 
@@ -216,9 +216,9 @@ export const gameRouter = createTRPCRouter({
       };
     }
 
-    const totalBets = player.totalBets || 0;
-    const totalLost = player.totalLost || 0;
-    const totalWagered = player.totalWagered || 0;
+    const totalBets = player.totalBets ?? 0;
+    const totalLost = player.totalLost ?? 0;
+    const totalWagered = player.totalWagered ?? 0;
     
     const winRate = totalBets > 0 
       ? (totalBets - Math.floor(totalLost / (totalWagered / totalBets))) / totalBets * 100 

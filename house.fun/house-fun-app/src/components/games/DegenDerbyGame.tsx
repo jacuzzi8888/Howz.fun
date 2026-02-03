@@ -17,14 +17,14 @@ const MIN_BET = 0.001;
 const MAX_BET = 100;
 
 const MOCK_HORSES: Horse[] = [
-  { name: "Pepe Pride", odds: 320 }, // 3.2x
-  { name: "Doge Dust", odds: 550 },
-  { name: "Diamond Hands", odds: 480 },
-  { name: "Bonk Blazer", odds: 850 },
-  { name: "Solana Speed", odds: 700 },
-  { name: "Hodl Horse", odds: 1500 },
-  { name: "Wif Hat", odds: 1200 },
-  { name: "Moon Shot", odds: 2500 },
+  { name: "Pepe Pride", oddsNumerator: 32, oddsDenominator: 10 }, // 3.2x
+  { name: "Doge Dust", oddsNumerator: 55, oddsDenominator: 10 },
+  { name: "Diamond Hands", oddsNumerator: 48, oddsDenominator: 10 },
+  { name: "Bonk Blazer", oddsNumerator: 85, oddsDenominator: 10 },
+  { name: "Solana Speed", oddsNumerator: 70, oddsDenominator: 10 },
+  { name: "Hodl Horse", oddsNumerator: 150, oddsDenominator: 10 },
+  { name: "Wif Hat", oddsNumerator: 120, oddsDenominator: 10 },
+  { name: "Moon Shot", oddsNumerator: 250, oddsDenominator: 10 },
 ];
 
 export const DegenDerbyGame: React.FC = () => {
@@ -55,10 +55,16 @@ const DegenDerbyGameContent: React.FC = () => {
   // Mock race data - in production fetch from database
   useEffect(() => {
     setCurrentRace({
+      index: 1,
       horses: MOCK_HORSES,
       totalBets: [500, 300, 400, 200, 350, 100, 150, 50].map(v => v * LAMPORTS_PER_SOL),
       playerCounts: [12, 8, 10, 5, 9, 3, 4, 2],
       status: 'Open',
+      winner: null,
+      houseFee: 0.01,
+      createdAt: Date.now(),
+      startedAt: null,
+      resolvedAt: null,
     });
   }, []);
 
@@ -160,7 +166,7 @@ const DegenDerbyGameContent: React.FC = () => {
     if (!currentRace) return 2.0;
     const totalPool = currentRace.totalBets.reduce((a, b) => a + b, 0);
     const horsePool = currentRace.totalBets[horseIndex];
-    if (horsePool === 0) return 5.0; // Default for unbet horses
+    if (!horsePool || horsePool === 0) return 5.0; // Default for unbet horses
     return (totalPool / horsePool) * 0.99; // 1% house fee
   };
 

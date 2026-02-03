@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type FlipIt, IDL } from './idl';
 
 // Program ID from deployment
@@ -8,13 +8,20 @@ export const PROGRAM_ID = new web3.PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg
 export const HOUSE_SEED = Buffer.from('house');
 export const BET_SEED = Buffer.from('bet');
 
+// Minimal wallet interface for provider
+interface WalletAdapter {
+  publicKey: web3.PublicKey | null;
+  signTransaction: ((tx: web3.Transaction) => Promise<web3.Transaction>) | undefined;
+  signAllTransactions?: (txs: web3.Transaction[]) => Promise<web3.Transaction[]>;
+}
+
 /**
  * Create Anchor Provider from wallet connection
  */
-export function createProvider(connection: web3.Connection, wallet: any): AnchorProvider {
+export function createProvider(connection: web3.Connection, wallet: WalletAdapter): AnchorProvider {
   return new AnchorProvider(
     connection,
-    wallet,
+    wallet as Wallet,
     AnchorProvider.defaultOptions()
   );
 }
@@ -96,15 +103,31 @@ export const FlipItErrors: Record<number, string> = {
   6009: 'Insufficient treasury balance',
 };
 
+interface FlipItProgramError {
+  code?: number;
+  message?: string;
+}
+
+function isProgramError(err: unknown): err is FlipItProgramError {
+  return typeof err === 'object' && err !== null;
+}
+
 /**
  * Parse Flip It program error
  */
-export function parseFlipItError(error: any): string {
-  if (error?.code && FlipItErrors[error.code]) {
-    return FlipItErrors[error.code]!;
+export function parseFlipItError(error: unknown): string {
+  if (!isProgramError(error)) {
+    return 'Unknown error occurred';
   }
   
-  if (error?.message) {
+  if (error.code) {
+    const errorMsg = FlipItErrors[error.code];
+    if (errorMsg) {
+      return errorMsg;
+    }
+  }
+  
+  if (error.message) {
     return error.message;
   }
   

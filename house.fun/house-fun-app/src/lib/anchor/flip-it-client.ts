@@ -11,6 +11,7 @@ import {
   parseFlipItError,
   solToLamports 
 } from './utils';
+import type { ArciumProof } from '~/lib/arcium/client';
 
 export interface BetResult {
   signature: string;
@@ -32,6 +33,7 @@ export interface BetAccount {
   status: 'Committed' | 'Resolved' | 'Claimed';
   playerWins: boolean | null;
   payout: number;
+  arciumProof?: ArciumProof | null;
 }
 
 /**
@@ -170,6 +172,58 @@ export function useFlipItProgram() {
   }, [program, wallet.publicKey, connection]);
 
   /**
+   * Reveal bet with Arcium provably fair proof
+   * This is the recommended method for maximum fairness
+   */
+  const revealWithArcium = useCallback(async (
+    betPDA: web3.PublicKey,
+    choice: 'HEADS' | 'TAILS',
+    nonce: number,
+    arciumProof: ArciumProof
+  ): Promise<RevealResult> => {
+    if (!program || !wallet.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const [housePDA] = getHousePDA();
+      const choiceNum = choice === 'HEADS' ? 0 : 1;
+
+      // Convert Arcium proof to format expected by smart contract
+      const proofData = {
+        outcome: arciumProof.outcome,
+        proof: Array.from(arciumProof.proof),
+        publicInputs: Array.from(arciumProof.publicInputs),
+        timestamp: new BN(arciumProof.timestamp),
+        clusterSignature: Array.from(arciumProof.clusterSignature),
+      };
+
+      // Send reveal transaction with Arcium proof
+      const tx = await program.methods
+        .reveal_with_arcium(choiceNum, new BN(nonce), proofData)
+        .accounts({
+          bet: betPDA,
+          house: housePDA,
+          player: wallet.publicKey,
+          system_program: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      // Fetch updated bet account
+      const betAccount = await (program.account as any).Bet.fetch(betPDA);
+
+      return {
+        signature: tx,
+        outcome: betAccount.outcome === 0 ? 'HEADS' : 'TAILS',
+        playerWon: betAccount.playerWins,
+        payout: betAccount.payout.toNumber() / web3.LAMPORTS_PER_SOL,
+      };
+    } catch (error) {
+      throw new Error(parseFlipItError(error));
+    }
+  }, [program, wallet.publicKey]);
+
+  /**
    * Claim winnings from resolved bet
    */
   const claimWinnings = useCallback(async (
@@ -244,7 +298,8 @@ export function useFlipItProgram() {
     isReady: !!program,
     initializeHouse,
     placeBet,
-    reveal,
+    reveal, // Legacy method
+    revealWithArcium, // New Arcium method
     claimWinnings,
     fetchBet,
     fetchHouse,

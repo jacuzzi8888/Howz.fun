@@ -121,6 +121,7 @@ export function useShadowPokerProgram() {
    * Initialize house (admin only)
    */
   const initializeHouse = useCallback(async (): Promise<string> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -128,7 +129,7 @@ export function useShadowPokerProgram() {
     try {
       const [housePDA] = getShadowPokerHousePDA();
       
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .initialize_house()
         .accounts({
           house: housePDA,
@@ -141,6 +142,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
   }, [program, wallet.publicKey]);
 
   /**
@@ -149,6 +151,7 @@ export function useShadowPokerProgram() {
   const createTable = useCallback(async (
     config: TableConfig
   ): Promise<CreateTableResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -159,7 +162,7 @@ export function useShadowPokerProgram() {
       const tableIndex = houseAccount ? houseAccount.totalTables.toNumber() : 0;
       const [tablePDA] = getTablePDA(tableIndex);
       
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .create_table(
           new BN(solToLamports(config.minBuyIn)),
           new BN(solToLamports(config.maxBuyIn)),
@@ -183,6 +186,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
   }, [program, wallet.publicKey]);
 
   /**
@@ -192,6 +196,7 @@ export function useShadowPokerProgram() {
     tablePDA: web3.PublicKey,
     buyIn: number
   ): Promise<JoinTableResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -201,7 +206,7 @@ export function useShadowPokerProgram() {
       
       const lamports = solToLamports(buyIn);
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .join_table(new BN(lamports))
         .accounts({
           player_state: playerStatePDA,
@@ -220,6 +225,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
@@ -228,6 +234,7 @@ export function useShadowPokerProgram() {
   const startHand = useCallback(async (
     tablePDA: web3.PublicKey
   ): Promise<StartHandResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -235,7 +242,7 @@ export function useShadowPokerProgram() {
     try {
       const [housePDA] = getShadowPokerHousePDA();
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .start_hand()
         .accounts({
           table: tablePDA,
@@ -252,6 +259,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
@@ -262,12 +270,13 @@ export function useShadowPokerProgram() {
     playerStatePDA: web3.PublicKey,
     blindType: BlindType
   ): Promise<string> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
 
     try {
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .post_blind({ [blindType.toLowerCase()]: {} })
         .accounts({
           player_state: playerStatePDA,
@@ -281,6 +290,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
@@ -290,8 +300,9 @@ export function useShadowPokerProgram() {
     tablePDA: web3.PublicKey,
     playerStatePDA: web3.PublicKey,
     action: PlayerAction,
-    amount: number = 0
+    amount = 0
   ): Promise<PlayerActionResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -300,7 +311,7 @@ export function useShadowPokerProgram() {
       const actionArg = { [action.toLowerCase()]: {} };
       const lamports = solToLamports(amount);
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .player_action(actionArg, new BN(lamports))
         .accounts({
           player_state: playerStatePDA,
@@ -319,6 +330,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
@@ -328,12 +340,13 @@ export function useShadowPokerProgram() {
     tablePDA: web3.PublicKey,
     cards: Card[]
   ): Promise<RevealCardsResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
 
     try {
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .reveal_cards(cards)
         .accounts({
           table: tablePDA,
@@ -350,6 +363,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
@@ -359,6 +373,7 @@ export function useShadowPokerProgram() {
     tablePDA: web3.PublicKey,
     winnerIndex: number
   ): Promise<ShowdownResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -366,7 +381,7 @@ export function useShadowPokerProgram() {
     try {
       const [housePDA] = getShadowPokerHousePDA();
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .showdown(winnerIndex)
         .accounts({
           table: tablePDA,
@@ -388,6 +403,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
   }, [program, wallet.publicKey]);
 
   /**
@@ -397,6 +413,7 @@ export function useShadowPokerProgram() {
     tablePDA: web3.PublicKey,
     playerStatePDA: web3.PublicKey
   ): Promise<LeaveTableResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -406,7 +423,7 @@ export function useShadowPokerProgram() {
       const playerState = await (program.account as any).PlayerState.fetch(playerStatePDA);
       const remainingStack = lamportsToSol(playerState.stack.toNumber());
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .leave_table()
         .accounts({
           player_state: playerStatePDA,
@@ -424,6 +441,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
   }, [program, wallet.publicKey]);
 
   /**
@@ -432,6 +450,7 @@ export function useShadowPokerProgram() {
   const withdrawTreasury = useCallback(async (
     amount: number
   ): Promise<string> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -440,7 +459,7 @@ export function useShadowPokerProgram() {
       const [housePDA] = getShadowPokerHousePDA();
       const lamports = solToLamports(amount);
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .withdraw_treasury(new BN(lamports))
         .accounts({
           house: housePDA,
@@ -453,6 +472,7 @@ export function useShadowPokerProgram() {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
@@ -463,6 +483,7 @@ export function useShadowPokerProgram() {
   ): Promise<PlayerStateAccount | null> => {
     if (!program) return null;
 
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     try {
       const state = await (program.account as any).PlayerState.fetch(playerStatePDA);
       
@@ -477,6 +498,7 @@ export function useShadowPokerProgram() {
         holeCards: state.holeCards.map((c: Card) => cardToDisplay(c)),
         position: state.position,
       };
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     } catch {
       return null;
     }
@@ -490,6 +512,7 @@ export function useShadowPokerProgram() {
   ): Promise<TableAccount | null> => {
     if (!program) return null;
 
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     try {
       const table = await (program.account as any).Table.fetch(tablePDA);
       
@@ -511,6 +534,7 @@ export function useShadowPokerProgram() {
         currentBet: lamportsToSol(table.currentBet.toNumber()),
         createdAt: table.createdAt.toNumber(),
       };
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     } catch {
       return null;
     }
@@ -522,6 +546,7 @@ export function useShadowPokerProgram() {
   const fetchHouse = useCallback(async (): Promise<ShadowPokerHouseAccount | null> => {
     if (!program) return null;
 
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     try {
       const [housePDA] = getShadowPokerHousePDA();
       const house = await (program.account as any).ShadowPokerHouse.fetch(housePDA);
@@ -533,6 +558,7 @@ export function useShadowPokerProgram() {
         totalVolume: lamportsToSol(house.totalVolume.toNumber()),
         houseFeeBps: house.houseFeeBps,
       };
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
     } catch {
       return null;
     }
@@ -577,7 +603,7 @@ export function useShadowPokerProgram() {
       const table = await fetchTable(tablePDA);
       const playerState = await fetchPlayerState(playerStatePDA);
       
-      if (!table || !playerState || !playerState.isActive) return [];
+      if (!table || !playerState?.isActive) return [];
       
       const actions: PlayerAction[] = ['Fold'];
       

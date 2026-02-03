@@ -41,8 +41,10 @@ export function createProvider(connection: web3.Connection, wallet: any): Anchor
 /**
  * Create Degen Derby program instance
  */
-export function createDegenDerbyProgram(provider: AnchorProvider): Program<DegenDerby> {
-  return new Program(DEGEN_DERBY_IDL, provider);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createDegenDerbyProgram(provider: AnchorProvider): Program<any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new Program(DEGEN_DERBY_IDL as any, provider);
 }
 
 /**
@@ -209,39 +211,66 @@ export const DegenDerbyErrors: Record<number, string> = {
   6016: 'Race has not started yet',
 };
 
+interface ProgramError {
+  code?: number;
+  message?: string;
+  error?: {
+    errorCode?: {
+      code?: string;
+    };
+  };
+}
+
 /**
  * Parse Degen Derby program error
  */
-export function parseDegenDerbyError(error: any): string {
+export function parseDegenDerbyError(error: unknown): string {
+  // Type guard to safely access error properties
+  const isProgramError = (err: unknown): err is ProgramError => {
+    return typeof err === 'object' && err !== null;
+  };
+  
+  if (!isProgramError(error)) {
+    return 'Unknown error occurred';
+  }
+  
   // Check for program error codes
-  if (error?.code && DegenDerbyErrors[error.code]) {
-    return DegenDerbyErrors[error.code]!;
+  if (error.code) {
+    const errorMsg = DegenDerbyErrors[error.code];
+    if (errorMsg) {
+      return errorMsg;
+    }
   }
   
   // Check for error message containing code
-  const codeMatch = error?.message?.match(/custom program error: (0x[0-9a-fA-F]+|\d+)/);
-  if (codeMatch) {
-    const code = parseInt(codeMatch[1], codeMatch[1].startsWith('0x') ? 16 : 10);
-    if (DegenDerbyErrors[code]) {
-      return DegenDerbyErrors[code];
+  const codeMatch = error.message?.match(/custom program error: (0x[0-9a-fA-F]+|\d+)/);
+  if (codeMatch?.[1]) {
+    const matchedCode = codeMatch[1];
+    const code = parseInt(matchedCode, matchedCode.startsWith('0x') ? 16 : 10);
+    const errorMsg = DegenDerbyErrors[code];
+    if (errorMsg) {
+      return errorMsg;
     }
   }
   
   // Check for Anchor error format
-  if (error?.error?.errorCode?.code) {
+  if (error.error?.errorCode?.code) {
     const anchorCode = error.error.errorCode.code;
     const numericCode = Object.keys(DegenDerbyErrors).find(
       key => {
-        const errorMsg = DegenDerbyErrors[parseInt(key)];
-        return errorMsg?.includes(anchorCode);
+        const msg = DegenDerbyErrors[parseInt(key)];
+        return msg?.includes(anchorCode);
       }
     );
     if (numericCode) {
-      return DegenDerbyErrors[parseInt(numericCode)]!;
+      const errorMsg = DegenDerbyErrors[parseInt(numericCode)];
+      if (errorMsg) {
+        return errorMsg;
+      }
     }
   }
   
-  if (error?.message) {
+  if (error.message) {
     return error.message;
   }
   

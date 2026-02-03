@@ -54,7 +54,6 @@ export const Header: React.FC = () => {
             <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0A0A0F]/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
-                    <div className="flex items-center justify-between h-20">
                         {/* Left Section: Logo + Navigation */}
                         <div className="flex items-center gap-6">
                             <Link href="/" className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">

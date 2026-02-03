@@ -16,6 +16,9 @@ import {
   type HorseData
 } from './degen-derby-utils';
 
+// Re-export types for consumers
+export type { RaceStatus, Horse, HorseData };
+
 export interface BetResult {
   signature: string;
   playerBetPDA: web3.PublicKey;
@@ -101,7 +104,7 @@ export function useDegenDerbyProgram() {
     try {
       const [housePDA] = getDegenDerbyHousePDA();
       
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .initialize_house()
         .accounts({
           house: housePDA,
@@ -132,7 +135,7 @@ export function useDegenDerbyProgram() {
       const raceIndex = houseAccount ? houseAccount.totalRaces.toNumber() : 0;
       const [racePDA] = getRacePDA(raceIndex);
       
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .create_race(horses)
         .accounts({
           race: racePDA,
@@ -171,7 +174,7 @@ export function useDegenDerbyProgram() {
       
       const lamports = solToLamports(amount);
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .place_bet(new BN(lamports), horseIndex)
         .accounts({
           player_bet: playerBetPDA,
@@ -207,7 +210,7 @@ export function useDegenDerbyProgram() {
     try {
       const [housePDA] = getDegenDerbyHousePDA();
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .start_race()
         .accounts({
           race: racePDA,
@@ -243,7 +246,7 @@ export function useDegenDerbyProgram() {
       const { blockhash } = await connection.getLatestBlockhash();
       const recentBlockhashAccount = new web3.PublicKey('SysvarRecentB1ockHashes11111111111111111111');
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .resolve_race()
         .accounts({
           race: racePDA,
@@ -281,7 +284,7 @@ export function useDegenDerbyProgram() {
     try {
       const [housePDA] = getDegenDerbyHousePDA();
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .claim_winnings()
         .accounts({
           player_bet: playerBetPDA,
@@ -318,7 +321,7 @@ export function useDegenDerbyProgram() {
     try {
       const [housePDA] = getDegenDerbyHousePDA();
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .cancel_race()
         .accounts({
           race: racePDA,
@@ -348,7 +351,7 @@ export function useDegenDerbyProgram() {
     try {
       const [housePDA] = getDegenDerbyHousePDA();
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .refund_bet()
         .accounts({
           player_bet: playerBetPDA,
@@ -379,7 +382,7 @@ export function useDegenDerbyProgram() {
       const [housePDA] = getDegenDerbyHousePDA();
       const lamports = solToLamports(amount);
 
-      const tx = await program.methods
+      const tx = await (program as any).methods
         .withdraw_treasury(new BN(lamports))
         .accounts({
           house: housePDA,

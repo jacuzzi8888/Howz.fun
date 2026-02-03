@@ -1,0 +1,1183 @@
+{
+  "id": "8e6a77db-dc8e-4c1d-a052-879a996efa21",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.house-fun-app_bet": {
+      "name": "house-fun-app_bet",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_bet_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "betPda": {
+          "name": "betPda",
+          "type": "varchar(44)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transactionSignature": {
+          "name": "transactionSignature",
+          "type": "varchar(88)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "playerId": {
+          "name": "playerId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gameId": {
+          "name": "gameId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "bet_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING'"
+        },
+        "playerChoice": {
+          "name": "playerChoice",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commitmentHash": {
+          "name": "commitmentHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nonce": {
+          "name": "nonce",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "outcome",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "playerWon": {
+          "name": "playerWon",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payoutAmount": {
+          "name": "payoutAmount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "houseFee": {
+          "name": "houseFee",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placedAt": {
+          "name": "placedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "committedAt": {
+          "name": "committedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolvedAt": {
+          "name": "resolvedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "claimedAt": {
+          "name": "claimedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "commitSlot": {
+          "name": "commitSlot",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolveSlot": {
+          "name": "resolveSlot",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "bet_pda_idx": {
+          "name": "bet_pda_idx",
+          "columns": [
+            {
+              "expression": "betPda",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bet_player_idx": {
+          "name": "bet_player_idx",
+          "columns": [
+            {
+              "expression": "playerId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bet_game_idx": {
+          "name": "bet_game_idx",
+          "columns": [
+            {
+              "expression": "gameId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bet_status_idx": {
+          "name": "bet_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bet_placed_at_idx": {
+          "name": "bet_placed_at_idx",
+          "columns": [
+            {
+              "expression": "placedAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bet_tx_idx": {
+          "name": "bet_tx_idx",
+          "columns": [
+            {
+              "expression": "transactionSignature",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "house-fun-app_bet_playerId_house-fun-app_player_id_fk": {
+          "name": "house-fun-app_bet_playerId_house-fun-app_player_id_fk",
+          "tableFrom": "house-fun-app_bet",
+          "tableTo": "house-fun-app_player",
+          "columnsFrom": [
+            "playerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "house-fun-app_bet_gameId_house-fun-app_game_id_fk": {
+          "name": "house-fun-app_bet_gameId_house-fun-app_game_id_fk",
+          "tableFrom": "house-fun-app_bet",
+          "tableTo": "house-fun-app_game",
+          "columnsFrom": [
+            "gameId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "house-fun-app_bet_betPda_unique": {
+          "name": "house-fun-app_bet_betPda_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "betPda"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.house-fun-app_game_session": {
+      "name": "house-fun-app_game_session",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_game_session_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "gameId": {
+          "name": "gameId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sessionPda": {
+          "name": "sessionPda",
+          "type": "varchar(44)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'WAITING'"
+        },
+        "minPlayers": {
+          "name": "minPlayers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 2
+        },
+        "maxPlayers": {
+          "name": "maxPlayers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "entryFee": {
+          "name": "entryFee",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prizePool": {
+          "name": "prizePool",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "playerIds": {
+          "name": "playerIds",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "winnerId": {
+          "name": "winnerId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startedAt": {
+          "name": "startedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endedAt": {
+          "name": "endedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "session_game_idx": {
+          "name": "session_game_idx",
+          "columns": [
+            {
+              "expression": "gameId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "session_status_idx": {
+          "name": "session_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "session_pda_idx": {
+          "name": "session_pda_idx",
+          "columns": [
+            {
+              "expression": "sessionPda",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "house-fun-app_game_session_gameId_house-fun-app_game_id_fk": {
+          "name": "house-fun-app_game_session_gameId_house-fun-app_game_id_fk",
+          "tableFrom": "house-fun-app_game_session",
+          "tableTo": "house-fun-app_game",
+          "columnsFrom": [
+            "gameId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "house-fun-app_game_session_winnerId_house-fun-app_player_id_fk": {
+          "name": "house-fun-app_game_session_winnerId_house-fun-app_player_id_fk",
+          "tableFrom": "house-fun-app_game_session",
+          "tableTo": "house-fun-app_player",
+          "columnsFrom": [
+            "winnerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "house-fun-app_game_session_sessionPda_unique": {
+          "name": "house-fun-app_game_session_sessionPda_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "sessionPda"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.house-fun-app_game": {
+      "name": "house-fun-app_game",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_game_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "type": {
+          "name": "type",
+          "type": "game_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "minBet": {
+          "name": "minBet",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1000000
+        },
+        "maxBet": {
+          "name": "maxBet",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 100000000000
+        },
+        "houseEdgeBps": {
+          "name": "houseEdgeBps",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 100
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "totalBets": {
+          "name": "totalBets",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalVolume": {
+          "name": "totalVolume",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalHouseProfit": {
+          "name": "totalHouseProfit",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "programId": {
+          "name": "programId",
+          "type": "varchar(44)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "game_type_idx": {
+          "name": "game_type_idx",
+          "columns": [
+            {
+              "expression": "type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "game_active_idx": {
+          "name": "game_active_idx",
+          "columns": [
+            {
+              "expression": "isActive",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.house-fun-app_house_treasury": {
+      "name": "house-fun-app_house_treasury",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_house_treasury_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "housePda": {
+          "name": "housePda",
+          "type": "varchar(44)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalFeesCollected": {
+          "name": "totalFeesCollected",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalWithdrawn": {
+          "name": "totalWithdrawn",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "currentBalance": {
+          "name": "currentBalance",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalBetsProcessed": {
+          "name": "totalBetsProcessed",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalVolume": {
+          "name": "totalVolume",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "house-fun-app_house_treasury_housePda_unique": {
+          "name": "house-fun-app_house_treasury_housePda_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "housePda"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.house-fun-app_leaderboard": {
+      "name": "house-fun-app_leaderboard",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_leaderboard_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "playerId": {
+          "name": "playerId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalProfitRank": {
+          "name": "totalProfitRank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totalWageredRank": {
+          "name": "totalWageredRank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "winStreakRank": {
+          "name": "winStreakRank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gameStats": {
+          "name": "gameStats",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "house-fun-app_leaderboard_playerId_house-fun-app_player_id_fk": {
+          "name": "house-fun-app_leaderboard_playerId_house-fun-app_player_id_fk",
+          "tableFrom": "house-fun-app_leaderboard",
+          "tableTo": "house-fun-app_player",
+          "columnsFrom": [
+            "playerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "house-fun-app_leaderboard_playerId_unique": {
+          "name": "house-fun-app_leaderboard_playerId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "playerId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.house-fun-app_player": {
+      "name": "house-fun-app_player",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_player_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "walletAddress": {
+          "name": "walletAddress",
+          "type": "varchar(44)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totalBets": {
+          "name": "totalBets",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalWagered": {
+          "name": "totalWagered",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalWon": {
+          "name": "totalWon",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "totalLost": {
+          "name": "totalLost",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "netProfit": {
+          "name": "netProfit",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "favoriteGame": {
+          "name": "favoriteGame",
+          "type": "game_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lastLoginAt": {
+          "name": "lastLoginAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "wallet_address_idx": {
+          "name": "wallet_address_idx",
+          "columns": [
+            {
+              "expression": "walletAddress",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "username_idx": {
+          "name": "username_idx",
+          "columns": [
+            {
+              "expression": "username",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "house-fun-app_player_walletAddress_unique": {
+          "name": "house-fun-app_player_walletAddress_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "walletAddress"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.house-fun-app_post": {
+      "name": "house-fun-app_post",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_post_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "name_idx": {
+          "name": "name_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.house-fun-app_treasury_transaction": {
+      "name": "house-fun-app_treasury_transaction",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "house-fun-app_treasury_transaction_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "treasuryId": {
+          "name": "treasuryId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transactionSignature": {
+          "name": "transactionSignature",
+          "type": "varchar(88)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "betId": {
+          "name": "betId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "treasury_tx_treasury_idx": {
+          "name": "treasury_tx_treasury_idx",
+          "columns": [
+            {
+              "expression": "treasuryId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "treasury_tx_type_idx": {
+          "name": "treasury_tx_type_idx",
+          "columns": [
+            {
+              "expression": "type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "treasury_tx_signature_idx": {
+          "name": "treasury_tx_signature_idx",
+          "columns": [
+            {
+              "expression": "transactionSignature",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "house-fun-app_treasury_transaction_treasuryId_house-fun-app_house_treasury_id_fk": {
+          "name": "house-fun-app_treasury_transaction_treasuryId_house-fun-app_house_treasury_id_fk",
+          "tableFrom": "house-fun-app_treasury_transaction",
+          "tableTo": "house-fun-app_house_treasury",
+          "columnsFrom": [
+            "treasuryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "house-fun-app_treasury_transaction_betId_house-fun-app_bet_id_fk": {
+          "name": "house-fun-app_treasury_transaction_betId_house-fun-app_bet_id_fk",
+          "tableFrom": "house-fun-app_treasury_transaction",
+          "tableTo": "house-fun-app_bet",
+          "columnsFrom": [
+            "betId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.bet_status": {
+      "name": "bet_status",
+      "schema": "public",
+      "values": [
+        "PENDING",
+        "COMMITTED",
+        "RESOLVED",
+        "CLAIMED",
+        "TIMEOUT",
+        "CANCELLED"
+      ]
+    },
+    "public.game_type": {
+      "name": "game_type",
+      "schema": "public",
+      "values": [
+        "FLIP_IT",
+        "FIGHT_CLUB",
+        "DEGEN_DERBY",
+        "SHADOW_POKER"
+      ]
+    },
+    "public.outcome": {
+      "name": "outcome",
+      "schema": "public",
+      "values": [
+        "HEADS",
+        "TAILS",
+        "PLAYER_WIN",
+        "HOUSE_WIN",
+        "DRAW"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

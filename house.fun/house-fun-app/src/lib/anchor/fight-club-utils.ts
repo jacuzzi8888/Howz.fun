@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type FightClub, FIGHT_CLUB_IDL } from './fight-club-idl';
 
 // Program ID from deployment
@@ -16,13 +16,20 @@ export const PLAYER_BET_SEED = Buffer.from('player_bet');
 export type MatchSide = 'A' | 'B';
 export type MatchStatus = 'Open' | 'Resolved' | 'Cancelled';
 
+// Minimal wallet interface for provider
+interface WalletAdapter {
+  publicKey: web3.PublicKey | null;
+  signTransaction: ((tx: web3.Transaction) => Promise<web3.Transaction>) | undefined;
+  signAllTransactions?: (txs: web3.Transaction[]) => Promise<web3.Transaction[]>;
+}
+
 /**
  * Create Anchor Provider from wallet connection
  */
-export function createProvider(connection: web3.Connection, wallet: any): AnchorProvider {
+export function createProvider(connection: web3.Connection, wallet: WalletAdapter): AnchorProvider {
   return new AnchorProvider(
     connection,
-    wallet,
+    wallet as Wallet,
     AnchorProvider.defaultOptions()
   );
 }

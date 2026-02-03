@@ -501,6 +501,7 @@ const ShadowPokerGameContent: React.FC = () => {
               { top: '50%', left: '-50px', transform: '-translate-y-1/2' },
             ];
             const pos = positions[idx % positions.length];
+            if (!pos) return null;
             
             return (
               <div 

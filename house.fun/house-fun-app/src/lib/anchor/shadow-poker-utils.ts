@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type ShadowPoker, SHADOW_POKER_IDL } from './shadow-poker-idl';
 
 // Program ID from deployment
@@ -45,13 +45,19 @@ export interface TableConfig {
   maxPlayers: number;
 }
 
+interface WalletAdapter {
+  publicKey: web3.PublicKey | null;
+  signTransaction: ((tx: web3.Transaction) => Promise<web3.Transaction>) | undefined;
+  signAllTransactions?: (txs: web3.Transaction[]) => Promise<web3.Transaction[]>;
+}
+
 /**
  * Create Anchor Provider from wallet connection
  */
-export function createProvider(connection: web3.Connection, wallet: any): AnchorProvider {
+export function createProvider(connection: web3.Connection, wallet: WalletAdapter): AnchorProvider {
   return new AnchorProvider(
     connection,
-    wallet,
+    wallet as Wallet,
     AnchorProvider.defaultOptions()
   );
 }
@@ -59,8 +65,10 @@ export function createProvider(connection: web3.Connection, wallet: any): Anchor
 /**
  * Create Shadow Poker program instance
  */
-export function createShadowPokerProgram(provider: AnchorProvider): Program<ShadowPoker> {
-  return new Program(SHADOW_POKER_IDL, provider);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createShadowPokerProgram(provider: AnchorProvider): Program<any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new Program(SHADOW_POKER_IDL as any, provider);
 }
 
 /**
@@ -194,39 +202,65 @@ export const ShadowPokerErrors: Record<number, string> = {
   6018: 'Invalid blind amounts',
 };
 
+interface PokerProgramError {
+  code?: number;
+  message?: string;
+  error?: {
+    errorCode?: {
+      code?: string;
+    };
+  };
+}
+
+function isPokerProgramError(err: unknown): err is PokerProgramError {
+  return typeof err === 'object' && err !== null;
+}
+
 /**
  * Parse Shadow Poker program error
  */
-export function parseShadowPokerError(error: any): string {
+export function parseShadowPokerError(error: unknown): string {
+  if (!isPokerProgramError(error)) {
+    return 'Unknown error occurred';
+  }
+  
   // Check for program error codes
-  if (error?.code && ShadowPokerErrors[error.code]) {
-    return ShadowPokerErrors[error.code]!;
+  if (error.code) {
+    const errorMsg = ShadowPokerErrors[error.code];
+    if (errorMsg) {
+      return errorMsg;
+    }
   }
   
   // Check for error message containing code
-  const codeMatch = error?.message?.match(/custom program error: (0x[0-9a-fA-F]+|\d+)/);
-  if (codeMatch) {
-    const code = parseInt(codeMatch[1], codeMatch[1].startsWith('0x') ? 16 : 10);
-    if (ShadowPokerErrors[code]) {
-      return ShadowPokerErrors[code]!;
+  const codeMatch = error.message?.match(/custom program error: (0x[0-9a-fA-F]+|\d+)/);
+  if (codeMatch?.[1]) {
+    const matchedCode = codeMatch[1];
+    const code = parseInt(matchedCode, matchedCode.startsWith('0x') ? 16 : 10);
+    const errorMsg = ShadowPokerErrors[code];
+    if (errorMsg) {
+      return errorMsg;
     }
   }
   
   // Check for Anchor error format
-  if (error?.error?.errorCode?.code) {
+  if (error.error?.errorCode?.code) {
     const anchorCode = error.error.errorCode.code;
     const numericCode = Object.keys(ShadowPokerErrors).find(
       key => {
-        const errorMsg = ShadowPokerErrors[parseInt(key)];
-        return errorMsg?.toLowerCase().includes(anchorCode.toLowerCase());
+        const msg = ShadowPokerErrors[parseInt(key)];
+        return msg?.toLowerCase().includes(anchorCode?.toLowerCase() ?? '');
       }
     );
     if (numericCode) {
-      return ShadowPokerErrors[parseInt(numericCode)]!;
+      const errorMsg = ShadowPokerErrors[parseInt(numericCode)];
+      if (errorMsg) {
+        return errorMsg;
+      }
     }
   }
   
-  if (error?.message) {
+  if (error.message) {
     return error.message;
   }
   
@@ -443,7 +477,7 @@ export function isFlush(cards: Card[]): boolean {
   if (cards.length < 5) return false;
   const suitCounts: Record<number, number> = {};
   for (const card of cards) {
-    suitCounts[card.suit] = (suitCounts[card.suit] || 0) + 1;
+    suitCounts[card.suit] = (suitCounts[card.suit] ?? 0) + 1;
   }
   return Object.values(suitCounts).some(count => count >= 5);
 }
@@ -457,7 +491,9 @@ export function isStraight(cards: Card[]): boolean {
   
   // Check for regular straight
   for (let i = 0; i <= uniqueRanks.length - 5; i++) {
-    if (uniqueRanks[i + 4]! - uniqueRanks[i]! === 4) {
+    const first = uniqueRanks[i];
+    const last = uniqueRanks[i + 4];
+    if (first !== undefined && last !== undefined && last - first === 4) {
       return true;
     }
   }
@@ -487,7 +523,7 @@ export function getHandStrengthDescription(holeCards: Card[], communityCards: Ca
   // Check for pairs, trips, quads
   const rankCounts: Record<number, number> = {};
   for (const card of allCards) {
-    rankCounts[card.rank] = (rankCounts[card.rank] || 0) + 1;
+    rankCounts[card.rank] = (rankCounts[card.rank] ?? 0) + 1;
   }
   const counts = Object.values(rankCounts).sort((a, b) => b - a);
   
