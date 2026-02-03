@@ -34,23 +34,31 @@ jobs:
         run: |
           # Download Solana CLI directly from GitHub releases (Agave)
           SOLANA_VERSION="1.18.25"
-          curl -L -o solana-release.tar.bz2 "https://github.com/anza-xyz/agave/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" || \
-          curl -L -o solana-release.tar.bz2 "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2"
+          curl -L -o solana-release.tar.bz2 "https://github.com/anza-xyz/agave/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2"
           
-          # Extract
+          # Extract and check structure
           tar -xjf solana-release.tar.bz2
+          ls -la
           
-          # Move to local bin
-          mkdir -p ~/.local/share/solana
-          mv solana-release/bin/* ~/.local/share/solana/ 2>/dev/null || mv solana-release/* ~/.local/share/solana/ 2>/dev/null || cp -r solana-release/* ~/.local/share/solana/
+          # Find the solana binary
+          if [ -d "solana-release/bin" ]; then
+            mkdir -p ~/.local/share/solana/bin
+            cp solana-release/bin/solana ~/.local/share/solana/bin/
+          elif [ -f "solana-release/solana" ]; then
+            mkdir -p ~/.local/share/solana/bin
+            cp solana-release/solana ~/.local/share/solana/bin/
+          else
+            # Try to find solana binary anywhere in extracted folder
+            find solana-release -name "solana" -type f -exec cp {} ~/.local/share/solana/bin/ \;
+          fi
           
           # Add to PATH
           export PATH="$HOME/.local/share/solana/bin:$PATH"
           echo "$HOME/.local/share/solana/bin" >> $GITHUB_PATH
           
           # Verify
-          which solana
-          solana --version
+          which solana || echo "solana not in PATH yet"
+          ~/.local/share/solana/bin/solana --version
 
       - name: Setup Solana Wallet
         run: |
