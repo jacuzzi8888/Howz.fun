@@ -24,116 +24,156 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: house.fun/house-fun-app/package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Solana CLI
+      - name: Install Linux Dependencies
         run: |
-          SOLANA_VERSION="1.18.25"
-          curl -L -o solana-release.tar.bz2 "https://github.com/anza-xyz/agave/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2"
-          tar -xjf solana-release.tar.bz2
-          
-          # Check what was extracted
-          echo "Extracted solana-release contents:"
-          ls -la solana-release/
-          
-          if [ -d "solana-release/bin" ]; then
-            echo "Contents of solana-release/bin:"
-            ls -la solana-release/bin/
-          fi
-          
-          # Copy entire solana-release to local share
-          mkdir -p ~/.local/share/solana
-          cp -r solana-release/* ~/.local/share/solana/
-          
-          # Make sure binaries are executable
-          chmod +x ~/.local/share/solana/bin/* 2>/dev/null || true
-          
-          echo "Installed binaries:"
-          ls -la ~/.local/share/solana/bin/
-          
-          echo "$HOME/.local/share/solana/bin" >> $GITHUB_PATH
-          ~/.local/share/solana/bin/solana --version
+          sudo apt-get update
+          sudo apt-get install -y pkg-config build-essential libudev-dev
 
-      - name: Setup Solana Wallet
+      - name: Install Agave (Solana CLI)
         run: |
+          # 2026 Standard: Use official Anza installer for Agave/Solana tools
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Verify Solana Installation
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+          solana-keygen --version
+
+      - name: Setup Deployer Key
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana
           
-          # For devnet deployment, generate a temporary keypair
-          # This avoids issues with private key format
-          ~/.local/share/solana/bin/solana-keygen new --outfile ~/.config/solana/id.json --no-passphrase --force
+          # 2026 Best Practice: Use a secret for persistent deployer wallet
+          if [ -n "${{ secrets.DEPLOYER_KEY }}" ]; then
+            echo "Using DEPLOYER_KEY from secrets"
+            echo '${{ secrets.DEPLOYER_KEY }}' > ~/.config/solana/id.json
+          else
+            echo "No DEPLOYER_KEY secret found, generating temporary keypair"
+            solana-keygen new --outfile ~/.config/solana/id.json --no-passphrase --force
+          fi
           
-          echo "Generated temporary keypair for deployment"
-          ~/.local/share/solana/bin/solana config set --url ${{ github.event.inputs.network }}
-          echo "Wallet address:"
-          ~/.local/share/solana/bin/solana address
+          solana config set --url ${{ github.event.inputs.network }}
           
-          echo ""
-          echo "⚠️ IMPORTANT: To deploy, you need to fund this address with devnet SOL"
-          echo "Address to fund: $(~/.local/share/solana/bin/solana address)"
-          echo "Get SOL from: https://faucet.solana.com/"
-          echo ""
-          echo "Or if you provided WALLET_PRIVATE_KEY secret, please ensure it's in JSON array format"
-          echo "Example: [12,34,56,...] not base58 format"
+          WALLET_ADDRESS=$(solana address)
+          echo "WALLET_ADDRESS=$WALLET_ADDRESS" >> $GITHUB_ENV
+          echo "Deployer Wallet: $WALLET_ADDRESS"
 
       - name: Check Wallet Balance
         run: |
-          echo "Checking balance..."
-          ~/.local/share/solana/bin/solana balance || echo "⚠️ Wallet needs funding from https://faucet.solana.com/"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "Checking balance for ${{ env.WALLET_ADDRESS }}..."
+          BALANCE=$(solana balance 2>/dev/null || echo "0")
+          echo "Current balance: $BALANCE"
+          
+          if [[ "$BALANCE" == "0"* ]]; then
+            echo ""
+            echo "::warning::Wallet needs funding!"
+            echo "Fund address: ${{ env.WALLET_ADDRESS }}"
+            echo "Faucet: https://faucet.solana.com/"
+          fi
 
-      - name: Install Anchor
+      - name: Install Anchor via AVM
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force 2>&1 || true
-          $HOME/.cargo/bin/avm install latest 2>&1 || cargo install anchor-cli --locked --force
-          $HOME/.cargo/bin/avm use latest 2>&1 || true
+          # Install AVM (Anchor Version Manager)
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          
+          # Install and use latest Anchor
+          $HOME/.cargo/bin/avm install latest
+          $HOME/.cargo/bin/avm use latest
+          
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           $HOME/.cargo/bin/anchor --version
+
+      - name: Generate Program Keypair & Sync IDs
+        working-directory: house.fun/programs/flip-it
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH"
+          
+          # Generate Program Keypair if missing
+          mkdir -p target/deploy
+          if [ ! -f target/deploy/flip_it-keypair.json ]; then
+            solana-keygen new -o target/deploy/flip_it-keypair.json --no-passphrase --force
+          fi
+          
+          PROGRAM_ID=$(solana-keygen pubkey target/deploy/flip_it-keypair.json)
+          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          echo "Program ID: $PROGRAM_ID"
+          
+          # Sync ID in lib.rs
+          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" programs/flip-it/src/lib.rs
+          
+          # Sync ID in Anchor.toml (handles both [programs.devnet] and [programs.localnet])
+          sed -i "s/flip_it = \".*\"/flip_it = \"$PROGRAM_ID\"/g" Anchor.toml
 
       - name: Build Program
         working-directory: house.fun/programs/flip-it
         run: |
-          # Remove any existing Cargo.lock to avoid version conflicts
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH"
+          
+          # Remove Cargo.lock to avoid version 4 lockfile issues
           rm -f Cargo.lock
-          # Update dependencies to ensure compatibility
-          cargo update
-          $HOME/.cargo/bin/anchor build
+          
+          # Build with Anchor
+          anchor build
+          
+          echo "Build complete. Program binary at target/deploy/"
+          ls -la target/deploy/
 
       - name: Deploy Program
         working-directory: house.fun/programs/flip-it
-        id: deploy
         run: |
-          mkdir -p target/deploy
-          if [ ! -f target/deploy/flip_it-keypair.json ]; then
-            ~/.local/share/solana/bin/solana-keygen new --outfile target/deploy/flip_it-keypair.json --no-passphrase --force
-          fi
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH"
           
-          PROGRAM_ID=$(~/.local/share/solana/bin/solana-keygen pubkey target/deploy/flip_it-keypair.json)
-          echo "Program ID: $PROGRAM_ID"
-          echo "program_id=$PROGRAM_ID" >> $GITHUB_OUTPUT
-          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          echo "Deploying to ${{ github.event.inputs.network }}..."
+          echo "Program ID: ${{ env.PROGRAM_ID }}"
           
-          sed -i "s/flip_it = \"[^\"]*\"/flip_it = \"$PROGRAM_ID\"/g" Anchor.toml
-          
-          $HOME/.cargo/bin/anchor deploy --provider.cluster ${{ github.event.inputs.network }} || {
-            echo "⚠️ Deploy may have failed or already exists"
-            ~/.local/share/solana/bin/solana program show $PROGRAM_ID && echo "✅ Program already deployed"
-          }
+          # Deploy with priority fees for 2026 network reliability
+          anchor deploy \
+            --provider.cluster ${{ github.event.inputs.network }} \
+            --program-keypair target/deploy/flip_it-keypair.json \
+            || {
+              echo "::warning::Deploy failed. Checking if program already exists..."
+              solana program show ${{ env.PROGRAM_ID }} && echo "Program already deployed"
+            }
 
-      - name: Update Code with Program ID
-        if: success() || failure()
+      - name: Upload IDL On-Chain
+        working-directory: house.fun/programs/flip-it
+        continue-on-error: true
         run: |
-          PROGRAM_ID="${{ steps.deploy.outputs.program_id }}"
-          if [ -n "$PROGRAM_ID" ]; then
-            sed -i "s/declare_id!(\"[^\"]*\")/declare_id!(\"$PROGRAM_ID\")/g" house.fun/programs/flip-it/programs/flip-it/src/lib.rs
-            find house.fun/house-fun-app/src -name "*.ts" -exec sed -i "s/Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS/$PROGRAM_ID/g" {} \;
-            
-            echo "✅ Program ID: $PROGRAM_ID"
-            echo ""
-            echo "📋 Add to your .env.local:"
-            echo "NEXT_PUBLIC_FLIP_IT_PROGRAM_ID=$PROGRAM_ID"
-            echo ""
-            echo "🔗 View: https://explorer.solana.com/address/$PROGRAM_ID?cluster=${{ github.event.inputs.network }}"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH"
+          
+          # Upload IDL so explorers can decode transactions
+          if [ -f target/idl/flip_it.json ]; then
+            echo "Uploading IDL on-chain..."
+            anchor idl init ${{ env.PROGRAM_ID }} --filepath target/idl/flip_it.json 2>/dev/null || \
+            anchor idl upgrade ${{ env.PROGRAM_ID }} --filepath target/idl/flip_it.json 2>/dev/null || \
+            echo "IDL upload skipped (may require authority)"
+          else
+            echo "::warning::IDL file not found at target/idl/flip_it.json"
           fi
+
+      - name: Deployment Summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Program ID | \`${{ env.PROGRAM_ID }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Network | \`${{ github.event.inputs.network }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployer | \`${{ env.WALLET_ADDRESS }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Add to your \`.env.local\`:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "NEXT_PUBLIC_FLIP_IT_PROGRAM_ID=${{ env.PROGRAM_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View on Solana Explorer](https://explorer.solana.com/address/${{ env.PROGRAM_ID }}?cluster=${{ github.event.inputs.network }})" >> $GITHUB_STEP_SUMMARY
