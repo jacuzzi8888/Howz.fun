@@ -95,6 +95,10 @@ jobs:
       - name: Build Program
         working-directory: house.fun/programs/flip-it
         run: |
+          # Remove any existing Cargo.lock to avoid version conflicts
+          rm -f Cargo.lock
+          # Update dependencies to ensure compatibility
+          cargo update
           $HOME/.cargo/bin/anchor build
 
       - name: Deploy Program
