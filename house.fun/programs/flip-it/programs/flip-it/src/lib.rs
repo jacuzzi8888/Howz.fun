@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
-use anchor_lang::solana_program::hash::hash;
+use anchor_lang::solana_program::keccak::hash;
 use anchor_lang::solana_program::sysvar::Sysvar;
 
 // Program ID - Replace with actual after deployment
@@ -124,7 +124,7 @@ pub mod flip_it {
         Ok(())
     }
 
-    /// LEGACY: Player reveals with pseudo-randomness (recent_blockhash)
+    /// LEGACY: Player reveals with pseudo-randomness (slot-based)
     /// DEPRECATED: Use reveal_with_arcium for provably fair outcomes
     pub fn reveal(
         ctx: Context<Reveal>,
@@ -132,7 +132,7 @@ pub mod flip_it {
         nonce: u64, // Secret nonce used in commitment
     ) -> Result<()> {
         let bet = &mut ctx.accounts.bet;
-        let house = &ctx.accounts.house;
+        let house = &mut ctx.accounts.house;
 
         // Check if Arcium is enforced
         require!(
@@ -150,11 +150,13 @@ pub mod flip_it {
             FlipItError::InvalidReveal
         );
 
-        // Generate random outcome using recent blockhash + player data
-        let recent_blockhash = ctx.accounts.recent_blockhashes.last_blockhash();
-        let mut random_seed = recent_blockhash.0.to_vec();
+        // Generate random outcome using clock slot + player data
+        // Note: This is NOT cryptographically secure - use Arcium for production
+        let clock = Clock::get()?;
+        let mut random_seed = clock.slot.to_le_bytes().to_vec();
         random_seed.extend_from_slice(&bet.player.to_bytes());
         random_seed.extend_from_slice(&nonce.to_le_bytes());
+        random_seed.extend_from_slice(&clock.unix_timestamp.to_le_bytes());
         let random_hash = hash(&random_seed).to_bytes();
         let outcome = random_hash[0] % 2;
 
@@ -343,69 +345,69 @@ pub mod flip_it {
         );
         Ok(())
     }
+}
 
-    // Internal helper functions
+// Internal helper functions (outside #[program] module)
 
-    /// Verify Arcium proof cryptographically
-    fn verify_arcium_proof_internal(proof: &ArciumProof, commitment: &[u8; 32]) -> Result<()> {
-        // In a full implementation, this would:
-        // 1. Verify the cluster signature against Arcium's public key
-        // 2. Verify the ZK proof using Arcium's verification algorithm
-        // 3. Ensure the proof corresponds to the commitment
+/// Verify Arcium proof cryptographically
+fn verify_arcium_proof_internal(proof: &ArciumProof, _commitment: &[u8; 32]) -> Result<()> {
+    // In a full implementation, this would:
+    // 1. Verify the cluster signature against Arcium's public key
+    // 2. Verify the ZK proof using Arcium's verification algorithm
+    // 3. Ensure the proof corresponds to the commitment
 
-        // For the hackathon implementation, we verify:
-        // - Proof structure is valid (done in verify_structure)
-        // - Proof is recent (done in verify_structure)
-        // - Proof contains valid outcome (0 or 1)
+    // For the hackathon implementation, we verify:
+    // - Proof structure is valid (done in verify_structure)
+    // - Proof is recent (done in verify_structure)
+    // - Proof contains valid outcome (0 or 1)
 
-        // TODO: Add full cryptographic verification when Arcium SDK provides on-chain verification library
+    // TODO: Add full cryptographic verification when Arcium SDK provides on-chain verification library
 
-        require!(
-            proof.outcome == 0 || proof.outcome == 1,
-            FlipItError::InvalidArciumProof
-        );
+    require!(
+        proof.outcome == 0 || proof.outcome == 1,
+        FlipItError::InvalidArciumProof
+    );
 
-        msg!("Arcium proof verified: Outcome {}", proof.outcome);
-        Ok(())
-    }
+    msg!("Arcium proof verified: Outcome {}", proof.outcome);
+    Ok(())
+}
 
-    /// Internal function to resolve a bet
-    fn resolve_bet_internal(
-        bet: &mut Account<Bet>,
-        house: &mut Account<House>,
-        choice: u8,
-        outcome: u8,
-    ) -> Result<()> {
-        // Determine winner
-        let player_wins = choice == outcome;
+/// Internal function to resolve a bet
+fn resolve_bet_internal(
+    bet: &mut Account<Bet>,
+    house: &mut Account<House>,
+    choice: u8,
+    outcome: u8,
+) -> Result<()> {
+    // Determine winner
+    let player_wins = choice == outcome;
 
-        // Calculate payouts
-        let house_fee = bet.amount * HOUSE_FEE_BPS as u64 / 10000;
-        let payout = if player_wins {
-            bet.amount * 2 - house_fee // Double minus house fee
-        } else {
-            0
-        };
+    // Calculate payouts
+    let house_fee = bet.amount * HOUSE_FEE_BPS as u64 / 10000;
+    let payout = if player_wins {
+        bet.amount * 2 - house_fee // Double minus house fee
+    } else {
+        0
+    };
 
-        // Update bet status
-        bet.status = BetStatus::Resolved;
-        bet.outcome = Some(outcome);
-        bet.player_wins = player_wins;
-        bet.payout = payout;
-        bet.house_fee = house_fee;
+    // Update bet status
+    bet.status = BetStatus::Resolved;
+    bet.outcome = Some(outcome);
+    bet.player_wins = player_wins;
+    bet.payout = payout;
+    bet.house_fee = house_fee;
 
-        // Transfer house fee to treasury
-        house.treasury += house_fee;
+    // Transfer house fee to treasury
+    house.treasury += house_fee;
 
-        msg!(
-            "Bet resolved: Player chose {}, Outcome: {}, Winner: {}",
-            if choice == 0 { "HEADS" } else { "TAILS" },
-            if outcome == 0 { "HEADS" } else { "TAILS" },
-            if player_wins { "Player" } else { "House" }
-        );
+    msg!(
+        "Bet resolved: Player chose {}, Outcome: {}, Winner: {}",
+        if choice == 0 { "HEADS" } else { "TAILS" },
+        if outcome == 0 { "HEADS" } else { "TAILS" },
+        if player_wins { "Player" } else { "House" }
+    );
 
-        Ok(())
-    }
+    Ok(())
 }
 
 // Account Structures
@@ -457,9 +459,6 @@ pub struct Reveal<'info> {
     pub house: Account<'info, House>,
 
     pub player: Signer<'info>,
-
-    /// CHECK: Recent blockhashes sysvar for randomness
-    pub recent_blockhashes: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }
