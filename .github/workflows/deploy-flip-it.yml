@@ -134,8 +134,9 @@ jobs:
           echo "Deploying to ${{ github.event.inputs.network }}..."
           echo "Program ID: ${{ env.PROGRAM_ID }}"
           
-          # Deploy with priority fees for 2026 network reliability
+          # Anchor 0.32.1 requires --program-name flag
           anchor deploy \
+            --program-name flip_it \
             --provider.cluster ${{ github.event.inputs.network }} \
             --program-keypair target/deploy/flip_it-keypair.json \
             || {
