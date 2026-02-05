@@ -50,14 +50,18 @@ jobs:
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana
           
-          # 2026 Best Practice: Use a secret for persistent deployer wallet
-          if [ -n "${{ secrets.DEPLOYER_KEY }}" ]; then
-            echo "Using DEPLOYER_KEY from secrets"
-            echo '${{ secrets.DEPLOYER_KEY }}' > ~/.config/solana/id.json
-          else
-            echo "No DEPLOYER_KEY secret found, generating temporary keypair"
-            solana-keygen new --outfile ~/.config/solana/id.json --no-passphrase --force
+          # DEPLOYER_KEY secret is REQUIRED - no fallback to temp wallet
+          if [ -z "${{ secrets.DEPLOYER_KEY }}" ]; then
+            echo "::error::DEPLOYER_KEY secret is not set!"
+            echo "Please add your wallet keypair JSON to GitHub Secrets:"
+            echo "  1. Go to Settings -> Secrets -> Actions"
+            echo "  2. Add secret named DEPLOYER_KEY"
+            echo "  3. Value: contents of ~/.config/solana/id.json"
+            exit 1
           fi
+          
+          echo "Using DEPLOYER_KEY from secrets"
+          echo '${{ secrets.DEPLOYER_KEY }}' > ~/.config/solana/id.json
           
           solana config set --url ${{ github.event.inputs.network }}
           
