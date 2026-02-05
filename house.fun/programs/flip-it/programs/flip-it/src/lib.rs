@@ -1,7 +1,14 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
-use anchor_lang::solana_program::keccak::hash;
 use anchor_lang::solana_program::sysvar::Sysvar;
+use sha2::{Digest, Sha256};
+
+/// Helper function to compute SHA256 hash and return as [u8; 32]
+fn sha256_hash(data: &[u8]) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    hasher.finalize().into()
+}
 
 // Program ID - Replace with actual after deployment
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -143,7 +150,7 @@ pub mod flip_it {
         // Verify commitment
         let mut commitment_data = vec![choice];
         commitment_data.extend_from_slice(&nonce.to_le_bytes());
-        let computed_commitment = hash(&commitment_data).to_bytes();
+        let computed_commitment = sha256_hash(&commitment_data);
 
         require!(
             computed_commitment == bet.commitment,
@@ -157,7 +164,7 @@ pub mod flip_it {
         random_seed.extend_from_slice(&bet.player.to_bytes());
         random_seed.extend_from_slice(&nonce.to_le_bytes());
         random_seed.extend_from_slice(&clock.unix_timestamp.to_le_bytes());
-        let random_hash = hash(&random_seed).to_bytes();
+        let random_hash = sha256_hash(&random_seed);
         let outcome = random_hash[0] % 2;
 
         // Resolve the bet
@@ -198,7 +205,7 @@ pub mod flip_it {
         // Verify commitment
         let mut commitment_data = vec![choice];
         commitment_data.extend_from_slice(&nonce.to_le_bytes());
-        let computed_commitment = hash(&commitment_data).to_bytes();
+        let computed_commitment = sha256_hash(&commitment_data);
 
         require!(
             computed_commitment == bet.commitment,
@@ -247,7 +254,8 @@ pub mod flip_it {
         // Transfer payout to player
         if bet.payout > 0 {
             let bet_key = bet.key();
-            let seeds = &[b"bet", player.key().as_ref(), bet_key.as_ref(), &[bet.bump]];
+            let player_key = player.key();
+            let seeds = &[b"bet", player_key.as_ref(), bet_key.as_ref(), &[bet.bump]];
             let signer = &[&seeds[..]];
 
             anchor_lang::system_program::transfer(
