@@ -122,6 +122,7 @@ pub mod flip_it {
         ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
         // Queue the computation
+        // Callback accounts are defined in FlipCallback struct via #[callback_accounts("flip")]
         queue_computation(
             ctx.accounts,
             computation_offset,
@@ -129,16 +130,7 @@ pub mod flip_it {
             vec![FlipCallback::callback_ix(
                 computation_offset,
                 &ctx.accounts.mxe_account,
-                &[
-                    CallbackAccount {
-                        pubkey: ctx.accounts.bet.key(),
-                        is_writable: true,
-                    },
-                    CallbackAccount {
-                        pubkey: ctx.accounts.house.key(),
-                        is_writable: true,
-                    },
-                ],
+                &[],
             )?],
             1,
             0,
@@ -258,6 +250,9 @@ pub mod flip_it {
         );
         require!(amount <= house.treasury, FlipItError::InsufficientTreasury);
 
+        // Update house treasury BEFORE transferring (avoids double borrow)
+        house.treasury -= amount;
+
         **ctx
             .accounts
             .house
@@ -268,8 +263,6 @@ pub mod flip_it {
             .authority
             .to_account_info()
             .try_borrow_mut_lamports()? += amount;
-
-        house.treasury -= amount;
 
         msg!("Treasury withdrawal: {} lamports", amount);
         Ok(())
