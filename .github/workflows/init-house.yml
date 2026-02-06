@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,7 +27,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install @coral-xyz/anchor @solana/web3.js
+        run: npm install @coral-xyz/anchor@0.30.1 @solana/web3.js@1.95.3
 
       - name: Initialize House Account
         env:
@@ -44,6 +46,7 @@ jobs:
 
             // Setup connection
             const connection = new Connection(RPC_URL, "confirmed");
+            console.log("Connected to:", RPC_URL.replace(/api-key=.*/, "api-key=***"));
 
             // Load deployer wallet from secret
             const deployerKey = JSON.parse(process.env.DEPLOYER_KEY);
@@ -54,8 +57,8 @@ jobs:
             const balance = await connection.getBalance(wallet.publicKey);
             console.log("Balance:", balance / 1e9, "SOL");
 
-            if (balance < 0.01 * 1e9) {
-              throw new Error("Insufficient balance. Need at least 0.01 SOL. Get devnet SOL: https://faucet.solana.com/");
+            if (balance < 0.005 * 1e9) {
+              throw new Error("Insufficient balance. Need at least 0.005 SOL. Get devnet SOL: https://faucet.solana.com/");
             }
 
             // Derive House PDA
@@ -69,8 +72,15 @@ jobs:
             const existing = await connection.getAccountInfo(housePDA);
             if (existing) {
               console.log("\n✅ House account already initialized!");
+              console.log("   Address:", housePDA.toString());
+              console.log("   Data length:", existing.data.length, "bytes");
               return;
             }
+
+            console.log("House account does not exist. Creating...");
+
+            // Load IDL
+            const idl = require("./house.fun/programs/flip-it/target/idl/flip_it.json");
 
             // Setup provider
             const anchorWallet = {
@@ -79,13 +89,10 @@ jobs:
               signAllTransactions: async (txs) => { txs.forEach(tx => tx.partialSign(wallet)); return txs; },
             };
             const provider = new anchor.AnchorProvider(connection, anchorWallet, { commitment: "confirmed" });
-
-            // Load IDL from file
-            const idl = require("./house.fun/programs/flip-it/target/idl/flip_it.json");
             const program = new anchor.Program(idl, PROGRAM_ID, provider);
 
             // Send initialize transaction
-            console.log("\n📝 Sending initialize_house transaction...");
+            console.log("\n📝 Sending initializeHouse transaction...");
             const tx = await program.methods
               .initializeHouse()
               .accounts({
@@ -108,11 +115,11 @@ jobs:
         if: success()
         run: |
           echo ""
-          echo "╔════════════════════════════════════════════════════════╗"
-          echo "║         🏠 HOUSE INITIALIZATION COMPLETE! 🏠          ║"
-          echo "╚════════════════════════════════════════════════════════╝"
+          echo "=========================================="
+          echo "  HOUSE INITIALIZATION COMPLETE"
+          echo "=========================================="
           echo ""
           echo "Program ID: 6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ"
           echo "Network:    ${{ github.event.inputs.environment }}"
           echo ""
-          echo "✅ House is ready for betting!"
+          echo "House is ready for betting!"
