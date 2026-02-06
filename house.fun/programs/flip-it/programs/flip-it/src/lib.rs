@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 
-// Computation definition offset for coin_flip instruction
-const COMP_DEF_OFFSET_COIN_FLIP: u32 = comp_def_offset("coin_flip");
+// Computation definition offset for flip instruction (matches encrypted-ixs)
+const COMP_DEF_OFFSET_FLIP: u32 = comp_def_offset("flip");
 
-// Program ID - will be set after deployment
+// Program ID - will be set during deployment
 declare_id!("5SLSFwTtdbomiw8fyo4obKvjBhKLaA7s7EbnWmpkgLkg");
 
 // Constants
@@ -35,11 +35,11 @@ pub mod flip_it {
         Ok(())
     }
 
-    /// Initialize the coin_flip computation definition
+    /// Initialize the flip computation definition
     /// Called once after program deployment to register the MPC circuit
-    pub fn init_coin_flip_comp_def(ctx: Context<InitCoinFlipCompDef>) -> Result<()> {
+    pub fn init_flip_comp_def(ctx: Context<InitFlipCompDef>) -> Result<()> {
         init_comp_def(ctx.accounts, None, None)?;
-        msg!("Coin flip computation definition initialized");
+        msg!("Flip computation definition initialized");
         Ok(())
     }
 
@@ -48,16 +48,14 @@ pub mod flip_it {
     // ============================================================
 
     /// Player places a bet with their choice
-    /// No commitment needed - Arcium handles the randomness securely
     pub fn place_bet(
         ctx: Context<PlaceBet>,
         amount: u64,
-        choice: u8, // 0 = HEADS, 1 = TAILS
+        choice: bool, // true = HEADS, false = TAILS
     ) -> Result<()> {
         // Validate bet amount
         require!(amount >= MIN_BET_LAMPORTS, FlipItError::BetTooSmall);
         require!(amount <= MAX_BET_LAMPORTS, FlipItError::BetTooLarge);
-        require!(choice == 0 || choice == 1, FlipItError::InvalidChoice);
 
         let bet = &mut ctx.accounts.bet;
         let player = &ctx.accounts.player;
@@ -70,7 +68,6 @@ pub mod flip_it {
         bet.status = BetStatus::Placed;
         bet.placed_at = clock.unix_timestamp;
         bet.bump = ctx.bumps.bet;
-        bet.outcome = None;
         bet.player_wins = false;
         bet.payout = 0;
         bet.house_fee = 0;
@@ -100,54 +97,36 @@ pub mod flip_it {
         msg!(
             "Bet placed: {} lamports on {} by {}",
             amount,
-            if choice == 0 { "HEADS" } else { "TAILS" },
+            if choice { "HEADS" } else { "TAILS" },
             player.key()
         );
         Ok(())
     }
 
     /// Request the coin flip computation from Arcium MPC cluster
-    /// This queues the computation - result comes via callback
-    pub fn request_flip(
-        ctx: Context<RequestFlip>,
+    pub fn flip(
+        ctx: Context<Flip>,
         computation_offset: u64,
-        // Encrypted input parameters
-        ciphertext_choice: [u8; 32],
-        ciphertext_bet_id: [u8; 32],
+        user_choice: [u8; 32],
         pub_key: [u8; 32],
         nonce: u128,
     ) -> Result<()> {
-        let bet = &ctx.accounts.bet;
-        let player = &ctx.accounts.player;
-
-        // Verify bet belongs to player and is in correct state
-        require!(bet.player == player.key(), FlipItError::UnauthorizedPlayer);
-        require!(
-            bet.status == BetStatus::Placed,
-            FlipItError::InvalidBetStatus
-        );
-
-        // Build encrypted arguments for the coin_flip circuit
-        // The circuit expects: Enc<Shared, CoinFlipInput> where CoinFlipInput has:
-        //   - player_choice: u8
-        //   - bet_id: u64
+        // Build encrypted arguments for the flip circuit
+        // Matches UserChoice struct in encrypted-ixs: { choice: bool }
         let args = ArgBuilder::new()
             .x25519_pubkey(pub_key)
             .plaintext_u128(nonce)
-            .encrypted_u8(ciphertext_choice)
-            .encrypted_u64(ciphertext_bet_id)
+            .encrypted_u8(user_choice) // bool encoded as u8
             .build();
 
-        // Set the bump for signing
         ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
-        // Queue the computation with Arcium
+        // Queue the computation
         queue_computation(
             ctx.accounts,
             computation_offset,
             args,
-            // Callback instruction with bet account for resolving
-            vec![CoinFlipCallback::callback_ix(
+            vec![FlipCallback::callback_ix(
                 computation_offset,
                 &ctx.accounts.mxe_account,
                 &[
@@ -161,55 +140,45 @@ pub mod flip_it {
                     },
                 ],
             )?],
-            1, // Number of callback transactions
-            0, // Priority fee (0 = none)
+            1,
+            0,
         )?;
 
         // Update bet status
         let bet = &mut ctx.accounts.bet;
         bet.status = BetStatus::Flipping;
 
-        msg!("Coin flip requested for bet: {}", bet.key());
+        msg!("Flip requested for bet: {}", bet.key());
         Ok(())
     }
 
     /// Callback from Arcium MPC cluster with the flip result
-    /// This is called automatically by the cluster after computation
-    #[arcium_callback(encrypted_ix = "coin_flip")]
-    pub fn coin_flip_callback(
-        ctx: Context<CoinFlipCallback>,
-        output: SignedComputationOutputs<CoinFlipOutput>,
+    #[arcium_callback(encrypted_ix = "flip")]
+    pub fn flip_callback(
+        ctx: Context<FlipCallback>,
+        output: SignedComputationOutputs<FlipOutput>,
     ) -> Result<()> {
         // Verify and extract the computation output
-        let result = match output.verify_output(
+        let player_wins = match output.verify_output(
             &ctx.accounts.cluster_account,
             &ctx.accounts.computation_account,
         ) {
-            Ok(CoinFlipOutput {
-                field_0: outcome,
-                field_1: player_wins,
-                field_2: _bet_id,
-            }) => (outcome, player_wins),
-            Err(e) => {
-                msg!("Arcium verification failed: {}", e);
-                return Err(FlipItError::ArciumVerificationFailed.into());
-            }
+            Ok(FlipOutput { field_0 }) => field_0,
+            Err(_) => return Err(FlipItError::ArciumVerificationFailed.into()),
         };
 
-        let (outcome, player_wins) = result;
         let bet = &mut ctx.accounts.bet;
         let house = &mut ctx.accounts.house;
 
         // Calculate payouts
         let house_fee = bet.amount * HOUSE_FEE_BPS as u64 / 10000;
         let payout = if player_wins {
-            bet.amount * 2 - house_fee // Double minus house fee
+            bet.amount * 2 - house_fee
         } else {
             0
         };
 
         // Update bet with results
-        bet.outcome = Some(outcome);
         bet.player_wins = player_wins;
         bet.payout = payout;
         bet.house_fee = house_fee;
@@ -219,22 +188,15 @@ pub mod flip_it {
         house.treasury += if player_wins { house_fee } else { bet.amount };
         house.active_bets -= 1;
 
-        // Emit event for frontend tracking
-        emit!(FlipResultEvent {
+        emit!(FlipEvent {
             bet: bet.key(),
             player: bet.player,
-            choice: bet.choice,
-            outcome,
             player_wins,
             payout,
-            house_fee,
         });
 
         msg!(
-            "Flip resolved: {} chose {}, result {}, winner: {}",
-            bet.player,
-            if bet.choice == 0 { "HEADS" } else { "TAILS" },
-            if outcome == 0 { "HEADS" } else { "TAILS" },
+            "Flip resolved: winner = {}",
             if player_wins { "Player" } else { "House" }
         );
 
@@ -246,14 +208,12 @@ pub mod flip_it {
         let bet = &ctx.accounts.bet;
         let player = &ctx.accounts.player;
 
-        // Verify bet is resolved and belongs to player
         require!(
             bet.status == BetStatus::Resolved,
             FlipItError::BetNotResolved
         );
         require!(bet.player == player.key(), FlipItError::UnauthorizedPlayer);
 
-        // Transfer payout to player
         if bet.payout > 0 {
             let bet_key = bet.key();
             let seeds = &[
@@ -279,7 +239,6 @@ pub mod flip_it {
             msg!("Payout claimed: {} lamports", bet.payout);
         }
 
-        // Update bet status
         let bet = &mut ctx.accounts.bet;
         bet.status = BetStatus::Claimed;
 
@@ -290,7 +249,6 @@ pub mod flip_it {
     // HOUSE MANAGEMENT
     // ============================================================
 
-    /// House authority withdraws treasury funds
     pub fn withdraw_treasury(ctx: Context<WithdrawTreasury>, amount: u64) -> Result<()> {
         let house = &mut ctx.accounts.house;
 
@@ -300,7 +258,6 @@ pub mod flip_it {
         );
         require!(amount <= house.treasury, FlipItError::InsufficientTreasury);
 
-        // Transfer from house to authority
         **ctx
             .accounts
             .house
@@ -318,7 +275,6 @@ pub mod flip_it {
         Ok(())
     }
 
-    /// Deposit funds to house treasury (for paying winners)
     pub fn deposit_treasury(ctx: Context<DepositTreasury>, amount: u64) -> Result<()> {
         let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
             &ctx.accounts.depositor.key(),
@@ -363,29 +319,33 @@ pub struct InitializeHouse<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[init_computation_definition_accounts("coin_flip")]
+#[init_computation_definition_accounts("flip", payer)]
 #[derive(Accounts)]
-pub struct InitCoinFlipCompDef<'info> {
+pub struct InitFlipCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
+    #[account(mut, address = derive_mxe_pda!())]
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
 
-    #[account(
-        init,
-        payer = payer,
-        space = ComputationDefinitionAccount::size(None),
-        seeds = [MXE_SEED, &COMP_DEF_OFFSET_COIN_FLIP.to_le_bytes()],
-        bump
-    )]
-    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+    #[account(mut)]
+    /// CHECK: comp_def_account, checked by arcium program.
+    pub comp_def_account: UncheckedAccount<'info>,
 
+    #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
+    /// CHECK: address_lookup_table, checked by arcium program.
+    pub address_lookup_table: UncheckedAccount<'info>,
+
+    #[account(address = LUT_PROGRAM_ID)]
+    /// CHECK: lut_program is the Address Lookup Table program.
+    pub lut_program: UncheckedAccount<'info>,
+
+    pub arcium_program: Program<'info, Arcium>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
-#[instruction(amount: u64, choice: u8)]
+#[instruction(amount: u64, choice: bool)]
 pub struct PlaceBet<'info> {
     #[account(
         init,
@@ -409,18 +369,14 @@ pub struct PlaceBet<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[queue_computation_accounts("coin_flip", player)]
+#[queue_computation_accounts("flip", payer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
-pub struct RequestFlip<'info> {
+pub struct Flip<'info> {
     #[account(mut)]
-    pub player: Signer<'info>,
+    pub payer: Signer<'info>,
 
-    #[account(
-        mut,
-        constraint = bet.player == player.key() @ FlipItError::UnauthorizedPlayer,
-        constraint = bet.status == BetStatus::Placed @ FlipItError::InvalidBetStatus
-    )]
+    #[account(mut)]
     pub bet: Account<'info, Bet>,
 
     #[account(
@@ -430,11 +386,10 @@ pub struct RequestFlip<'info> {
     )]
     pub house: Account<'info, House>,
 
-    // Arcium required accounts
     #[account(
         init_if_needed,
         space = 9,
-        payer = player,
+        payer = payer,
         seeds = [&SIGN_PDA_SEED],
         bump,
         address = derive_sign_pda!(),
@@ -446,31 +401,31 @@ pub struct RequestFlip<'info> {
 
     #[account(
         mut,
-        address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet)
+        address = derive_mempool_pda!(mxe_account, FlipItError::ClusterNotSet)
     )]
     /// CHECK: mempool_account, checked by arcium program
     pub mempool_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
-        address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet)
+        address = derive_execpool_pda!(mxe_account, FlipItError::ClusterNotSet)
     )]
     /// CHECK: executing_pool, checked by arcium program
     pub executing_pool: UncheckedAccount<'info>,
 
     #[account(
         mut,
-        address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet)
+        address = derive_comp_pda!(computation_offset, mxe_account, FlipItError::ClusterNotSet)
     )]
     /// CHECK: computation_account, checked by arcium program
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COIN_FLIP))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_FLIP))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
     #[account(
         mut,
-        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet)
+        address = derive_cluster_pda!(mxe_account, FlipItError::ClusterNotSet)
     )]
     pub cluster_account: Account<'info, Cluster>,
 
@@ -484,13 +439,12 @@ pub struct RequestFlip<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
-#[callback_accounts("coin_flip")]
+#[callback_accounts("flip")]
 #[derive(Accounts)]
-pub struct CoinFlipCallback<'info> {
-    // Standard Arcium callback accounts
+pub struct FlipCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
 
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COIN_FLIP))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_FLIP))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
     #[account(address = derive_mxe_pda!())]
@@ -499,14 +453,14 @@ pub struct CoinFlipCallback<'info> {
     /// CHECK: computation_account, checked by arcium program
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(address = derive_cluster_pda!(mxe_account, FlipItError::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
     /// CHECK: instructions_sysvar
     pub instructions_sysvar: AccountInfo<'info>,
 
-    // Custom callback accounts (must match order in request_flip)
+    // Custom callback accounts
     #[account(mut)]
     pub bet: Account<'info, Bet>,
 
@@ -566,12 +520,12 @@ pub struct DepositTreasury<'info> {
 
 #[account]
 pub struct House {
-    pub authority: Pubkey, // House admin
-    pub treasury: u64,     // Accumulated funds for paying winners
-    pub total_bets: u64,   // Total bet count (used for PDA seeds)
-    pub total_volume: u64, // Total SOL volume
-    pub active_bets: u64,  // Currently pending bets
-    pub bump: u8,          // PDA bump
+    pub authority: Pubkey,
+    pub treasury: u64,
+    pub total_bets: u64,
+    pub total_volume: u64,
+    pub active_bets: u64,
+    pub bump: u8,
 }
 
 impl House {
@@ -580,28 +534,27 @@ impl House {
 
 #[account]
 pub struct Bet {
-    pub player: Pubkey,      // Player address
-    pub amount: u64,         // Bet amount in lamports
-    pub choice: u8,          // 0 = HEADS, 1 = TAILS
-    pub status: BetStatus,   // Current status
-    pub placed_at: i64,      // Unix timestamp
-    pub outcome: Option<u8>, // Result: 0 = HEADS, 1 = TAILS
-    pub player_wins: bool,   // Did player win?
-    pub payout: u64,         // Amount to payout
-    pub house_fee: u64,      // Fee collected
-    pub bump: u8,            // PDA bump
+    pub player: Pubkey,
+    pub amount: u64,
+    pub choice: bool, // true = HEADS, false = TAILS
+    pub status: BetStatus,
+    pub placed_at: i64,
+    pub player_wins: bool,
+    pub payout: u64,
+    pub house_fee: u64,
+    pub bump: u8,
 }
 
 impl Bet {
-    pub const SIZE: usize = 32 + 8 + 1 + 1 + 8 + 2 + 1 + 8 + 8 + 1;
+    pub const SIZE: usize = 32 + 8 + 1 + 1 + 8 + 1 + 8 + 8 + 1;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub enum BetStatus {
-    Placed,   // Bet placed, waiting for flip request
-    Flipping, // Flip requested, waiting for MPC result
-    Resolved, // Result received, ready to claim
-    Claimed,  // Winnings claimed
+    Placed,
+    Flipping,
+    Resolved,
+    Claimed,
 }
 
 // ============================================================
@@ -609,14 +562,11 @@ pub enum BetStatus {
 // ============================================================
 
 #[event]
-pub struct FlipResultEvent {
+pub struct FlipEvent {
     pub bet: Pubkey,
     pub player: Pubkey,
-    pub choice: u8,
-    pub outcome: u8,
     pub player_wins: bool,
     pub payout: u64,
-    pub house_fee: u64,
 }
 
 // ============================================================
@@ -629,12 +579,8 @@ pub enum FlipItError {
     BetTooSmall,
     #[msg("Bet amount too large (max 100 SOL)")]
     BetTooLarge,
-    #[msg("Invalid choice - must be 0 (HEADS) or 1 (TAILS)")]
-    InvalidChoice,
     #[msg("Unauthorized player")]
     UnauthorizedPlayer,
-    #[msg("Invalid bet status for this operation")]
-    InvalidBetStatus,
     #[msg("Bet not resolved yet")]
     BetNotResolved,
     #[msg("Unauthorized house authority")]
@@ -645,17 +591,4 @@ pub enum FlipItError {
     ArciumVerificationFailed,
     #[msg("Cluster not set for MXE")]
     ClusterNotSet,
-}
-
-// ============================================================
-// OUTPUT TYPE (auto-generated by Arcium, defined here for reference)
-// ============================================================
-
-// This is generated by the arcium build process from the Arcis circuit
-// Matches the CoinFlipOutput struct in encrypted-ixs/coin_flip.rs
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct CoinFlipOutput {
-    pub field_0: u8,   // outcome
-    pub field_1: bool, // player_wins
-    pub field_2: u64,  // bet_id
 }

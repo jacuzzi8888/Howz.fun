@@ -1,9 +1,9 @@
-[features]
-seeds = false
-skip-lint = false
-
 [toolchain]
-anchor_version = "0.32.1"
+package_manager = "yarn"
+
+[features]
+resolution = true
+skip-lint = false
 
 [programs.localnet]
 flip_it = "5SLSFwTtdbomiw8fyo4obKvjBhKLaA7s7EbnWmpkgLkg"
@@ -15,14 +15,8 @@ flip_it = "5SLSFwTtdbomiw8fyo4obKvjBhKLaA7s7EbnWmpkgLkg"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
-
-# Arcium cluster configuration for devnet
-# Cluster offset 456 = v0.7.0 (recommended)
-[arcium]
-cluster_offset = 456
-recovery_set_size = 4
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""

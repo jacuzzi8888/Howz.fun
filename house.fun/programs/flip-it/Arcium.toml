@@ -1,18 +1,9 @@
-# Arcium MXE Configuration for Flip It
-# https://docs.arcium.com
-
-[mxe]
-name = "flip_it"
-version = "0.1.0"
-
-[cluster]
-# Devnet cluster offset (v0.7.0 recommended)
-offset = 456
-
-[build]
-# Output directory for compiled circuits
-output_dir = "build"
-
-[test]
-# Default to devnet for testing
-cluster = "devnet"
+[localnet]
+# number of nodes in the single cluster of the localnet
+nodes = 2
+# number of seconds to wait for the localnet to come online
+localnet_timeout_secs = 60
+# MPC backends this MXE supports (default: ["Cerberus"])
+# Supported values: "Cerberus", "Manticore", or both
+# Examples: backends = ["Cerberus"] or backends = ["Cerberus", "Manticore"]
+backends = ["Cerberus"]

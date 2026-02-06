@@ -19,7 +19,7 @@ on:
 env:
   # Free Helius RPC
   HELIUS_RPC_URL: https://devnet.helius-rpc.com/?api-key=${{ secrets.HELIUS_API_KEY }}
-  # Arcium cluster offset (456 = v0.7.0)
+  # Arcium cluster offset (456 = v0.8.0)
   ARCIUM_CLUSTER_OFFSET: 456
 
 jobs:
@@ -143,13 +143,15 @@ jobs:
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           
-          # Update lib.rs
+          # Update lib.rs (correct path from flip-it root)
           sed -i "s/declare_id!(\".*\")/declare_id!(\"${{ env.PROGRAM_ID }}\")/g" programs/flip-it/src/lib.rs
           
-          # Update Anchor.toml
+          # Update Anchor.toml (both localnet and devnet)
           sed -i "s/flip_it = \".*\"/flip_it = \"${{ env.PROGRAM_ID }}\"/g" Anchor.toml
           
-          echo "✅ Program ID synced"
+          echo "✅ Program ID synced to ${{ env.PROGRAM_ID }}"
+          echo "Contents of lib.rs (first 10 lines):"
+          head -10 programs/flip-it/src/lib.rs
 
       # Step 11: Build Arcis circuits and Anchor program
       - name: Build Arcis circuits
@@ -157,12 +159,34 @@ jobs:
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$HOME/.arcium/bin:$PATH"
           
+          echo "📁 Project structure:"
+          ls -la
+          echo ""
+          echo "📁 encrypted-ixs structure:"
+          ls -la encrypted-ixs/ || echo "encrypted-ixs not found"
+          echo ""
+          echo "📁 encrypted-ixs/src structure:"
+          ls -la encrypted-ixs/src/ || echo "encrypted-ixs/src not found"
+          echo ""
+          echo "📄 encrypted-ixs/Cargo.toml:"
+          cat encrypted-ixs/Cargo.toml
+          echo ""
+          echo "📄 Arcium.toml:"
+          cat Arcium.toml
+          echo ""
+          
           echo "🔨 Building Arcis circuits..."
-          arcium build
+          arcium build 2>&1 || {
+            echo "❌ Build failed. Checking for common issues..."
+            echo ""
+            echo "📄 encrypted-ixs/src/lib.rs:"
+            cat encrypted-ixs/src/lib.rs
+            exit 1
+          }
           
           echo ""
           echo "📁 Build artifacts:"
-          ls -lh build/
+          ls -lh build/ || echo "No build directory found"
           
           echo ""
           echo "✅ Circuits built successfully"

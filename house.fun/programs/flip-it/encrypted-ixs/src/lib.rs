@@ -1,20 +1,35 @@
-// Flip It - Arcis Encrypted Instruction Stub
-// This is a placeholder for the Arcium CLI to compile
+use arcis::*;
 
-/// Input from the player - their bet details
-pub struct CoinFlipInput {
-    /// Player's choice: 0 = HEADS, 1 = TAILS
-    pub player_choice: u8,
-    /// Bet ID for correlation
-    pub bet_id: u64,
-}
+#[encrypted]
+mod circuits {
+    use arcis::*;
 
-/// Output returned to the callback
-pub struct CoinFlipOutput {
-    /// The random outcome: 0 = HEADS, 1 = TAILS
-    pub outcome: u8,
-    /// Whether the player won
-    pub player_wins: bool,
-    /// Bet ID passed through for correlation
-    pub bet_id: u64,
+    /// Represents the player's choice in the coin flip game.
+    pub struct UserChoice {
+        pub choice: bool, // Player's choice: true for heads, false for tails
+    }
+
+    /// Performs a confidential coin flip and compares it with the player's choice.
+    ///
+    /// This function generates a cryptographically secure random boolean value within
+    /// the MPC environment and compares it with the player's encrypted choice.
+    /// The comparison result (win/lose) is revealed while keeping both the player's
+    /// choice and the actual coin flip result confidential.
+    ///
+    /// # Arguments
+    /// * `input_ctxt` - Player's encrypted choice (heads or tails)
+    ///
+    /// # Returns
+    /// * `true` if the player's choice matches the coin flip (player wins)
+    /// * `false` if the player's choice doesn't match (player loses)
+    #[instruction]
+    pub fn flip(input_ctxt: Enc<Shared, UserChoice>) -> bool {
+        let input = input_ctxt.to_arcis();
+
+        // Generate a cryptographically secure random boolean (the coin flip)
+        let toss = ArcisRNG::bool();
+
+        // Compare player's choice with the coin flip result and reveal only the outcome
+        (input.choice == toss).reveal()
+    }
 }
