@@ -394,21 +394,21 @@ pub struct Flip<'info> {
 
     #[account(
         mut,
-        address = derive_mempool_pda!(mxe_account, FlipItError::ClusterNotSet)
+        address = derive_mempool_pda!(mxe_account)
     )]
     /// CHECK: mempool_account, checked by arcium program
     pub mempool_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
-        address = derive_execpool_pda!(mxe_account, FlipItError::ClusterNotSet)
+        address = derive_execpool_pda!(mxe_account)
     )]
     /// CHECK: executing_pool, checked by arcium program
     pub executing_pool: UncheckedAccount<'info>,
 
     #[account(
         mut,
-        address = derive_comp_pda!(computation_offset, mxe_account, FlipItError::ClusterNotSet)
+        address = derive_comp_pda!(computation_offset, mxe_account)
     )]
     /// CHECK: computation_account, checked by arcium program
     pub computation_account: UncheckedAccount<'info>,
@@ -418,7 +418,7 @@ pub struct Flip<'info> {
 
     #[account(
         mut,
-        address = derive_cluster_pda!(mxe_account, FlipItError::ClusterNotSet)
+        address = derive_cluster_pda!(mxe_account)
     )]
     pub cluster_account: Account<'info, Cluster>,
 
@@ -446,7 +446,7 @@ pub struct FlipCallback<'info> {
     /// CHECK: computation_account, checked by arcium program
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account, FlipItError::ClusterNotSet))]
+    #[account(address = derive_cluster_pda!(mxe_account))]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
