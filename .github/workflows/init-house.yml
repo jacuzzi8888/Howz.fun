@@ -41,6 +41,38 @@ jobs:
           const PROGRAM_ID = new PublicKey("6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ");
           const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com";
 
+          // Embedded IDL - no on-chain fetch or local file needed
+          const IDL = {
+            "version": "0.1.0",
+            "name": "flip_it",
+            "instructions": [
+              {
+                "name": "initializeHouse",
+                "accounts": [
+                  { "name": "house", "isMut": true, "isSigner": false },
+                  { "name": "authority", "isMut": true, "isSigner": true },
+                  { "name": "systemProgram", "isMut": false, "isSigner": false }
+                ],
+                "args": []
+              }
+            ],
+            "accounts": [
+              {
+                "name": "House",
+                "type": {
+                  "kind": "struct",
+                  "fields": [
+                    { "name": "authority", "type": "publicKey" },
+                    { "name": "treasury", "type": "u64" },
+                    { "name": "totalBets", "type": "u64" },
+                    { "name": "totalVolume", "type": "u64" },
+                    { "name": "bump", "type": "u8" }
+                  ]
+                }
+              }
+            ]
+          };
+
           async function main() {
             console.log("🏠 Initializing House Account...\n");
 
@@ -79,23 +111,14 @@ jobs:
 
             console.log("House account does not exist. Creating...");
 
-            // Setup anchor wallet & provider first
+            // Setup anchor wallet & provider
             const anchorWallet = {
               publicKey: wallet.publicKey,
               signTransaction: async (tx) => { tx.partialSign(wallet); return tx; },
               signAllTransactions: async (txs) => { txs.forEach(tx => tx.partialSign(wallet)); return txs; },
             };
             const provider = new anchor.AnchorProvider(connection, anchorWallet, { commitment: "confirmed" });
-
-            // Fetch IDL from on-chain program account (no local build artifacts needed)
-            console.log("Fetching IDL from on-chain...");
-            const idl = await anchor.Program.fetchIdl(PROGRAM_ID, provider);
-            if (!idl) {
-              throw new Error("IDL not found on-chain for program " + PROGRAM_ID.toString() + ". Make sure the program is deployed with IDL.");
-            }
-            console.log("IDL fetched successfully");
-
-            const program = new anchor.Program(idl, PROGRAM_ID, provider);
+            const program = new anchor.Program(IDL, PROGRAM_ID, provider);
 
             // Send initialize transaction
             console.log("\n📝 Sending initializeHouse transaction...");
