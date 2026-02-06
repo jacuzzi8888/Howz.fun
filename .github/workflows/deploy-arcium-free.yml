@@ -81,22 +81,25 @@ jobs:
 
       # Step 7: Setup deployer wallet
       - name: Setup deployer wallet
+        env:
+          DEPLOYER_KEY: ${{ secrets.DEPLOYER_KEY }}
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana
           
-          if [ -z "${{ secrets.DEPLOYER_KEY }}" ]; then
+          if [ -z "$DEPLOYER_KEY" ]; then
             echo "::error::DEPLOYER_KEY secret is not set!"
             echo "Please add your wallet keypair JSON to GitHub Secrets"
             exit 1
           fi
           
-          echo '${{ secrets.DEPLOYER_KEY }}' > ~/.config/solana/id.json
+          echo "$DEPLOYER_KEY" > ~/.config/solana/id.json
+          chmod 600 ~/.config/solana/id.json
           solana config set --url devnet
           
           WALLET_ADDRESS=$(solana address)
           echo "WALLET_ADDRESS=$WALLET_ADDRESS" >> $GITHUB_ENV
-          echo "✅ Wallet configured: $WALLET_ADDRESS"
+          echo "Wallet configured: $WALLET_ADDRESS"
 
       # Step 8: Check wallet balance
       - name: Check wallet balance
