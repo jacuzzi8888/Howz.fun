@@ -36,42 +36,13 @@ jobs:
         run: |
           node << 'SCRIPT'
           const anchor = require("@coral-xyz/anchor");
-          const { Connection, Keypair, PublicKey, SystemProgram } = require("@solana/web3.js");
+          const { Connection, Keypair, PublicKey, SystemProgram, Transaction, TransactionInstruction } = require("@solana/web3.js");
 
           const PROGRAM_ID = new PublicKey("6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ");
           const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com";
 
-          // Embedded IDL - no on-chain fetch or local file needed
-          const IDL = {
-            "version": "0.1.0",
-            "name": "flip_it",
-            "instructions": [
-              {
-                "name": "initializeHouse",
-                "accounts": [
-                  { "name": "house", "isMut": true, "isSigner": false },
-                  { "name": "authority", "isMut": true, "isSigner": true },
-                  { "name": "systemProgram", "isMut": false, "isSigner": false }
-                ],
-                "args": []
-              }
-            ],
-            "accounts": [
-              {
-                "name": "House",
-                "type": {
-                  "kind": "struct",
-                  "fields": [
-                    { "name": "authority", "type": "publicKey" },
-                    { "name": "treasury", "type": "u64" },
-                    { "name": "totalBets", "type": "u64" },
-                    { "name": "totalVolume", "type": "u64" },
-                    { "name": "bump", "type": "u8" }
-                  ]
-                }
-              }
-            ]
-          };
+          // Discriminator for initializeHouse (first 8 bytes of sha256("global:initialize_house"))
+          const INITIALIZE_HOUSE_DISCRIMINATOR = Buffer.from([112, 146, 238, 68, 186, 143, 197, 129]);
 
           async function main() {
             console.log("🏠 Initializing House Account...\n");
@@ -81,6 +52,9 @@ jobs:
             console.log("Connected to:", RPC_URL.replace(/api-key=.*/, "api-key=***"));
 
             // Load deployer wallet from secret
+            if (!process.env.DEPLOYER_KEY) {
+              throw new Error("DEPLOYER_KEY secret not set");
+            }
             const deployerKey = JSON.parse(process.env.DEPLOYER_KEY);
             const wallet = Keypair.fromSecretKey(new Uint8Array(deployerKey));
             console.log("Wallet:", wallet.publicKey.toString());
@@ -94,11 +68,12 @@ jobs:
             }
 
             // Derive House PDA
-            const [housePDA] = PublicKey.findProgramAddressSync(
+            const [housePDA, houseBump] = PublicKey.findProgramAddressSync(
               [Buffer.from("house")],
               PROGRAM_ID
             );
             console.log("House PDA:", housePDA.toString());
+            console.log("House Bump:", houseBump);
 
             // Check if already initialized
             const existing = await connection.getAccountInfo(housePDA);
@@ -111,33 +86,51 @@ jobs:
 
             console.log("House account does not exist. Creating...");
 
-            // Setup anchor wallet & provider
-            const anchorWallet = {
-              publicKey: wallet.publicKey,
-              signTransaction: async (tx) => { tx.partialSign(wallet); return tx; },
-              signAllTransactions: async (txs) => { txs.forEach(tx => tx.partialSign(wallet)); return txs; },
-            };
-            const provider = new anchor.AnchorProvider(connection, anchorWallet, { commitment: "confirmed" });
-            const program = new anchor.Program(IDL, PROGRAM_ID, provider);
+            // Build instruction manually to avoid Anchor serialization issues
+            const keys = [
+              { pubkey: housePDA, isSigner: false, isWritable: true },
+              { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+              { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+            ];
 
-            // Send initialize transaction
+            const instruction = new TransactionInstruction({
+              keys,
+              programId: PROGRAM_ID,
+              data: INITIALIZE_HOUSE_DISCRIMINATOR,
+            });
+
+            // Build and send transaction
             console.log("\n📝 Sending initializeHouse transaction...");
-            const tx = await program.methods
-              .initializeHouse()
-              .accounts({
-                house: housePDA,
-                authority: wallet.publicKey,
-                systemProgram: SystemProgram.programId,
-              })
-              .rpc();
+            
+            const transaction = new Transaction().add(instruction);
+            transaction.feePayer = wallet.publicKey;
+            
+            const { blockhash } = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            
+            transaction.sign(wallet);
+            
+            const signature = await connection.sendRawTransaction(transaction.serialize());
+            console.log("Transaction sent:", signature);
+            
+            // Wait for confirmation
+            const confirmation = await connection.confirmTransaction(signature, "confirmed");
+            
+            if (confirmation.value.err) {
+              throw new Error("Transaction failed: " + JSON.stringify(confirmation.value.err));
+            }
 
             console.log("\n✅ House initialized successfully!");
-            console.log("   Transaction:", tx);
+            console.log("   Transaction:", signature);
             console.log("   House PDA:", housePDA.toString());
-            console.log("   Explorer: https://explorer.solana.com/tx/" + tx + "?cluster=devnet");
+            console.log("   Explorer: https://explorer.solana.com/tx/" + signature + "?cluster=devnet");
           }
 
-          main().catch(err => { console.error("❌ Error:", err.message || err); process.exit(1); });
+          main().catch(err => { 
+            console.error("❌ Error:", err.message || err); 
+            if (err.logs) console.error("Logs:", err.logs);
+            process.exit(1); 
+          });
           SCRIPT
 
       - name: Summary
