@@ -79,16 +79,22 @@ jobs:
 
             console.log("House account does not exist. Creating...");
 
-            // Load IDL
-            const idl = require("./house.fun/programs/flip-it/target/idl/flip_it.json");
-
-            // Setup provider
+            // Setup anchor wallet & provider first
             const anchorWallet = {
               publicKey: wallet.publicKey,
               signTransaction: async (tx) => { tx.partialSign(wallet); return tx; },
               signAllTransactions: async (txs) => { txs.forEach(tx => tx.partialSign(wallet)); return txs; },
             };
             const provider = new anchor.AnchorProvider(connection, anchorWallet, { commitment: "confirmed" });
+
+            // Fetch IDL from on-chain program account (no local build artifacts needed)
+            console.log("Fetching IDL from on-chain...");
+            const idl = await anchor.Program.fetchIdl(PROGRAM_ID, provider);
+            if (!idl) {
+              throw new Error("IDL not found on-chain for program " + PROGRAM_ID.toString() + ". Make sure the program is deployed with IDL.");
+            }
+            console.log("IDL fetched successfully");
+
             const program = new anchor.Program(idl, PROGRAM_ID, provider);
 
             // Send initialize transaction
