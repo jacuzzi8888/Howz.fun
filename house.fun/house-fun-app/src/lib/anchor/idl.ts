@@ -4,7 +4,7 @@
  */
 
 export type FlipIt = {
-  "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  "address": "6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ",
   "metadata": {
     "name": "flip_it",
     "version": "0.1.0",
@@ -355,7 +355,7 @@ export type FlipIt = {
 };
 
 export const IDL: FlipIt = {
-  "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  "address": "6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ",
   "metadata": {
     "name": "flip_it",
     "version": "0.1.0",

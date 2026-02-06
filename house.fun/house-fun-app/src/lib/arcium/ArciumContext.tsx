@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { PublicKey } from '@solana/web3.js';
 import { 
   initializeArciumClient, 
-  getArciumClient,
+  isArciumConfigured,
   executeFlipItComputation,
   executeDegenDerbyComputation,
   executeShadowPokerComputation,
@@ -12,11 +12,11 @@ import {
   type ComputationResult,
   verifyArciumProofLocal,
 } from './client';
-import { createCommitment, verifyReveal } from './privacy';
 
 // Arcium Context State
-interface ArciumContextState {
+export interface ArciumContextState {
   isInitialized: boolean;
+  isConfigured: boolean;
   isComputing: boolean;
   lastComputation: ComputationResult | null;
   error: string | null;
@@ -47,6 +47,9 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [lastComputation, setLastComputation] = useState<ComputationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Check if Arcium is configured (has API key)
+  const isConfigured = isArciumConfigured();
+
   // Initialize Arcium client
   const initialize = useCallback((apiKey: string) => {
     try {
@@ -68,6 +71,9 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const apiKey = process.env.NEXT_PUBLIC_ARCIUM_API_KEY;
     if (apiKey && !isInitialized) {
       initialize(apiKey);
+    } else if (!apiKey) {
+      // No API key - Arcium is not configured
+      setIsInitialized(false);
     }
   }, [initialize, isInitialized]);
 
@@ -77,10 +83,10 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     playerPublicKey: PublicKey,
     nonce: string
   ): Promise<ComputationResult> => {
-    if (!isInitialized) {
+    if (!isConfigured) {
       return {
         success: false,
-        error: 'Arcium client not initialized',
+        error: 'Arcium not configured. Set NEXT_PUBLIC_ARCIUM_API_KEY.',
       };
     }
 
@@ -92,7 +98,7 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLastComputation(result);
       
       if (!result.success) {
-        setError(result.error || 'Computation failed');
+        setError(result.error ?? 'Computation failed');
       }
       
       return result;
@@ -106,17 +112,17 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsComputing(false);
     }
-  }, [isInitialized]);
+  }, [isConfigured]);
 
   // Generate Degen Derby winner
   const generateDerbyWinner = useCallback(async (
     raceId: string,
     horses: Array<{ id: string; odds: number }>
   ): Promise<ComputationResult> => {
-    if (!isInitialized) {
+    if (!isConfigured) {
       return {
         success: false,
-        error: 'Arcium client not initialized',
+        error: 'Arcium not configured.',
       };
     }
 
@@ -128,7 +134,7 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLastComputation(result);
       
       if (!result.success) {
-        setError(result.error || 'Computation failed');
+        setError(result.error ?? 'Computation failed');
       }
       
       return result;
@@ -142,17 +148,17 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsComputing(false);
     }
-  }, [isInitialized]);
+  }, [isConfigured]);
 
   // Generate Shadow Poker action
   const generatePokerAction = useCallback(async (
     action: 'shuffle' | 'deal' | 'showdown',
     params: Record<string, unknown>
   ): Promise<ComputationResult> => {
-    if (!isInitialized) {
+    if (!isConfigured) {
       return {
         success: false,
-        error: 'Arcium client not initialized',
+        error: 'Arcium not configured.',
       };
     }
 
@@ -164,7 +170,7 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLastComputation(result);
       
       if (!result.success) {
-        setError(result.error || 'Computation failed');
+        setError(result.error ?? 'Computation failed');
       }
       
       return result;
@@ -178,7 +184,7 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsComputing(false);
     }
-  }, [isInitialized]);
+  }, [isConfigured]);
 
   // Verify Arcium proof
   const verifyProof = useCallback(async (proof: ArciumProof): Promise<boolean> => {
@@ -189,6 +195,7 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <ArciumContext.Provider
       value={{
         isInitialized,
+        isConfigured,
         isComputing,
         lastComputation,
         error,

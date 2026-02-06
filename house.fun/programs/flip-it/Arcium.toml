@@ -1,0 +1,18 @@
+# Arcium MXE Configuration for Flip It
+# https://docs.arcium.com
+
+[mxe]
+name = "flip_it"
+version = "0.1.0"
+
+[cluster]
+# Devnet cluster offset (v0.7.0 recommended)
+offset = 456
+
+[build]
+# Output directory for compiled circuits
+output_dir = "build"
+
+[test]
+# Default to devnet for testing
+cluster = "devnet"

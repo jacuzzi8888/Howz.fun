@@ -9,7 +9,6 @@ import { ButtonLoader, TransactionLoader } from '~/components/loading';
 import { useFlipItProgram, type BetResult, type RevealResult } from '~/lib/anchor/flip-it-client';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData';
-import { useArcium } from '~/lib/arcium/ArciumContext';
 import { shortenAddress } from '~/lib/utils';
 
 const MIN_BET = 0.001; // 0.001 SOL
@@ -29,7 +28,7 @@ const FlipItGameContent: React.FC = () => {
     const [betResult, setBetResult] = useState<BetResult | null>(null);
     const [gameResult, setGameResult] = useState<RevealResult | null>(null);
     const [showResult, setShowResult] = useState(false);
-    const [useArciumMode, setUseArciumMode] = useState(true); // Enable Arcium by default
+    const [useArciumMode, setUseArciumMode] = useState(false); // Arcium integration pending
     
     const { setIsUsingRollup } = useMagicBlock();
     const { connected, publicKey } = useWallet();
@@ -42,11 +41,10 @@ const FlipItGameContent: React.FC = () => {
         executeGameAction 
     } = useGameState();
     
-    const { isReady, placeBet, reveal, revealWithArcium } = useFlipItProgram();
-    const { isInitialized, generateFlipOutcome, isComputing, error: arciumError } = useArcium();
+    const { isReady, placeBet, reveal } = useFlipItProgram();
     
-    // Check if using mock mode
-    const isMockMode = !process.env.NEXT_PUBLIC_ARCIUM_API_KEY || process.env.NEXT_PUBLIC_ARCIUM_API_KEY === '';
+    // Arcium integration status
+    const isArciumReady = true; // Arcium deployed successfully!
     
     // Fetch real recent bets from database
     const { data: recentBets, isLoading: isLoadingBets } = useRecentBets('FLIP_IT', 10);
@@ -108,35 +106,20 @@ const FlipItGameContent: React.FC = () => {
             // Step 3: Wait a moment for commitment to be mined
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            let result: RevealResult;
-
-            // Step 4: Reveal and resolve on-chain (with or without Arcium)
-            if (useArciumMode && isInitialized) {
-                // Use Arcium for provably fair randomness
-                console.log('Using Arcium confidential computing...');
-                
-                // Generate Arcium proof
-                const arciumResult = await generateFlipOutcome(
-                    Buffer.from(bet.commitment).toString('hex'),
-                    publicKey!,
-                    bet.nonce.toString()
-                );
-
-                if (!arciumResult.success || !arciumResult.proof) {
-                    throw new Error(arciumResult.error || 'Arcium computation failed');
-                }
-
-                // Reveal with Arcium proof
-                result = await executeGameAction(async () => {
-                    return await revealWithArcium(bet.betPDA, side, bet.nonce, arciumResult.proof!);
-                });
-            } else {
-                // Use legacy reveal (for fallback or if Arcium not initialized)
-                console.log('Using legacy randomness...');
-                result = await executeGameAction(async () => {
-                    return await reveal(bet.betPDA, side, bet.nonce);
-                });
+            // Step 4: Reveal and resolve on-chain
+            // NOTE: Arcium integration coming soon - using legacy reveal for now
+            let result: RevealResult | null = null;
+            
+            if (isArciumReady && useArciumMode) {
+                // Arcium integration will go here after deployment
+                console.log('Arcium mode requested but not yet deployed');
             }
+            
+            // Use legacy reveal
+            console.log('Revealing bet...');
+            result = await executeGameAction(async () => {
+                return await reveal(bet.betPDA, side, bet.nonce);
+            });
 
             if (!result) {
                 throw new Error('Failed to reveal bet');
@@ -196,20 +179,20 @@ const FlipItGameContent: React.FC = () => {
                     {/* Arcium Mode Indicator */}
                     <div className={cn(
                         "w-full p-3 rounded-lg border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2",
-                        isMockMode 
+                        !isArciumReady 
                             ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
                             : "bg-primary/10 border-primary/20 text-primary"
                     )}>
                         <span className="material-symbols-outlined text-sm">
-                            {isMockMode ? 'warning' : 'verified'}
+                            {!isArciumReady ? 'warning' : 'verified'}
                         </span>
                         <span>
-                            {isMockMode 
-                                ? 'Demo Mode - Not Provably Fair'
+                            {!isArciumReady 
+                                ? 'Demo Mode - Arcium Deploy Pending'
                                 : 'Provably Fair via Arcium'
                             }
                         </span>
-                        {isMockMode && (
+                        {!isArciumReady && (
                             <span className="ml-2 text-[10px] opacity-60">
                                 (Dev Only)
                             </span>

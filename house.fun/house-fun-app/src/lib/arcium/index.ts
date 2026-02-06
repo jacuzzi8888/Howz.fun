@@ -4,6 +4,8 @@
  * This module provides confidential computing integration for provably fair gaming.
  * All games use Arcium's Multi-Party Computation (MPC) network for verifiable randomness.
  * 
+ * CURRENT STATUS: Waiting for Arcium devnet access
+ * 
  * @module lib/arcium
  */
 
@@ -11,6 +13,8 @@
 export {
   initializeArciumClient,
   getArciumClient,
+  isArciumConfigured,
+  isArciumInitialized,
   executeFlipItComputation,
   executeDegenDerbyComputation,
   executeShadowPokerComputation,
@@ -30,9 +34,9 @@ export {
 export {
   ArciumProvider,
   useArcium,
-  // Legacy exports for backward compatibility
   PrivacyProvider,
   usePrivacy,
+  type ArciumContextState,
 } from './ArciumContext';
 
 // Privacy utilities (commitment scheme)
@@ -41,16 +45,6 @@ export {
   verifyReveal,
   type Commitment,
 } from './privacy';
-
-// Mock mode utilities (for development without Arcium network)
-export {
-  shouldUseMockMode,
-  logMockModeWarning,
-  generateMockProof,
-  mockFlipItComputation,
-  mockDegenDerbyComputation,
-  mockShadowPokerComputation,
-} from './mock';
 
 // Constants
 export const ARCIUM_CONSTANTS = {
@@ -73,6 +67,3 @@ export const ARCIUM_CONSTANTS = {
     FIGHT_CLUB: 'fight_club_winner_v1',
   },
 } as const;
-
-// Re-export types for convenience
-export type { ArciumContextState } from './ArciumContext';

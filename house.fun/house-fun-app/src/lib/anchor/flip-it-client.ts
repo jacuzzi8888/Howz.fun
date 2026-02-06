@@ -11,7 +11,6 @@ import {
   parseFlipItError,
   solToLamports 
 } from './utils';
-import type { ArciumProof } from '~/lib/arcium/client';
 
 export interface BetResult {
   signature: string;
@@ -33,11 +32,23 @@ export interface BetAccount {
   status: 'Committed' | 'Resolved' | 'Claimed';
   playerWins: boolean | null;
   payout: number;
-  arciumProof?: ArciumProof | null;
 }
 
 /**
  * Hook to interact with Flip It smart contract
+ * 
+ * NOTE: This client uses the legacy Anchor IDL which expects snake_case method names.
+ * The Rust program has been refactored for Arcium integration with camelCase methods,
+ * but the IDL needs to be regenerated with:
+ *   cd house.fun/programs/flip-it && anchor build && anchor idl init --filepath target/idl/flip_it.json <program_id>
+ * 
+ * After IDL regeneration, update this client to use the new Arcium methods:
+ *   - initialize_house -> initializeHouse
+ *   - init_coin_flip_comp_def (NEW) - one-time setup
+ *   - place_bet -> placeBet (takes choice directly, no commitment)
+ *   - request_flip (NEW) - queues Arcium computation
+ *   - claim_winnings -> claimWinnings
+ *   - deposit_treasury (NEW)
  */
 export function useFlipItProgram() {
   const { connection } = useConnection();
@@ -76,7 +87,7 @@ export function useFlipItProgram() {
   }, [program, wallet.publicKey]);
 
   /**
-   * Place a bet with commitment
+   * Place a bet with commitment (legacy method - pre-Arcium)
    */
   const placeBet = useCallback(async (
     amount: number,
@@ -126,7 +137,9 @@ export function useFlipItProgram() {
   }, [program, wallet.publicKey]);
 
   /**
-   * Reveal bet and resolve game
+   * Reveal bet and resolve game (legacy method - uses on-chain randomness)
+   * NOTE: This is exploitable and should not be used for real stakes.
+   * Use Arcium integration (coming after IDL update) for provably fair flips.
    */
   const reveal = useCallback(async (
     betPDA: web3.PublicKey,
@@ -141,66 +154,9 @@ export function useFlipItProgram() {
       const [housePDA] = getHousePDA();
       const choiceNum = choice === 'HEADS' ? 0 : 1;
 
-      // Get recent blockhash for randomness
-      const { blockhash } = await connection.getLatestBlockhash();
-      const recentBlockhashAccount = new web3.PublicKey('SysvarRecentB1ockHashes11111111111111111111');
-
       // Send reveal transaction
       const tx = await program.methods
         .reveal(choiceNum, new BN(nonce))
-        .accounts({
-          bet: betPDA,
-          house: housePDA,
-          player: wallet.publicKey,
-          recent_blockhashes: recentBlockhashAccount,
-          system_program: web3.SystemProgram.programId,
-        } as any)
-        .rpc();
-
-      // Fetch updated bet account
-      const betAccount = await (program.account as any).Bet.fetch(betPDA);
-
-      return {
-        signature: tx,
-        outcome: betAccount.outcome === 0 ? 'HEADS' : 'TAILS',
-        playerWon: betAccount.playerWins,
-        payout: betAccount.payout.toNumber() / web3.LAMPORTS_PER_SOL,
-      };
-    } catch (error) {
-      throw new Error(parseFlipItError(error));
-    }
-  }, [program, wallet.publicKey, connection]);
-
-  /**
-   * Reveal bet with Arcium provably fair proof
-   * This is the recommended method for maximum fairness
-   */
-  const revealWithArcium = useCallback(async (
-    betPDA: web3.PublicKey,
-    choice: 'HEADS' | 'TAILS',
-    nonce: number,
-    arciumProof: ArciumProof
-  ): Promise<RevealResult> => {
-    if (!program || !wallet.publicKey) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const [housePDA] = getHousePDA();
-      const choiceNum = choice === 'HEADS' ? 0 : 1;
-
-      // Convert Arcium proof to format expected by smart contract
-      const proofData = {
-        outcome: arciumProof.outcome,
-        proof: Array.from(arciumProof.proof),
-        publicInputs: Array.from(arciumProof.publicInputs),
-        timestamp: new BN(arciumProof.timestamp),
-        clusterSignature: Array.from(arciumProof.clusterSignature),
-      };
-
-      // Send reveal transaction with Arcium proof
-      const tx = await program.methods
-        .reveal_with_arcium(choiceNum, new BN(nonce), proofData)
         .accounts({
           bet: betPDA,
           house: housePDA,
@@ -298,8 +254,7 @@ export function useFlipItProgram() {
     isReady: !!program,
     initializeHouse,
     placeBet,
-    reveal, // Legacy method
-    revealWithArcium, // New Arcium method
+    reveal,
     claimWinnings,
     fetchBet,
     fetchHouse,

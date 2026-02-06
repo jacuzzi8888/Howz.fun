@@ -1,0 +1,292 @@
+name: Deploy Flip It - Free Tier (Hackathon)
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Network to deploy to'
+        required: true
+        default: 'devnet'
+        type: choice
+        options:
+          - devnet
+      skip_init:
+        description: 'Skip computation definition initialization (if already initialized)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  # Free Helius RPC
+  HELIUS_RPC_URL: https://devnet.helius-rpc.com/?api-key=${{ secrets.HELIUS_API_KEY }}
+  # Arcium cluster offset (456 = v0.7.0)
+  ARCIUM_CLUSTER_OFFSET: 456
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Cache dependencies for faster builds
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      # Step 3: Install system dependencies
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config build-essential libudev-dev libssl-dev
+
+      # Step 4: Install Solana CLI
+      - name: Install Solana CLI
+        run: |
+          echo "Installing Solana CLI..."
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          solana --version
+
+      # Step 5: Install Anchor via AVM
+      - name: Install Anchor
+        run: |
+          echo "Installing Anchor..."
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install latest
+          avm use latest
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          anchor --version
+
+      # Step 6: Install Arcium CLI
+      - name: Install Arcium CLI
+        run: |
+          echo "Installing Arcium CLI..."
+          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+          export PATH="$HOME/.arcium/bin:$PATH"
+          echo "$HOME/.arcium/bin" >> $GITHUB_PATH
+          arcium --version
+
+      # Step 7: Setup deployer wallet
+      - name: Setup deployer wallet
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          mkdir -p ~/.config/solana
+          
+          if [ -z "${{ secrets.DEPLOYER_KEY }}" ]; then
+            echo "::error::DEPLOYER_KEY secret is not set!"
+            echo "Please add your wallet keypair JSON to GitHub Secrets"
+            exit 1
+          fi
+          
+          echo '${{ secrets.DEPLOYER_KEY }}' > ~/.config/solana/id.json
+          solana config set --url devnet
+          
+          WALLET_ADDRESS=$(solana address)
+          echo "WALLET_ADDRESS=$WALLET_ADDRESS" >> $GITHUB_ENV
+          echo "✅ Wallet configured: $WALLET_ADDRESS"
+
+      # Step 8: Check wallet balance
+      - name: Check wallet balance
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "Checking balance..."
+          BALANCE=$(solana balance 2>/dev/null || echo "0")
+          echo "Current balance: $BALANCE SOL"
+          
+          # Extract numeric value
+          BALANCE_NUM=$(echo $BALANCE | grep -oP '^[0-9.]+' || echo "0")
+          
+          if (( $(echo "$BALANCE_NUM < 2" | bc -l) )); then
+            echo ""
+            echo "⚠️  WARNING: Low balance detected"
+            echo "Fund this address: ${{ env.WALLET_ADDRESS }}"
+            echo "Faucet: https://faucet.solana.com/"
+            echo ""
+            echo "Attempting deployment anyway..."
+          fi
+
+      # Step 9: Generate program keypair
+      - name: Generate program keypair
+        working-directory: house.fun/programs/flip-it
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          mkdir -p target/deploy
+          
+          if [ ! -f target/deploy/flip_it-keypair.json ]; then
+            echo "Generating new program keypair..."
+            solana-keygen new -o target/deploy/flip_it-keypair.json --no-passphrase --force
+          fi
+          
+          PROGRAM_ID=$(solana-keygen pubkey target/deploy/flip_it-keypair.json)
+          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          echo "✅ Program ID: $PROGRAM_ID"
+
+      # Step 10: Sync program ID
+      - name: Sync program ID
+        working-directory: house.fun/programs/flip-it
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          
+          # Update lib.rs
+          sed -i "s/declare_id!(\".*\")/declare_id!(\"${{ env.PROGRAM_ID }}\")/g" programs/flip-it/src/lib.rs
+          
+          # Update Anchor.toml
+          sed -i "s/flip_it = \".*\"/flip_it = \"${{ env.PROGRAM_ID }}\"/g" Anchor.toml
+          
+          echo "✅ Program ID synced"
+
+      # Step 11: Build Arcis circuits and Anchor program
+      - name: Build Arcis circuits
+        working-directory: house.fun/programs/flip-it
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$HOME/.arcium/bin:$PATH"
+          
+          echo "🔨 Building Arcis circuits..."
+          arcium build
+          
+          echo ""
+          echo "📁 Build artifacts:"
+          ls -lh build/
+          
+          echo ""
+          echo "✅ Circuits built successfully"
+
+      # Step 12: Deploy to devnet
+      - name: Deploy to devnet
+        id: deploy
+        working-directory: house.fun/programs/flip-it
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$HOME/.arcium/bin:$PATH"
+          
+          echo "🚀 Deploying to devnet..."
+          echo "Program ID: ${{ env.PROGRAM_ID }}"
+          echo "Cluster Offset: ${{ env.ARCIUM_CLUSTER_OFFSET }}"
+          echo ""
+          
+          # Deploy with Arcium
+          arcium deploy \
+            --cluster-offset ${{ env.ARCIUM_CLUSTER_OFFSET }} \
+            --recovery-set-size 4 \
+            --keypair-path ~/.config/solana/id.json \
+            --rpc-url ${{ env.HELIUS_RPC_URL }} \
+            2>&1 | tee deploy.log
+          
+          # Check if deployment succeeded
+          if grep -q "Error" deploy.log; then
+            echo ""
+            echo "⚠️  Deployment may have partially failed"
+            echo "Checking if program exists..."
+            
+            if solana program show ${{ env.PROGRAM_ID }} --url devnet > /dev/null 2>&1; then
+              echo "✅ Program already deployed"
+              echo "DEPLOY_STATUS=existing" >> $GITHUB_ENV
+            else
+              echo "❌ Deployment failed"
+              exit 1
+            fi
+          else
+            echo "✅ Deployment successful"
+            echo "DEPLOY_STATUS=new" >> $GITHUB_ENV
+          fi
+
+      # Step 13: Initialize computation definition
+      - name: Initialize computation definition
+        if: ${{ !inputs.skip_init }}
+        working-directory: house.fun/programs/flip-it
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$HOME/.arcium/bin:$PATH"
+          
+          echo "🔧 Initializing computation definition..."
+          
+          # Build TypeScript tests first
+          npm install
+          
+          # Run initialization test
+          # This will initialize the comp_def if not already done
+          anchor test --skip-build --skip-deploy 2>&1 | tee test.log || true
+          
+          if grep -q "passed" test.log; then
+            echo "✅ Computation definition initialized"
+          else
+            echo "⚠️  Computation definition may already exist or test failed"
+            echo "You can check manually and use 'skip_init' option if needed"
+          fi
+
+      # Step 14: Verify deployment
+      - name: Verify deployment
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          
+          echo "🔍 Verifying deployment..."
+          echo ""
+          
+          # Check program
+          echo "Program Status:"
+          solana program show ${{ env.PROGRAM_ID }} --url devnet || echo "Program not found"
+          
+          echo ""
+          echo "Program Account:"
+          solana account ${{ env.PROGRAM_ID }} --url devnet | head -20 || echo "Account not accessible"
+          
+          echo ""
+          echo "✅ Verification complete"
+
+      # Step 15: Deployment summary
+      - name: Deployment Summary
+        run: |
+          echo "## 🎉 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Program ID | \`${{ env.PROGRAM_ID }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Network | devnet |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployer | \`${{ env.WALLET_ADDRESS }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cluster Offset | ${{ env.ARCIUM_CLUSTER_OFFSET }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ env.DEPLOY_STATUS || 'unknown' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [View on Solana Explorer](https://explorer.solana.com/address/${{ env.PROGRAM_ID }}?cluster=devnet)" >> $GITHUB_STEP_SUMMARY
+          echo "- [View on Solscan](https://solscan.io/account/${{ env.PROGRAM_ID }}?cluster=devnet)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Update \`.env.local\`:" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "   NEXT_PUBLIC_FLIP_IT_PROGRAM_ID=${{ env.PROGRAM_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "2. Copy the new IDL to your frontend:" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "   cp house.fun/programs/flip-it/target/idl/flip_it.json house.fun/house-fun-app/src/lib/anchor/idl.ts" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "3. Test the deployment with:" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "   cd house.fun/programs/flip-it" >> $GITHUB_STEP_SUMMARY
+          echo "   anchor test" >> $GITHUB_STEP_SUMMARY
+          echo "   \`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      # Step 16: Upload artifacts
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flip-it-deployment
+          path: |
+            house.fun/programs/flip-it/target/deploy/
+            house.fun/programs/flip-it/target/idl/
+            house.fun/programs/flip-it/build/
+          retention-days: 30
