@@ -12,12 +12,6 @@ on:
           - devnet
           - mainnet
 
-env:
-  SOLANA_CLI_VERSION: 1.18.26
-  ANCHOR_VERSION: 0.30.1
-  NODE_VERSION: 20
-  RPC_URL: ${{ secrets.HELIUS_RPC_URL }}
-
 jobs:
   initialize-house:
     runs-on: ubuntu-latest
@@ -28,105 +22,97 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: house.fun/house-fun-app/package-lock.json
-
-      - name: Install Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v${{ env.SOLANA_CLI_VERSION }}/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana --version
-
-      - name: Setup Deployer Wallet
-        run: |
-          mkdir -p ~/.config/solana
-          echo "${{ secrets.DEPLOYER_KEY }}" > ~/.config/solana/id.json
-          chmod 600 ~/.config/solana/id.json
-          solana config set --keypair ~/.config/solana/id.json
-          solana config set --url ${{ env.RPC_URL }}
-          echo "Wallet pubkey: $(solana-keygen pubkey ~/.config/solana/id.json)"
-
-      - name: Check Wallet Balance
-        run: |
-          BALANCE=$(solana balance | awk '{print $1}')
-          echo "Wallet balance: $BALANCE SOL"
-          if (( $(echo "$BALANCE < 0.01" | bc -l) )); then
-            echo "❌ ERROR: Insufficient balance. Need at least 0.01 SOL."
-            echo "Get devnet SOL from: https://faucet.solana.com/"
-            exit 1
-          fi
-
-      - name: Install Anchor
-        run: |
-          npm install -g @coral-xyz/anchor-cli@${{ env.ANCHOR_VERSION }}
-          anchor --version
+          node-version: 20
 
       - name: Install dependencies
-        working-directory: house.fun/programs/flip-it
-        run: npm install
-
-      - name: Build Program
-        working-directory: house.fun/programs/flip-it
-        run: anchor build
+        run: npm install @coral-xyz/anchor @solana/web3.js
 
       - name: Initialize House Account
-        working-directory: house.fun/programs/flip-it
+        env:
+          DEPLOYER_KEY: ${{ secrets.DEPLOYER_KEY }}
+          RPC_URL: ${{ secrets.HELIUS_RPC_URL }}
         run: |
-          echo "🏠 Initializing House Account..."
-          
-          # Get program ID
-          PROGRAM_ID="6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ"
-          echo "Program ID: $PROGRAM_ID"
-          
-          # Calculate House PDA
-          HOUSE_PDA=$(solana-keygen pubkey --program-id "$PROGRAM_ID" --with-seed "house" | head -1)
-          echo "House PDA: $HOUSE_PDA"
-          
-          # Check if house already exists
-          ACCOUNT_INFO=$(solana account "$HOUSE_PDA" 2>&1 || true)
-          if echo "$ACCOUNT_INFO" | grep -q "Error"; then
-            echo "✓ House account does not exist yet. Creating..."
-          else
-            echo "✅ House account already initialized!"
-            echo "$ACCOUNT_INFO"
-            exit 0
-          fi
-          
-          # Run initialization script
-          node scripts/initialize-house.js 2>&1 || {
-            echo "❌ Initialization failed"
-            exit 1
+          node << 'SCRIPT'
+          const anchor = require("@coral-xyz/anchor");
+          const { Connection, Keypair, PublicKey, SystemProgram } = require("@solana/web3.js");
+
+          const PROGRAM_ID = new PublicKey("6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ");
+          const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com";
+
+          async function main() {
+            console.log("🏠 Initializing House Account...\n");
+
+            // Setup connection
+            const connection = new Connection(RPC_URL, "confirmed");
+
+            // Load deployer wallet from secret
+            const deployerKey = JSON.parse(process.env.DEPLOYER_KEY);
+            const wallet = Keypair.fromSecretKey(new Uint8Array(deployerKey));
+            console.log("Wallet:", wallet.publicKey.toString());
+
+            // Check balance
+            const balance = await connection.getBalance(wallet.publicKey);
+            console.log("Balance:", balance / 1e9, "SOL");
+
+            if (balance < 0.01 * 1e9) {
+              throw new Error("Insufficient balance. Need at least 0.01 SOL. Get devnet SOL: https://faucet.solana.com/");
+            }
+
+            // Derive House PDA
+            const [housePDA] = PublicKey.findProgramAddressSync(
+              [Buffer.from("house")],
+              PROGRAM_ID
+            );
+            console.log("House PDA:", housePDA.toString());
+
+            // Check if already initialized
+            const existing = await connection.getAccountInfo(housePDA);
+            if (existing) {
+              console.log("\n✅ House account already initialized!");
+              return;
+            }
+
+            // Setup provider
+            const anchorWallet = {
+              publicKey: wallet.publicKey,
+              signTransaction: async (tx) => { tx.partialSign(wallet); return tx; },
+              signAllTransactions: async (txs) => { txs.forEach(tx => tx.partialSign(wallet)); return txs; },
+            };
+            const provider = new anchor.AnchorProvider(connection, anchorWallet, { commitment: "confirmed" });
+
+            // Load IDL from file
+            const idl = require("./house.fun/programs/flip-it/target/idl/flip_it.json");
+            const program = new anchor.Program(idl, PROGRAM_ID, provider);
+
+            // Send initialize transaction
+            console.log("\n📝 Sending initialize_house transaction...");
+            const tx = await program.methods
+              .initializeHouse()
+              .accounts({
+                house: housePDA,
+                authority: wallet.publicKey,
+                systemProgram: SystemProgram.programId,
+              })
+              .rpc();
+
+            console.log("\n✅ House initialized successfully!");
+            console.log("   Transaction:", tx);
+            console.log("   House PDA:", housePDA.toString());
+            console.log("   Explorer: https://explorer.solana.com/tx/" + tx + "?cluster=devnet");
           }
 
-      - name: Verify House Account
-        run: |
-          PROGRAM_ID="6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ"
-          HOUSE_PDA=$(solana-keygen pubkey --program-id "$PROGRAM_ID" --with-seed "house" | head -1)
-          
-          echo ""
-          echo "🔍 Verifying House Account..."
-          echo "House PDA: $HOUSE_PDA"
-          
-          solana account "$HOUSE_PDA"
+          main().catch(err => { console.error("❌ Error:", err.message || err); process.exit(1); });
+          SCRIPT
 
-      - name: Deployment Summary
+      - name: Summary
+        if: success()
         run: |
-          PROGRAM_ID="6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ"
-          HOUSE_PDA=$(solana-keygen pubkey --program-id "$PROGRAM_ID" --with-seed "house" | head -1)
-          
           echo ""
           echo "╔════════════════════════════════════════════════════════╗"
           echo "║         🏠 HOUSE INITIALIZATION COMPLETE! 🏠          ║"
           echo "╚════════════════════════════════════════════════════════╝"
           echo ""
-          echo "Program ID: $PROGRAM_ID"
-          echo "House PDA:  $HOUSE_PDA"
+          echo "Program ID: 6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ"
           echo "Network:    ${{ github.event.inputs.environment }}"
-          echo ""
-          echo "Links:"
-          echo "  • Program: https://explorer.solana.com/address/$PROGRAM_ID?cluster=devnet"
-          echo "  • House:   https://explorer.solana.com/address/$HOUSE_PDA?cluster=devnet"
           echo ""
           echo "✅ House is ready for betting!"
