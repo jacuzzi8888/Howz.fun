@@ -81,49 +81,58 @@ jobs:
 
       # Step 7: Setup deployer wallet
       - name: Setup deployer wallet
+        env:
+          KEYPAIR_JSON: ${{ secrets.DEPLOYER_KEY }}
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana
           
-          # Try to get the secret
-          DEPLOYER_KEY='${{ secrets.DEPLOYER_KEY }}'
-          
           echo "Debug: Checking DEPLOYER_KEY..."
-          echo "Debug: Secret name = DEPLOYER_KEY"
+          echo "Debug: KEYPAIR_JSON length = ${#KEYPAIR_JSON}"
           
-          # Check if secret is set
-          if [ -n "$DEPLOYER_KEY" ] && [ "${#DEPLOYER_KEY}" -gt 10 ] && [[ "$DEPLOYER_KEY" == \[* ]]; then
-            echo "Debug: DEPLOYER_KEY is set, length = ${#DEPLOYER_KEY}"
-            echo "Debug: First 30 chars = ${DEPLOYER_KEY:0:30}"
+          # Check if secret is set and valid
+          if [ -n "$KEYPAIR_JSON" ] && [ "${#KEYPAIR_JSON}" -gt 10 ]; then
+            echo "Debug: Secret is set, checking format..."
             
-            # Save to file
-            echo -n "$DEPLOYER_KEY" > ~/.config/solana/id.json
-            chmod 600 ~/.config/solana/id.json
-            echo "✅ Using DEPLOYER_KEY from secrets"
+            # Check if it starts with [
+            if [[ "$KEYPAIR_JSON" == \[* ]]; then
+              echo "Debug: Format looks correct (starts with [)"
+              echo "Debug: First 50 chars: ${KEYPAIR_JSON:0:50}"
+              
+              # Save to file
+              printf '%s' "$KEYPAIR_JSON" > ~/.config/solana/id.json
+              chmod 600 ~/.config/solana/id.json
+              echo "✅ Using DEPLOYER_KEY from secrets"
+            else
+              echo "::error::DEPLOYER_KEY format is invalid!"
+              echo "Expected JSON array starting with '['"
+              echo "Got: ${KEYPAIR_JSON:0:50}"
+              exit 1
+            fi
           else
-            echo "⚠️  DEPLOYER_KEY not found or invalid. Generating temporary keypair..."
-            echo "    You'll need to fund this address before deploying."
+            echo "::error::DEPLOYER_KEY secret is not set!"
             echo ""
-            
-            # Generate a new keypair
-            solana-keygen new -o ~/.config/solana/id.json --no-passphrase --force
-            
+            echo "Please add your wallet keypair JSON to GitHub Secrets."
+            echo "The value should be a JSON array like: [12,34,56,...]"
             echo ""
-            echo "⚠️  IMPORTANT: Save this keypair if you want to reuse it!"
-            echo "    Keypair JSON:"
-            cat ~/.config/solana/id.json
-            echo ""
+            echo "To get this from your Solana wallet:"
+            echo "  cat ~/.config/solana/id.json"
+            exit 1
           fi
           
           solana config set --url devnet
           
-          # Get and display the wallet address
-          WALLET_ADDRESS=$(solana address)
+          # Verify the keypair works
+          if ! WALLET_ADDRESS=$(solana address 2>&1); then
+            echo "::error::Failed to read wallet address from keypair!"
+            echo "Error: $WALLET_ADDRESS"
+            echo ""
+            echo "The keypair JSON might be malformed."
+            exit 1
+          fi
+          
           echo ""
           echo "📝 Wallet Address: $WALLET_ADDRESS"
-          echo "   Fund this address: https://faucet.solana.com/"
-          echo ""
-          
           echo "WALLET_ADDRESS=$WALLET_ADDRESS" >> $GITHUB_ENV
           echo "✅ Wallet configured"
 
