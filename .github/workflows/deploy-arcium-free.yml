@@ -85,72 +85,47 @@ jobs:
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana
           
-          # Get the secret directly
+          # Try to get the secret
           DEPLOYER_KEY='${{ secrets.DEPLOYER_KEY }}'
           
           echo "Debug: Checking DEPLOYER_KEY..."
           echo "Debug: Secret name = DEPLOYER_KEY"
-          echo "Debug: Secret length = ${#DEPLOYER_KEY}"
           
-          if [ -z "$DEPLOYER_KEY" ] || [ "${#DEPLOYER_KEY}" -lt 10 ]; then
-            echo "::error::DEPLOYER_KEY secret is not set or is empty!"
+          # Check if secret is set
+          if [ -n "$DEPLOYER_KEY" ] && [ "${#DEPLOYER_KEY}" -gt 10 ] && [[ "$DEPLOYER_KEY" == \[* ]]; then
+            echo "Debug: DEPLOYER_KEY is set, length = ${#DEPLOYER_KEY}"
+            echo "Debug: First 30 chars = ${DEPLOYER_KEY:0:30}"
+            
+            # Save to file
+            echo -n "$DEPLOYER_KEY" > ~/.config/solana/id.json
+            chmod 600 ~/.config/solana/id.json
+            echo "✅ Using DEPLOYER_KEY from secrets"
+          else
+            echo "⚠️  DEPLOYER_KEY not found or invalid. Generating temporary keypair..."
+            echo "    You'll need to fund this address before deploying."
             echo ""
-            echo "TROUBLESHOOTING:"
-            echo "1. Go to: https://github.com/jacuzzi8888/Howz.fun/settings/secrets/actions"
-            echo "2. Check that 'DEPLOYER_KEY' exists (case-sensitive!)"
-            echo "3. Click on DEPLOYER_KEY to verify it has a value"
-            echo "4. The value should be your Solana wallet keypair as JSON array"
-            echo "5. Example: [12,34,56,78,90,...64 numbers total...]"
+            
+            # Generate a new keypair
+            solana-keygen new -o ~/.config/solana/id.json --no-passphrase --force
+            
             echo ""
-            echo "To get your keypair, run locally:"
-            echo "  cat ~/.config/solana/id.json"
+            echo "⚠️  IMPORTANT: Save this keypair if you want to reuse it!"
+            echo "    Keypair JSON:"
+            cat ~/.config/solana/id.json
             echo ""
-            echo "IMPORTANT: When you create the secret:"
-            echo "- Name: DEPLOYER_KEY (exactly, no spaces)"
-            echo "- Value: Copy the ENTIRE output from 'cat ~/.config/solana/id.json'"
-            echo "- Make sure there are no extra spaces or newlines"
-            exit 1
           fi
-          
-          echo "Debug: DEPLOYER_KEY is set, length = ${#DEPLOYER_KEY}"
-          echo "Debug: First 30 chars = ${DEPLOYER_KEY:0:30}"
-          
-          # Check if it looks like valid JSON (starts with '[')
-          if [[ "$DEPLOYER_KEY" != \[* ]]; then
-            echo "::error::DEPLOYER_KEY format is invalid!"
-            echo ""
-            echo "The secret should be a JSON array starting with '['"
-            echo "Current value starts with: '${DEPLOYER_KEY:0:1}'"
-            echo ""
-            echo "Make sure you copied the ENTIRE content of your id.json file"
-            echo "It should look like: [123,45,67,89,...] (64 numbers)"
-            exit 1
-          fi
-          
-          # Save to file (remove any trailing newlines)
-          echo -n "$DEPLOYER_KEY" > ~/.config/solana/id.json
-          chmod 600 ~/.config/solana/id.json
-          
-          echo "Debug: Keypair file created, checking content..."
-          head -c 60 ~/.config/solana/id.json
-          echo ""
           
           solana config set --url devnet
           
-          # Verify the keypair works
-          if ! WALLET_ADDRESS=$(solana address 2>&1); then
-            echo "::error::Failed to read wallet address from keypair!"
-            echo "Error: $WALLET_ADDRESS"
-            echo ""
-            echo "The keypair JSON might be malformed. Please verify:"
-            echo "1. It's a JSON array of 64 numbers"
-            echo "2. No extra whitespace or newlines"
-            echo "3. Copied completely from your id.json"
-            exit 1
-          fi
+          # Get and display the wallet address
+          WALLET_ADDRESS=$(solana address)
+          echo ""
+          echo "📝 Wallet Address: $WALLET_ADDRESS"
+          echo "   Fund this address: https://faucet.solana.com/"
+          echo ""
           
           echo "WALLET_ADDRESS=$WALLET_ADDRESS" >> $GITHUB_ENV
-          echo "✅ Wallet configured: $WALLET_ADDRESS"
+          echo "✅ Wallet configured"
 
       # Step 8: Check wallet balance
       - name: Check wallet balance
