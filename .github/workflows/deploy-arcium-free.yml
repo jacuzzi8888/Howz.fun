@@ -81,41 +81,60 @@ jobs:
 
       # Step 7: Setup deployer wallet
       - name: Setup deployer wallet
-        env:
-          DEPLOYER_KEY: ${{ secrets.DEPLOYER_KEY }}
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana
           
-          echo "Debug: Checking if DEPLOYER_KEY is set..."
-          echo "Debug: DEPLOYER_KEY length = ${#DEPLOYER_KEY}"
+          # Get the secret directly
+          DEPLOYER_KEY='${{ secrets.DEPLOYER_KEY }}'
           
-          if [ -z "$DEPLOYER_KEY" ]; then
+          echo "Debug: Checking DEPLOYER_KEY..."
+          echo "Debug: Secret name = DEPLOYER_KEY"
+          echo "Debug: Secret length = ${#DEPLOYER_KEY}"
+          
+          if [ -z "$DEPLOYER_KEY" ] || [ "${#DEPLOYER_KEY}" -lt 10 ]; then
             echo "::error::DEPLOYER_KEY secret is not set or is empty!"
             echo ""
-            echo "Please add your wallet keypair JSON to GitHub Secrets."
-            echo "The value should be a JSON array like: [1,2,3,...,64 numbers total]"
+            echo "TROUBLESHOOTING:"
+            echo "1. Go to: https://github.com/jacuzzi8888/Howz.fun/settings/secrets/actions"
+            echo "2. Check that 'DEPLOYER_KEY' exists (case-sensitive!)"
+            echo "3. Click on DEPLOYER_KEY to verify it has a value"
+            echo "4. The value should be your Solana wallet keypair as JSON array"
+            echo "5. Example: [12,34,56,78,90,...64 numbers total...]"
             echo ""
-            echo "To get this from your Solana wallet:"
+            echo "To get your keypair, run locally:"
             echo "  cat ~/.config/solana/id.json"
             echo ""
+            echo "IMPORTANT: When you create the secret:"
+            echo "- Name: DEPLOYER_KEY (exactly, no spaces)"
+            echo "- Value: Copy the ENTIRE output from 'cat ~/.config/solana/id.json'"
+            echo "- Make sure there are no extra spaces or newlines"
             exit 1
           fi
+          
+          echo "Debug: DEPLOYER_KEY is set, length = ${#DEPLOYER_KEY}"
+          echo "Debug: First 30 chars = ${DEPLOYER_KEY:0:30}"
           
           # Check if it looks like valid JSON (starts with '[')
           if [[ "$DEPLOYER_KEY" != \[* ]]; then
             echo "::error::DEPLOYER_KEY format is invalid!"
             echo ""
             echo "The secret should be a JSON array starting with '['"
-            echo "Current value starts with: ${DEPLOYER_KEY:0:1}"
+            echo "Current value starts with: '${DEPLOYER_KEY:0:1}'"
             echo ""
             echo "Make sure you copied the ENTIRE content of your id.json file"
             echo "It should look like: [123,45,67,89,...] (64 numbers)"
             exit 1
           fi
           
-          echo "$DEPLOYER_KEY" > ~/.config/solana/id.json
+          # Save to file (remove any trailing newlines)
+          echo -n "$DEPLOYER_KEY" > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
+          
+          echo "Debug: Keypair file created, checking content..."
+          head -c 60 ~/.config/solana/id.json
+          echo ""
+          
           solana config set --url devnet
           
           # Verify the keypair works
