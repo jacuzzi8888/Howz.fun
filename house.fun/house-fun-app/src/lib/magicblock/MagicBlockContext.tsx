@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, useState } from 'react';
-import { Connection } from '@solana/web3.js';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { Connection, Keypair } from '@solana/web3.js';
+import { SessionManager } from './SessionManager';
 
 interface MagicBlockContextState {
     standardConnection: Connection;
@@ -9,6 +10,12 @@ interface MagicBlockContextState {
     activeConnection: Connection;
     isUsingRollup: boolean;
     setIsUsingRollup: (val: boolean) => void;
+    // Session Keys
+    sessionKey: Keypair | null;
+    isSessionActive: boolean;
+    sessionRemainingTime: string;
+    refreshSession: () => void;
+    clearSession: () => void;
 }
 
 const MagicBlockContext = createContext<MagicBlockContextState | null>(null);
@@ -17,24 +24,58 @@ export const MagicBlockProvider: React.FC<{
     children: React.ReactNode;
 }> = ({ children }) => {
     const [isUsingRollup, setIsUsingRollup] = useState(false);
+    const [sessionKey, setSessionKey] = useState<Keypair | null>(null);
+    const [sessionRemainingTime, setSessionRemainingTime] = useState('00:00');
+
     // Standard Mainnet/Devnet Connection
     const standardConnection = useMemo(() =>
         new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com', 'confirmed'),
         []);
 
     // MagicBlock Ephemeral Rollup Connection
-    // In a real hackathon setup, this would be the URL provided by MagicBlock Labs
     const rollupConnection = useMemo(() =>
         new Connection('https://mainnet.magicblock.app', 'confirmed'),
         []);
+
+    const refreshSession = () => {
+        setSessionKey(SessionManager.getStoredSessionKey());
+    };
+
+    const clearSession = () => {
+        SessionManager.clearSession();
+        setSessionKey(null);
+    };
+
+    // Session Timer & Refresh Logic
+    useEffect(() => {
+        refreshSession();
+        const interval = setInterval(() => {
+            const active = SessionManager.isSessionActive();
+            setSessionRemainingTime(SessionManager.getRemainingTime());
+
+            // Auto-clear if expired
+            if (!active && sessionKey !== null) {
+                setSessionKey(null);
+            } else if (active && sessionKey === null) {
+                setSessionKey(SessionManager.getStoredSessionKey());
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [sessionKey]);
 
     const value = useMemo(() => ({
         standardConnection,
         rollupConnection,
         activeConnection: isUsingRollup ? rollupConnection : standardConnection,
         isUsingRollup,
-        setIsUsingRollup
-    }), [standardConnection, rollupConnection, isUsingRollup]);
+        setIsUsingRollup,
+        sessionKey,
+        isSessionActive: sessionKey !== null,
+        sessionRemainingTime,
+        refreshSession,
+        clearSession
+    }), [standardConnection, rollupConnection, isUsingRollup, sessionKey, sessionRemainingTime]);
 
     return (
         <MagicBlockContext.Provider value={value}>

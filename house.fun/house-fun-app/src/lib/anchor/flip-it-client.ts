@@ -1,6 +1,7 @@
 import { Program, web3, BN } from '@coral-xyz/anchor';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useMemo } from 'react';
+import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 import { type FlipIt } from './idl';
 import {
   createFlipItProgram,
@@ -50,21 +51,25 @@ export interface BetAccount {
  *   - claim_winnings -> claimWinnings
  *   - deposit_treasury (NEW)
  */
-export function useFlipItProgram() {
-  const { connection } = useConnection();
+export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
+  const { activeConnection } = useMagicBlock();
   const wallet = useWallet();
 
   const program = useMemo(() => {
-    if (!wallet.publicKey) return null;
-    // Some wallets don't expose signTransaction immediately - try both methods
-    const hasSigningCapability = wallet.signTransaction || wallet.signAllTransactions;
-    if (!hasSigningCapability) {
-      console.warn('[FlipIt] Wallet signing capability not available yet');
-      return null;
+    if (!wallet.publicKey && !sessionKey) return null;
+
+    // In session mode, we use the session key to sign.
+    if (!sessionKey) {
+      const hasSigningCapability = wallet.signTransaction || wallet.signAllTransactions;
+      if (!hasSigningCapability) {
+        console.warn('[FlipIt] Wallet signing capability not available yet');
+        return null;
+      }
     }
-    const provider = createProvider(connection, wallet);
+
+    const provider = createProvider(activeConnection, wallet, sessionKey);
     return createFlipItProgram(provider);
-  }, [connection, wallet]);
+  }, [activeConnection, wallet, sessionKey]);
 
   /**
    * Initialize house (admin only)

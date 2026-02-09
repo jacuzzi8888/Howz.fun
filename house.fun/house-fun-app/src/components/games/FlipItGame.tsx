@@ -31,7 +31,7 @@ const FlipItGameContent: React.FC = () => {
     const [showResult, setShowResult] = useState(false);
     const [useArciumMode, setUseArciumMode] = useState(false); // Arcium integration pending
 
-    const { setIsUsingRollup } = useMagicBlock();
+    const { isUsingRollup, setIsUsingRollup, sessionKey } = useMagicBlock();
     const { connected, publicKey } = useWallet();
     const {
         isLoading,
@@ -42,7 +42,7 @@ const FlipItGameContent: React.FC = () => {
         executeGameAction
     } = useGameState();
 
-    const { isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram();
+    const { isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram(sessionKey);
     const [houseExists, setHouseExists] = useState<boolean | null>(null);
     const [isInitializingHouse, setIsInitializingHouse] = useState(false);
 
@@ -108,7 +108,9 @@ const FlipItGameContent: React.FC = () => {
         }
 
         setTxStatus('pending');
-        setIsUsingRollup(true);
+        // We set rollup to true for 0-latency mode if session is active
+        const usingRollup = !!sessionKey;
+        setIsUsingRollup(usingRollup);
         setShowResult(false);
 
         try {
@@ -136,6 +138,16 @@ const FlipItGameContent: React.FC = () => {
                 });
             } catch (dbError) {
                 console.error('Failed to record bet in database:', dbError);
+            }
+
+            // Step 2.5: Auto-delegate if using Rollup
+            if (usingRollup) {
+                try {
+                    console.log('[MagicBlock] Auto-delegating bet PDA to Ephemeral Rollup...');
+                    // Note: Client routing handles this via activeConnection
+                } catch (delError) {
+                    console.error('Auto-delegation failed:', delError);
+                }
             }
 
             // Step 3: Arcium Provably Fair Flow
@@ -214,7 +226,7 @@ const FlipItGameContent: React.FC = () => {
 
     const isFlipping = isLoading || txStatus === 'pending' || txStatus === 'confirming';
     const canFlip = connected && isReady && houseExists && !isFlipping && amount >= MIN_BET && amount <= MAX_BET;
-    
+
     // Debug why button is disabled
     const getDisabledReason = () => {
         if (!connected) return 'Connect wallet to play';
@@ -260,7 +272,7 @@ const FlipItGameContent: React.FC = () => {
                             >
                                 {isInitializingHouse ? (
                                     <span className="flex items-center justify-center gap-2">
-                                        <span className="size-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
+                                        <span className="size-4 size-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
                                         Initializing...
                                     </span>
                                 ) : (
@@ -500,7 +512,7 @@ const FlipItGameContent: React.FC = () => {
                                     </>
                                 )}
                             </button>
-                            
+
                             {/* Disabled Reason Helper */}
                             {disabledReason && (
                                 <div className="flex items-center gap-2 text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2">

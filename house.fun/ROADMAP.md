@@ -14,15 +14,52 @@ We have established a robust, high-performance foundation for a Solana-native ga
 ### 🪙 Flip It (Production Ready)
 - **Arcium Integrated**: Provably fair randomness via encrypted computations.
 - **Commit-Reveal Scheme**: Secure betting flow that prevents manipulation.
+# Roadmap: house.fun On-Chain Casino
+
+This document outlines the current state of the project, identifying what has been built and the technical roadmap for the **Playsolana Matrix Hackathon**.
+
+## ✅ Current Status: The Foundation is Built
+We have established a robust, high-performance foundation for a Solana-native gaming platform.
+
+### Core Infrastructure
+- **Next.js 15 App Router**: Modern SSR-compatible architecture.
+- **Anchor Framework**: Four dedicated Solana programs (`flip-it`, `fight-club`, `shadow-poker`, `degen-derby`).
+- **Database Layer**: Supabase + Drizzle ORM with full schema for bettors, tables, and sessions.
+- **Premium UI**: Glassmorphism aesthetic, custom animations, and responsive design systems.
+
+### 🪙 Flip It (Production Ready)
+- **Arcium Integrated**: Provably fair randomness via encrypted computations.
+- **Commit-Reveal Scheme**: Secure betting flow that prevents manipulation.
 - **Production Build**: Verified for Vercel deployment with SSR safety.
 
 ---
 
 ## 🏗️ The Roadmap: What's Next?
 
-### Phase 1: Arcium Hardware Confidentiality (Privacy & Fairness)
-Currently, only `Flip It` leverages Arcium. The biggest technical leap is moving the other games from "on-chain transparent" to "confidential."
+## 🏎️ Phase 2: Rapid Game Portfolio Expansion (Hackathon Week)
+**Goal**: Launch all remaining games with the complete High-Performance Stack.
 
+### 🪙 Flip It (Coin Flip) - [EST: 1 DAY]
+- [ ] Implement Signless UX (Session Keys).
+- [ ] Route `place_bet` through MagicBlock Ephemeral Rollups.
+- [ ] Integrate Arcium MPC for 100% provable fairness.
+
+### 🐎 Degen Derby (Horse Racing) - [EST: 1.5 DAYS]
+- [ ] Upgrade to `arcium-anchor` for private winner selection.
+- [ ] Implement Session Keys for continuous betting.
+- [ ] Delegation: Move race state to Ephemeral Layer for real-time odds updates.
+
+### 🥊 Fight Club (PVP Betting) - [EST: 1.5 DAYS]
+- [ ] Implement Arcium-based match resolution (Oracle-free).
+- [ ] Signless UI for high-frequency betting rounds.
+
+## 🌉 Phase 3: Omnichain & Social Integration (Final 48h)
+- [ ] **Omni-Liquidity**: LayerZero integration for SOL/USDC deposits from any chain.
+- [ ] **Social Layer**: Telegram Mini App (TMA) deployment for viral growth.
+- [ ] **Vibe Check**: Final UI/UX polish and sound design.
+
+- **[ ] Session Keys (MagicBlock)**: 
+  - *Plan*: Implement signless gaming. Users sign once at the start of a session; no more wallet popups during the match.
 - **[x] Shadow Poker - Private Hands (Arcium Client Implemented)**: 
   - *Status*: ✅ **Frontend Complete** - Arcium MXE client integrated.
   - *Completed*: 
@@ -30,17 +67,6 @@ Currently, only `Flip It` leverages Arcium. The biggest technical leap is moving
     - `ArciumContext.tsx` extended with poker methods
     - Encrypted card types and deck structures
     - UI shows locked cards with "Encrypted by Arcium" badges
-    - Ready for smart contract deployment with `deal_encrypted_cards` and `showdown_with_proof` instructions
-  - *Remaining*: Deploy updated Rust contract with Arcium proof verification
-- **[ ] Degen Derby - Fair Winning**: 
-  - *Status*: Uses vulnerable blockhash randomness.
-  - *Plan*: Use Arcium to generate the winning horse seed in a confidential TEE, ensuring zero miner manipulation.
-
-### Phase 2: Oracle-Driven Automation
-- **[ ] Fight Club - Auto Resolution**:
-  - *Status*: Requires admin manual "win" call.
-  - *Plan*: Integrate **Jupiter API** or **Pyth Oracles** to automatically resolve fights based on 24h price performance of the competing memecoins.
-
 ### Phase 3: Fast Loops & Retention
 - **[ ] MagicBlock Ephemeral Rollups**:
   - *Plan*: Implement MagicBlock for Shadow Poker betting rounds to enable sub-second interactions without waiting for Solana L1 finality.

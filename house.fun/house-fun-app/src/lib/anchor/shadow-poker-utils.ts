@@ -21,7 +21,7 @@ export const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K
 export type Rank = typeof RANKS[number];
 
 // Types
-export type TableStatus = 'Waiting' | 'PreFlop' | 'Flop' | 'Turn' | 'River' | 'Showdown' | 'Finished';
+export type TableStatus = 'Waiting' | 'Dealing' | 'Betting' | 'Finished';
 export type BettingRound = 'PreFlop' | 'Flop' | 'Turn' | 'River';
 export type PlayerAction = 'Fold' | 'Check' | 'Call' | 'Raise' | 'AllIn';
 export type BlindType = 'Small' | 'Big';
@@ -54,7 +54,37 @@ interface WalletAdapter {
 /**
  * Create Anchor Provider from wallet connection
  */
-export function createProvider(connection: web3.Connection, wallet: WalletAdapter): AnchorProvider {
+export function createProvider(
+  connection: web3.Connection,
+  wallet: WalletAdapter,
+  sessionKey?: web3.Keypair | null
+): AnchorProvider {
+  if (sessionKey) {
+    // Session Key Signer: Bypasses the wallet adapter's signTransaction
+    const sessionWallet = {
+      publicKey: wallet.publicKey || sessionKey.publicKey,
+      signTransaction: async <T extends web3.Transaction | web3.VersionedTransaction>(tx: T): Promise<T> => {
+        if (tx instanceof web3.Transaction) {
+          tx.partialSign(sessionKey);
+        } else {
+          tx.sign([sessionKey]);
+        }
+        return tx;
+      },
+      signAllTransactions: async <T extends web3.Transaction | web3.VersionedTransaction>(txs: T[]): Promise<T[]> => {
+        return txs.map(tx => {
+          if (tx instanceof web3.Transaction) {
+            tx.partialSign(sessionKey);
+          } else {
+            tx.sign([sessionKey]);
+          }
+          return tx;
+        });
+      }
+    };
+    return new AnchorProvider(connection, sessionWallet as any, AnchorProvider.defaultOptions());
+  }
+
   return new AnchorProvider(
     connection,
     wallet as Wallet,
@@ -98,7 +128,7 @@ export function getTablePDA(tableIndex: number): [web3.PublicKey, number] {
  * Get Player State PDA address
  */
 export function getPlayerStatePDA(
-  tablePDA: web3.PublicKey, 
+  tablePDA: web3.PublicKey,
   player: web3.PublicKey
 ): [web3.PublicKey, number] {
   return web3.PublicKey.findProgramAddressSync(
@@ -223,7 +253,7 @@ export function parseShadowPokerError(error: unknown): string {
   if (!isPokerProgramError(error)) {
     return 'Unknown error occurred';
   }
-  
+
   // Check for program error codes
   if (error.code) {
     const errorMsg = ShadowPokerErrors[error.code];
@@ -231,7 +261,7 @@ export function parseShadowPokerError(error: unknown): string {
       return errorMsg;
     }
   }
-  
+
   // Check for error message containing code
   const codeMatch = error.message?.match(/custom program error: (0x[0-9a-fA-F]+|\d+)/);
   if (codeMatch?.[1]) {
@@ -242,7 +272,7 @@ export function parseShadowPokerError(error: unknown): string {
       return errorMsg;
     }
   }
-  
+
   // Check for Anchor error format
   if (error.error?.errorCode?.code) {
     const anchorCode = error.error.errorCode.code;
@@ -259,11 +289,11 @@ export function parseShadowPokerError(error: unknown): string {
       }
     }
   }
-  
+
   if (error.message) {
     return error.message;
   }
-  
+
   return 'Unknown error occurred';
 }
 
@@ -274,16 +304,10 @@ export function formatTableStatus(status: TableStatus): string {
   switch (status) {
     case 'Waiting':
       return 'Waiting for Players';
-    case 'PreFlop':
-      return 'Pre-Flop';
-    case 'Flop':
-      return 'Flop';
-    case 'Turn':
-      return 'Turn';
-    case 'River':
-      return 'River';
-    case 'Showdown':
-      return 'Showdown';
+    case 'Dealing':
+      return 'Dealing (Arcium)';
+    case 'Betting':
+      return 'Betting Round';
     case 'Finished':
       return 'Hand Finished';
     default:
@@ -332,11 +356,11 @@ export function validateBuyIn(buyIn: number, minBuyIn: number, maxBuyIn: number)
   if (buyIn < minBuyIn) {
     return { valid: false, error: `Minimum buy-in is ${minBuyIn} SOL` };
   }
-  
+
   if (buyIn > maxBuyIn) {
     return { valid: false, error: `Maximum buy-in is ${maxBuyIn} SOL` };
   }
-  
+
   return { valid: true };
 }
 
@@ -347,19 +371,19 @@ export function validateTableParams(params: TableConfig): { valid: boolean; erro
   if (params.minBuyIn >= params.maxBuyIn) {
     return { valid: false, error: 'Min buy-in must be less than max buy-in' };
   }
-  
+
   if (params.smallBlind >= params.bigBlind) {
     return { valid: false, error: 'Small blind must be less than big blind' };
   }
-  
+
   if (params.maxPlayers < 2 || params.maxPlayers > 10) {
     return { valid: false, error: 'Max players must be between 2 and 10' };
   }
-  
+
   if (params.minBuyIn < params.bigBlind * 20) {
     return { valid: false, error: 'Min buy-in should be at least 20 big blinds' };
   }
-  
+
   return { valid: true };
 }
 
@@ -375,17 +399,17 @@ export function validatePlayerAction(
   bigBlind: number
 ): { valid: boolean; error?: string } {
   const callAmount = calculateCallAmount(currentBet, playerBet);
-  
+
   switch (action) {
     case 'Fold':
       return { valid: true };
-      
+
     case 'Check':
       if (callAmount > 0) {
         return { valid: false, error: 'Cannot check when there is a bet to call' };
       }
       return { valid: true };
-      
+
     case 'Call':
       if (callAmount === 0) {
         return { valid: false, error: 'No bet to call' };
@@ -394,7 +418,7 @@ export function validatePlayerAction(
         return { valid: false, error: 'Insufficient stack to call' };
       }
       return { valid: true };
-      
+
     case 'Raise':
       if (amount <= callAmount) {
         return { valid: false, error: 'Raise must be greater than call amount' };
@@ -407,10 +431,10 @@ export function validatePlayerAction(
         return { valid: false, error: 'Insufficient stack for raise' };
       }
       return { valid: true };
-      
+
     case 'AllIn':
       return { valid: true };
-      
+
     default:
       return { valid: false, error: 'Invalid action' };
   }
@@ -488,7 +512,7 @@ export function isFlush(cards: Card[]): boolean {
 export function isStraight(cards: Card[]): boolean {
   if (cards.length < 5) return false;
   const uniqueRanks = [...new Set(cards.map(c => c.rank))].sort((a, b) => a - b);
-  
+
   // Check for regular straight
   for (let i = 0; i <= uniqueRanks.length - 5; i++) {
     const first = uniqueRanks[i];
@@ -497,13 +521,13 @@ export function isStraight(cards: Card[]): boolean {
       return true;
     }
   }
-  
+
   // Check for A-2-3-4-5 straight (wheel)
-  if (uniqueRanks.includes(12) && uniqueRanks.includes(0) && 
-      uniqueRanks.includes(1) && uniqueRanks.includes(2) && uniqueRanks.includes(3)) {
+  if (uniqueRanks.includes(12) && uniqueRanks.includes(0) &&
+    uniqueRanks.includes(1) && uniqueRanks.includes(2) && uniqueRanks.includes(3)) {
     return true;
   }
-  
+
   return false;
 }
 
@@ -512,26 +536,26 @@ export function isStraight(cards: Card[]): boolean {
  */
 export function getHandStrengthDescription(holeCards: Card[], communityCards: Card[]): string {
   const allCards = [...holeCards, ...communityCards];
-  
+
   if (allCards.length < 5) return 'Insufficient cards';
-  
+
   // This is a simplified version - full hand evaluation would be more complex
   if (isFlush(allCards) && isStraight(allCards)) return 'Straight Flush';
   if (isFlush(allCards)) return 'Flush';
   if (isStraight(allCards)) return 'Straight';
-  
+
   // Check for pairs, trips, quads
   const rankCounts: Record<number, number> = {};
   for (const card of allCards) {
     rankCounts[card.rank] = (rankCounts[card.rank] ?? 0) + 1;
   }
   const counts = Object.values(rankCounts).sort((a, b) => b - a);
-  
+
   if (counts[0] === 4) return 'Four of a Kind';
   if (counts[0] === 3 && counts[1]! >= 2) return 'Full House';
   if (counts[0] === 3) return 'Three of a Kind';
   if (counts[0] === 2 && counts[1] === 2) return 'Two Pair';
   if (counts[0] === 2) return 'One Pair';
-  
+
   return 'High Card';
 }

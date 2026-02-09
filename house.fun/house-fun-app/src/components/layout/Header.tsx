@@ -7,11 +7,12 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 import { CashierModal } from '~/components/wallet/CashierModal';
+import { SessionManager } from '~/lib/magicblock/SessionManager';
 
 export const Header: React.FC = () => {
     const [isCashierOpen, setIsCashierOpen] = useState(false);
     const { publicKey, connected } = useWallet();
-    const { isUsingRollup } = useMagicBlock();
+    const { isUsingRollup, setIsUsingRollup, isSessionActive, sessionRemainingTime, refreshSession } = useMagicBlock();
     const { connection } = useConnection();
     const [balance, setBalance] = useState<number | null>(null);
     const [isMounted, setIsMounted] = useState(false);
@@ -78,12 +79,15 @@ export const Header: React.FC = () => {
 
                         {/* Center: Network Status */}
                         <div className="hidden lg:flex items-center gap-6">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                            <button
+                                onClick={() => setIsUsingRollup(!isUsingRollup)}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group cursor-pointer"
+                            >
                                 <span className={`size-1.5 rounded-full ${isUsingRollup ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(7,204,0,0.8)]' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]'}`}></span>
-                                <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">
+                                <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest group-hover:text-white transition-colors">
                                     {isUsingRollup ? 'Ephemeral Rollup Active' : 'Solana L1 Mainnet'}
                                 </span>
-                            </div>
+                            </button>
                             {isUsingRollup && (
                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
                                     <span className="material-symbols-outlined text-[14px] text-primary">speed</span>
@@ -95,16 +99,41 @@ export const Header: React.FC = () => {
                         {/* Right Actions */}
                         <div className="flex items-center gap-4">
                             {connected && (
-                                <div
-                                    onClick={() => setIsCashierOpen(true)}
-                                    className="flex flex-col items-end mr-4 cursor-pointer group"
-                                >
-                                    <span className="text-[10px] text-gray-400 font-bold tracking-[0.2em] group-hover:text-primary transition-colors">BALANCE</span>
-                                    <div className="flex items-center gap-1">
-                                        <span className="font-bold text-lg text-white group-hover:text-glow transition-all">{formattedBalance}</span>
-                                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
+                                <>
+                                    {/* Session Key Status */}
+                                    <div className="hidden sm:flex flex-col items-end px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`size-1.5 rounded-full ${isSessionActive ? 'bg-primary animate-pulse shadow-[0_0_5px_#BBFF00]' : 'bg-gray-500'}`}></span>
+                                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
+                                                {isSessionActive ? 'Session Active' : 'No Session'}
+                                            </span>
+                                        </div>
+                                        {isSessionActive ? (
+                                            <span className="text-[10px] font-mono font-bold text-primary">{sessionRemainingTime} left</span>
+                                        ) : (
+                                            <button
+                                                onClick={() => {
+                                                    SessionManager.createEphemeralKeypair();
+                                                    refreshSession();
+                                                }}
+                                                className="text-[10px] font-black text-accentGold hover:text-white transition-colors animate-pulse"
+                                            >
+                                                Start Session
+                                            </button>
+                                        )}
                                     </div>
-                                </div>
+
+                                    <div
+                                        onClick={() => setIsCashierOpen(true)}
+                                        className="flex flex-col items-end mr-4 cursor-pointer group"
+                                    >
+                                        <span className="text-[10px] text-gray-400 font-bold tracking-[0.2em] group-hover:text-primary transition-colors">BALANCE</span>
+                                        <div className="flex items-center gap-1">
+                                            <span className="font-bold text-lg text-white group-hover:text-glow transition-all">{formattedBalance}</span>
+                                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
+                                        </div>
+                                    </div>
+                                </>
                             )}
 
                             <div className="custom-wallet-button">

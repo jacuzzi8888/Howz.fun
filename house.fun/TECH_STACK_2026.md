@@ -19,12 +19,13 @@ Jupiter has deprecated the old "Flash Fill" methods in favor of the **Ultra API*
 - **Swap-to-Bet**: Use **Cross Program Invocation (CPI)**. In 2026, the Solana transaction size limits have been relaxed via **Address Lookup Tables (ALTs) v2**, making CPI the most efficient way to bet with any memecoin.
 - **Slippage**: Implement **Dynamic Slippage** (set to `auto` in the Jupiter SDK) to prevent failed swaps during high volatility meme fights.
 
-## 3. MagicBlock (Ephemeral Rollups)
-To achieve "Shadow Poker" with sub-second feedback, you must use MagicBlock.
+## 3. MagicBlock (Ephemeral Rollups & Session Keys)
+To achieve "Shadow Poker" with sub-second feedback and zero-friction UX, you must use MagicBlock.
 
 - **Performance**: Block times are now **1ms**. This enables the "fast-fold" poker features found in Web2 apps.
-- **Tooling**: Use the `@magicblock/sdk`. 
-- **Pattern**: Delegate the poker table PDA to an ephemeral rollup. Moves like "Check" or "Raise" happen on the rollup, while final payouts settle on Solana L1.
+- **Session Keys**: Implement the **Session Key pattern**. Players sign once to authorize an ephemeral key, allowing signless actions (Check/Fold/Raise) for the duration of the game.
+- **Bolt ECS**: Use the **Bolt framework** (On-chain Entity-Component-System) for managing game state (Hands, Stacks, Pots) with high-frequency updates.
+- **Pattern**: Delegate the poker table PDA to an ephemeral rollup. Moves happen on the rollup, while final payouts settle on Solana L1.
 - **Gas**: MagicBlock supports **Gasless Execution** for rollups—the house can sponsor player transactions to remove all friction.
 
 ## 4. Oracles & Data (Pyth & Helius)

@@ -9,15 +9,16 @@ import { GameErrorBoundary } from '~/components/error-boundaries';
 import { ButtonLoader, TransactionLoader } from '~/components/loading';
 import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData';
 import { shortenAddress } from '~/lib/utils';
-import { 
-  useShadowPokerProgram, 
-  type TableAccount, 
+import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
+import {
+  useShadowPokerProgram,
+  type TableAccount,
   type PlayerStateAccount,
   type JoinTableResult,
-  type PlayerActionResult 
+  type PlayerActionResult
 } from '~/lib/anchor/shadow-poker-client';
-import { 
-  type PlayerAction, 
+import {
+  type PlayerAction,
   type TableStatus,
   getTablePDA,
   getPlayerStatePDA,
@@ -57,29 +58,33 @@ export const ShadowPokerGame: React.FC = () => {
 
 const ShadowPokerGameContent: React.FC = () => {
   const { connected, publicKey } = useWallet();
-  const { 
-    isLoading, 
-    error, 
-    txStatus, 
-    setTxStatus, 
+  const { isUsingRollup, isSessionActive, sessionKey } = useMagicBlock();
+
+  const {
+    isLoading,
+    error,
+    txStatus,
+    setTxStatus,
     reset,
-    executeGameAction 
+    executeGameAction
   } = useGameState();
-  
-  const { 
-    isReady, 
-    joinTable, 
-    leaveTable, 
-    playerAction, 
-    fetchTable, 
+
+  const {
+    isReady,
+    joinTable,
+    leaveTable,
+    playerAction,
+    fetchTable,
     fetchPlayerState,
     isPlayerTurn,
-    getAvailableActions 
-  } = useShadowPokerProgram();
-  
+    getAvailableActions,
+    delegateAccount,
+    undelegateAccount,
+  } = useShadowPokerProgram(sessionKey);
+
   // Fetch real recent bets from database
   const { data: recentBets, isLoading: isLoadingBets } = useRecentBets('SHADOW_POKER', 10);
-  
+
   // Mutations for recording bets
   const recordBet = useRecordBet();
   const resolveBet = useResolveBet();
@@ -96,7 +101,7 @@ const ShadowPokerGameContent: React.FC = () => {
   const [isPlayerTurnState, setIsPlayerTurnState] = useState(false);
   const [opponents, setOpponents] = useState<OpponentPlayer[]>([]);
   const [lastAction, setLastAction] = useState<string | null>(null);
-  
+
   // Arcium encrypted card state
   const {
     isGeneratingDeck,
@@ -110,21 +115,22 @@ const ShadowPokerGameContent: React.FC = () => {
     generateShowdownProof,
     reset: resetArcium,
     validateDeckIntegrity,
+    isComputing,
   } = useShadowPokerArcium();
-  
+
   const [encryptedHoleCards, setEncryptedHoleCards] = useState<EncryptedCardData[] | null>(null);
   const [showEncryptedCards, setShowEncryptedCards] = useState(false);
-  
+
   // Initialize table PDA on mount
   useEffect(() => {
     const [pda] = getTablePDA(DEFAULT_TABLE_INDEX);
     setTablePDA(pda);
   }, []);
-  
+
   // Fetch table data periodically
   useEffect(() => {
     if (!tablePDA || !isReady) return;
-    
+
     const fetchTableData = async () => {
       try {
         const tableData = await fetchTable(tablePDA);
@@ -135,17 +141,17 @@ const ShadowPokerGameContent: React.FC = () => {
         console.error('Failed to fetch table:', err);
       }
     };
-    
+
     fetchTableData();
     const interval = setInterval(fetchTableData, 3000); // Poll every 3 seconds
-    
+
     return () => clearInterval(interval);
   }, [tablePDA, isReady, fetchTable]);
-  
+
   // Fetch player state when at table
   useEffect(() => {
     if (!playerStatePDA || !isReady || !isAtTable) return;
-    
+
     const fetchPlayerData = async () => {
       try {
         const playerData = await fetchPlayerState(playerStatePDA);
@@ -156,13 +162,13 @@ const ShadowPokerGameContent: React.FC = () => {
         console.error('Failed to fetch player state:', err);
       }
     };
-    
+
     fetchPlayerData();
     const interval = setInterval(fetchPlayerData, 2000);
-    
+
     return () => clearInterval(interval);
   }, [playerStatePDA, isReady, isAtTable, fetchPlayerState]);
-  
+
   // Check if it's player's turn and get available actions
   useEffect(() => {
     if (!tablePDA || !playerStatePDA || !isReady || !isAtTable) {
@@ -170,12 +176,12 @@ const ShadowPokerGameContent: React.FC = () => {
       setAvailableActions([]);
       return;
     }
-    
+
     const checkTurn = async () => {
       try {
         const turn = await isPlayerTurn(tablePDA, playerStatePDA);
         setIsPlayerTurnState(turn);
-        
+
         if (turn) {
           const actions = await getAvailableActions(tablePDA, playerStatePDA);
           setAvailableActions(actions);
@@ -186,20 +192,20 @@ const ShadowPokerGameContent: React.FC = () => {
         console.error('Failed to check turn:', err);
       }
     };
-    
+
     checkTurn();
     const interval = setInterval(checkTurn, 1000);
-    
+
     return () => clearInterval(interval);
   }, [tablePDA, playerStatePDA, isReady, isAtTable, isPlayerTurn, getAvailableActions]);
-  
+
   // Generate mock opponents based on table state
   useEffect(() => {
     if (!table || !publicKey) {
       setOpponents([]);
       return;
     }
-    
+
     const mockOpponents: OpponentPlayer[] = table.players
       .filter((p, idx) => p.toBase58() !== publicKey.toBase58())
       .map((player, idx) => ({
@@ -212,7 +218,7 @@ const ShadowPokerGameContent: React.FC = () => {
         position: idx,
         lastAction: idx === 2 ? 'Check' : undefined,
       }));
-    
+
     setOpponents(mockOpponents);
   }, [table, publicKey]);
 
@@ -232,7 +238,7 @@ const ShadowPokerGameContent: React.FC = () => {
         setPlayerStatePDA(joinResult.playerStatePDA);
         setIsAtTable(true);
         setTxStatus('confirmed');
-        
+
         // Record in database
         try {
           await recordBet.mutateAsync({
@@ -245,6 +251,18 @@ const ShadowPokerGameContent: React.FC = () => {
           });
         } catch (dbError) {
           console.error('Failed to record join in database:', dbError);
+        }
+
+        // Auto-delegate if in Rollup Mode
+        if (isUsingRollup) {
+          try {
+            console.log('[MagicBlock] Auto-delegating table and player state...');
+            await delegateAccount(tablePDA);
+            await delegateAccount(joinResult.playerStatePDA);
+            console.log('[MagicBlock] Accounts delegated to Ephemeral Rollup');
+          } catch (delError) {
+            console.error('Auto-delegation failed:', delError);
+          }
         }
       } else {
         throw new Error('Failed to join table');
@@ -265,10 +283,23 @@ const ShadowPokerGameContent: React.FC = () => {
         return await leaveTable(tablePDA, playerStatePDA);
       });
 
+      setTxStatus('confirmed');
+
+      // Undelegate if in Rollup Mode
+      if (isUsingRollup && playerStatePDA) {
+        try {
+          console.log('[MagicBlock] Undelegating accounts...');
+          await undelegateAccount(playerStatePDA);
+          await undelegateAccount(tablePDA);
+          console.log('[MagicBlock] Accounts returned to L1');
+        } catch (undelError) {
+          console.error('Undelegation failed:', undelError);
+        }
+      }
+
       setIsAtTable(false);
       setPlayerStatePDA(null);
       setPlayerState(null);
-      setTxStatus('confirmed');
     } catch (err) {
       setTxStatus('failed');
       console.error('Leave table failed:', err);
@@ -290,7 +321,7 @@ const ShadowPokerGameContent: React.FC = () => {
         setLastAction(formatPlayerAction(actionResult.action));
         setTxStatus('confirmed');
         setBetAmount(0);
-        
+
         // Record action in database
         try {
           await recordBet.mutateAsync({
@@ -311,6 +342,50 @@ const ShadowPokerGameContent: React.FC = () => {
     }
   };
 
+  const handleStartHand = async () => {
+    if (!connected || !isReady || !tablePDA) return;
+
+    setTxStatus('pending');
+
+    try {
+      // Step 1: Arcium generates encrypted deck (automatic on-chain init inside hook)
+      console.log('[Game] Starting encrypted hand with Arcium...');
+      const result = await generateEncryptedDeck(tablePDA, table?.players || []);
+
+      if (result.success) {
+        setTxStatus('confirmed');
+        setLastAction('Hand Started (Encrypted)');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      setTxStatus('failed');
+      console.error('Start hand failed:', err);
+    }
+  };
+
+  const handleShowdown = async () => {
+    if (!connected || !isReady || !tablePDA) return;
+
+    setTxStatus('pending');
+
+    try {
+      console.log('[Game] Triggering Arcium showdown revelation...');
+      if (!encryptedDeck) throw new Error('No encrypted deck found for showdown');
+      const result = await generateShowdownProof(tablePDA, encryptedDeck);
+
+      if (result.success) {
+        setTxStatus('confirmed');
+        setLastAction('Showdown Complete');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      setTxStatus('failed');
+      console.error('Showdown failed:', err);
+    }
+  };
+
   const handleReset = () => {
     reset();
     setLastAction(null);
@@ -320,7 +395,7 @@ const ShadowPokerGameContent: React.FC = () => {
   const canJoin = connected && isReady && !isProcessing && !isAtTable && buyInAmount >= MIN_BUY_IN && buyInAmount <= MAX_BUY_IN;
   const canLeave = connected && isReady && !isProcessing && isAtTable;
   const canAct = isPlayerTurnState && !isProcessing && isAtTable;
-  
+
   // Debug helper to show why actions are disabled
   const getDisabledReason = () => {
     if (!connected) return 'Connect wallet';
@@ -333,7 +408,7 @@ const ShadowPokerGameContent: React.FC = () => {
   const disabledReason = getDisabledReason();
 
   // Calculate call amount
-  const callAmount = table && playerState 
+  const callAmount = table && playerState
     ? Math.max(0, table.currentBet - playerState.currentBet)
     : 0;
 
@@ -357,7 +432,7 @@ const ShadowPokerGameContent: React.FC = () => {
     <div className="flex flex-1 relative overflow-hidden">
       {/* Game Area (Center) */}
       <div className="flex-1 flex items-center justify-center relative p-4 mt-6 perspective-[1000px] overflow-y-auto">
-        
+
         {/* Wallet Not Connected */}
         {!connected && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
@@ -371,8 +446,8 @@ const ShadowPokerGameContent: React.FC = () => {
         {/* Transaction Status */}
         {txStatus !== 'idle' && (
           <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md">
-            <TransactionLoader 
-              status={txStatus} 
+            <TransactionLoader
+              status={txStatus}
               message={txStatus === 'pending' ? 'Confirm in wallet...' : undefined}
             />
           </div>
@@ -385,7 +460,7 @@ const ShadowPokerGameContent: React.FC = () => {
               <span className="material-symbols-outlined text-red-500 text-sm">error</span>
               <p className="text-red-400 text-sm">{error}</p>
             </div>
-            <button 
+            <button
               onClick={handleReset}
               className="mt-2 text-xs text-red-400/60 hover:text-red-400 underline"
             >
@@ -432,7 +507,7 @@ const ShadowPokerGameContent: React.FC = () => {
               <p className="text-gray-400 text-sm mb-6">
                 Table #{DEFAULT_TABLE_INDEX + 1} • Min: {MIN_BUY_IN} SOL • Max: {MAX_BUY_IN} SOL
               </p>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-2 block">
@@ -505,11 +580,35 @@ const ShadowPokerGameContent: React.FC = () => {
                   Encrypted by Arcium
                 </div>
               </div>
-              
+
               {/* Table Status */}
               {table && (
-                <div className="text-[10px] font-black text-white/60 uppercase tracking-widest">
-                  {formatTableStatus(table.status)}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="text-[10px] font-black text-white/60 uppercase tracking-widest">
+                    {formatTableStatus(table.status)}
+                  </div>
+
+                  {/* Admin Controls (Mocking authority check) */}
+                  <div className="flex gap-2">
+                    {table.status === 'Waiting' && table.players.length >= 2 && (
+                      <button
+                        onClick={handleStartHand}
+                        disabled={isProcessing || isGeneratingDeck}
+                        className="bg-primary hover:bg-primaryHover text-black text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest transition-all"
+                      >
+                        {isGeneratingDeck ? 'Generating Deck...' : 'Start Hand'}
+                      </button>
+                    )}
+                    {(table.status === 'Betting' || table.status === 'Dealing') && (
+                      <button
+                        onClick={handleShowdown}
+                        disabled={isProcessing || isComputing}
+                        className="bg-accentGold hover:bg-accentGold/80 text-black text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest transition-all"
+                      >
+                        {isComputing ? 'Revealing Cards...' : 'Showdown'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -564,9 +663,9 @@ const ShadowPokerGameContent: React.FC = () => {
             ];
             const pos = positions[idx % positions.length];
             if (!pos) return null;
-            
+
             return (
-              <div 
+              <div
                 key={opponent.id}
                 className={cn(
                   "absolute flex flex-col items-center gap-3 z-30",
@@ -613,20 +712,20 @@ const ShadowPokerGameContent: React.FC = () => {
                 "size-20 rounded-full bg-black border-2 overflow-hidden shadow-2xl relative z-10",
                 isPlayerTurnState ? "border-accentGold" : "border-white/10"
               )}>
-                <img 
-                  className="w-full h-full object-cover" 
+                <img
+                  className="w-full h-full object-cover"
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${publicKey?.toBase58() || 'hero'}`}
-                  alt="Your Avatar" 
+                  alt="Your Avatar"
                 />
               </div>
-              
+
               {/* Hole Cards - Arcium Encrypted or Plain Text */}
               {((playerState.holeCards && playerState.holeCards.length > 0) || (encryptedHoleCards && encryptedHoleCards.length > 0)) && (
                 <div className="absolute bottom-[80px] left-1/2 -translate-x-1/2 flex gap-3 z-0">
                   {/* Show decrypted cards if available */}
                   {decryptedHoleCards && decryptedHoleCards.length > 0 ? (
                     decryptedHoleCards.map((card, idx) => (
-                      <div 
+                      <div
                         key={`decrypted-${idx}`}
                         className={cn(
                           "w-20 h-28 md:w-24 md:h-36 bg-white rounded-xl shadow-2xl flex flex-col items-center justify-center relative border border-gray-300 transform hover:translate-y-[-20px] transition-all duration-300",
@@ -651,7 +750,7 @@ const ShadowPokerGameContent: React.FC = () => {
                   ) : encryptedHoleCards && encryptedHoleCards.length > 0 ? (
                     // Show encrypted/locked cards
                     encryptedHoleCards.map((_, idx) => (
-                      <div 
+                      <div
                         key={`encrypted-${idx}`}
                         className={cn(
                           "w-20 h-28 md:w-24 md:h-36 bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-xl shadow-2xl flex flex-col items-center justify-center relative border-2 border-dashed border-primary/30 transform hover:translate-y-[-20px] transition-all duration-300",
@@ -661,7 +760,7 @@ const ShadowPokerGameContent: React.FC = () => {
                         <span className="material-symbols-outlined text-4xl text-primary/40">lock</span>
                         <span className="text-[8px] text-primary/60 uppercase tracking-widest mt-2 font-bold">Arcium</span>
                         <span className="text-[6px] text-white/40 uppercase tracking-widest">Encrypted</span>
-                        
+
                         {/* Lock overlay animation */}
                         <div className="absolute inset-0 bg-primary/5 rounded-xl animate-pulse opacity-50"></div>
                       </div>
@@ -669,7 +768,7 @@ const ShadowPokerGameContent: React.FC = () => {
                   ) : playerState.holeCards && playerState.holeCards.length > 0 ? (
                     // Fallback: Show plain cards (legacy mode)
                     playerState.holeCards.map((card, idx) => (
-                      <div 
+                      <div
                         key={`plain-${idx}`}
                         className={cn(
                           "w-20 h-28 md:w-24 md:h-36 bg-white rounded-xl shadow-2xl flex flex-col items-center justify-center relative border border-gray-300 transform hover:translate-y-[-20px] transition-all duration-300",
@@ -736,8 +835,8 @@ const ShadowPokerGameContent: React.FC = () => {
                     <span className="text-accentGold">Pot Limit</span>
                     <span>Max: {playerState.stack.toFixed(2)}</span>
                   </div>
-                  <input 
-                    type="range" 
+                  <input
+                    type="range"
                     className="w-full h-1.5 bg-neutral-800 rounded-full appearance-none cursor-pointer accent-primary"
                     min={table?.bigBlind || 0.01}
                     max={playerState.stack}
@@ -753,21 +852,21 @@ const ShadowPokerGameContent: React.FC = () => {
 
               {/* Buttons Grid */}
               <div className="w-full md:w-auto grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button 
+                <button
                   onClick={() => handlePlayerAction('Fold')}
                   disabled={!canAct || !availableActions.includes('Fold')}
                   className="h-14 min-w-[100px] bg-danger hover:bg-danger/80 text-black font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 shadow-xl border-b-4 border-black/40 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Fold
                 </button>
-                <button 
+                <button
                   onClick={() => handlePlayerAction('Check')}
                   disabled={!canAct || !availableActions.includes('Check')}
                   className="h-14 min-w-[100px] bg-neutral-800 hover:bg-neutral-700 text-white font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 shadow-xl border-b-4 border-black/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Check
                 </button>
-                <button 
+                <button
                   onClick={() => handlePlayerAction('Call')}
                   disabled={!canAct || !availableActions.includes('Call')}
                   className="h-14 min-w-[100px] bg-white hover:bg-white/90 text-black font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 shadow-xl border-b-4 border-black/20 flex flex-col items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
@@ -775,7 +874,7 @@ const ShadowPokerGameContent: React.FC = () => {
                   <span>Call</span>
                   <span className="text-[8px] opacity-60">{callAmount.toFixed(2)}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handlePlayerAction('Raise')}
                   disabled={!canAct || !availableActions.includes('Raise')}
                   className="h-14 min-w-[100px] bg-primary hover:bg-primaryHover text-black font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 shadow-[0_0_20px_rgba(7,204,0,0.4)] border-b-4 border-black/40 flex flex-col items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
@@ -794,7 +893,7 @@ const ShadowPokerGameContent: React.FC = () => {
             >
               Leave Table
             </button>
-            
+
             {/* Debug: Why buttons are disabled */}
             {disabledReason && isAtTable && (
               <div className="flex items-center gap-2 text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 mt-2">

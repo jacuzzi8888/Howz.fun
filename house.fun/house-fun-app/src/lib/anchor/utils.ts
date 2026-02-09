@@ -20,10 +20,30 @@ interface WalletAdapter {
 /**
  * Create Anchor Provider from wallet connection
  */
-export function createProvider(connection: web3.Connection, wallet: WalletAdapter): AnchorProvider {
+export function createProvider(
+  connection: web3.Connection,
+  wallet: WalletAdapter,
+  sessionKey?: web3.Keypair | null
+): AnchorProvider {
+  const finalWallet = sessionKey
+    ? {
+      publicKey: sessionKey.publicKey,
+      signTransaction: async (tx: web3.Transaction) => {
+        tx.partialSign(sessionKey);
+        return tx;
+      },
+      signAllTransactions: async (txs: web3.Transaction[]) => {
+        return txs.map((tx) => {
+          tx.partialSign(sessionKey);
+          return tx;
+        });
+      },
+    }
+    : wallet;
+
   return new AnchorProvider(
     connection,
-    wallet as Wallet,
+    finalWallet as Wallet,
     AnchorProvider.defaultOptions()
   );
 }

@@ -12,6 +12,8 @@ import { useCallback, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { useArcium } from '~/lib/arcium/ArciumContext';
 import { createCommitment } from '~/lib/arcium/privacy';
+import { useShadowPokerProgram } from '~/lib/anchor/shadow-poker-client';
+import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 import type { ArciumProof, EncryptedDeck, EncryptedCard } from '~/lib/arcium/client';
 import { cardToDisplay, type Card, type CardDisplay, type Suit, type Rank } from '~/lib/anchor/shadow-poker-utils';
 
@@ -22,23 +24,24 @@ function arciumCardToDisplay(card: { rank: string; suit: string }): CardDisplay 
     '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
     'J': 11, 'Q': 12, 'K': 13, 'A': 14,
   };
-  
+
   // Map suit string to numeric suit
   const suitMap: Record<string, number> = {
     'Hearts': 0, 'Diamonds': 1, 'Clubs': 2, 'Spades': 3,
   };
-  
+
   const cardObj: Card = {
     suit: suitMap[card.suit] ?? 0,
     rank: rankMap[card.rank] ?? 2,
   };
-  
+
   return cardToDisplay(cardObj);
 }
 
 export interface ShadowPokerArciumState {
   isGeneratingDeck: boolean;
   isDecryptingCards: boolean;
+  isComputing: boolean;
   encryptedDeck: EncryptedDeck | null;
   decryptedHoleCards: CardDisplay[] | null;
   arciumProof: ArciumProof | null;
@@ -72,25 +75,27 @@ export interface UseShadowPokerArciumReturn extends ShadowPokerArciumState {
     tablePDA: PublicKey,
     playerPublicKeys: PublicKey[]
   ) => Promise<GenerateDeckResult>;
-  
+
   decryptHoleCards: (
     encryptedCards: EncryptedCard[],
     playerPublicKey: PublicKey
   ) => Promise<DecryptCardsResult>;
-  
+
   generateShowdownProof: (
     tablePDA: PublicKey,
     encryptedDeck: EncryptedDeck
   ) => Promise<ShowdownProofResult>;
-  
+
   // Utility functions
   reset: () => void;
   validateDeckIntegrity: (deck: EncryptedDeck) => boolean;
 }
 
 export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
+  const { sessionKey } = useMagicBlock();
   const { generatePokerDeck, decryptPlayerCards, generateShowdownReveal, isComputing } = useArcium();
-  
+  const { initializeEncryptedTable, setEncryptedCards, showdownEncrypted } = useShadowPokerProgram(sessionKey);
+
   const [encryptedDeck, setEncryptedDeck] = useState<EncryptedDeck | null>(null);
   const [decryptedHoleCards, setDecryptedHoleCards] = useState<CardDisplay[] | null>(null);
   const [arciumProof, setArciumProof] = useState<ArciumProof | null>(null);
@@ -147,6 +152,18 @@ export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
       // Step 3: Store encrypted deck and proof
       setEncryptedDeck(result.encryptedDeck);
       setArciumProof(result.proof);
+
+      // Step 4: Update On-Chain State (Anchor Program)
+      // This bridges the Arcium MXE result to the Solana/MagicBlock contract
+      const commitmentBuffer = Buffer.from(result.encryptedDeck.commitment, 'hex');
+      const commitmentArray = Array.from(commitmentBuffer).slice(0, 32);
+
+      console.log('[Arcium] Initializing encrypted table on-chain...');
+      await initializeEncryptedTable(tablePDA, commitmentArray);
+
+      console.log('[Arcium] Setting encrypted card states on-chain...');
+      const proofData = Buffer.from(result.proof.proof);
+      await setEncryptedCards(tablePDA, result.proof.outcome, proofData);
 
       return {
         success: true,
@@ -258,6 +275,13 @@ export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
       // Convert Arcium card format to CardDisplay
       const displayCards = result.allCards.map(arciumCardToDisplay);
 
+      // Step 2: Update On-Chain State
+      const showdownProofData = Buffer.from(result.proof.proof);
+      // Determine winner index (in a real app, this is determined by the MPC worker)
+      const winnerIndex = result.proof.outcome;
+
+      await showdownEncrypted(tablePDA, winnerIndex, showdownProofData);
+
       return {
         success: true,
         allCards: displayCards,
@@ -300,8 +324,8 @@ export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
       }
 
       // Verify all cards have required fields
-      const validCards = deck.cards.every(card => 
-        card.ciphertext && 
+      const validCards = deck.cards.every(card =>
+        card.ciphertext &&
         card.ciphertext.length > 0 &&
         card.playerPubkey &&
         card.proofFragment &&
@@ -333,6 +357,7 @@ export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
     generateShowdownProof,
     reset,
     validateDeckIntegrity,
+    isComputing,
   };
 }
 
@@ -343,7 +368,7 @@ export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
 export function serializeEncryptedDeckForTransaction(deck: EncryptedDeck): Buffer {
   // Structure: [commitment (32 bytes)] [num_cards (2 bytes)] [cards...]
   const commitmentBytes = Buffer.from(deck.commitment.slice(0, 64), 'hex');
-  
+
   const numCardsBuffer = Buffer.allocUnsafe(2);
   numCardsBuffer.writeUInt16LE(deck.cards.length, 0);
 
@@ -351,9 +376,9 @@ export function serializeEncryptedDeckForTransaction(deck: EncryptedDeck): Buffe
   const cardBuffers = deck.cards.map(card => {
     const cipherLength = Buffer.allocUnsafe(2);
     cipherLength.writeUInt16LE(card.ciphertext.length, 0);
-    
+
     const playerKeyBytes = Buffer.from(card.playerPubkey, 'base64');
-    
+
     const proofLength = Buffer.allocUnsafe(2);
     proofLength.writeUInt16LE(card.proofFragment.length, 0);
 
@@ -380,15 +405,15 @@ export function serializeEncryptedDeckForTransaction(deck: EncryptedDeck): Buffe
 export function serializePokerProofForTransaction(proof: ArciumProof, deckCommitment: string): Buffer {
   // Structure: [outcome (1 byte)] [proof_length (4 bytes)] [proof] [public_inputs_length (4 bytes)] [public_inputs] [deck_commitment (32 bytes)]
   const outcomeByte = Buffer.from([proof.outcome]);
-  
+
   const proofLength = Buffer.allocUnsafe(4);
   proofLength.writeUInt32LE(proof.proof.length, 0);
-  
+
   const publicInputsLength = Buffer.allocUnsafe(4);
   publicInputsLength.writeUInt32LE(proof.publicInputs.length, 0);
-  
+
   const deckCommitmentBytes = Buffer.from(deckCommitment.slice(0, 64), 'hex');
-  
+
   return Buffer.concat([
     outcomeByte,
     proofLength,
@@ -404,8 +429,8 @@ export function serializePokerProofForTransaction(proof: ArciumProof, deckCommit
  * Returns indices of the 2 cards dealt to the specified player
  */
 export function getPlayerHoleCardIndices(
-  deck: EncryptedDeck, 
-  playerIndex: number, 
+  deck: EncryptedDeck,
+  playerIndex: number,
   totalPlayers: number
 ): number[] {
   // Standard dealing: 2 cards per player, dealt in order
@@ -414,7 +439,7 @@ export function getPlayerHoleCardIndices(
   // etc.
   const firstCard = playerIndex;
   const secondCard = totalPlayers + playerIndex;
-  
+
   return [firstCard, secondCard];
 }
 
@@ -427,7 +452,7 @@ export function getCommunityCardIndices(totalPlayers: number): number[] {
   // Hole cards: 2 * totalPlayers
   // Community starts at index: 2 * totalPlayers
   const startIdx = 2 * totalPlayers;
-  
+
   // Flop: 3 cards (indices 0, 1, 2)
   // Turn: 1 card (index 3)
   // River: 1 card (index 4)
