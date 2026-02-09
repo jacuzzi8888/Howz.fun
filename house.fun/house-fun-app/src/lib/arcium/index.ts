@@ -18,6 +18,9 @@ export {
   executeFlipItComputation,
   executeDegenDerbyComputation,
   executeShadowPokerComputation,
+  executePokerDeckGeneration,
+  executePokerCardDecryption,
+  executePokerShowdown,
   serializeArciumProof,
   verifyArciumProofLocal,
   type ArciumConfig,
@@ -26,8 +29,13 @@ export {
   type ComputationResult,
   type FlipItComputation,
   type DegenDerbyComputation,
-  type ShadowPokerComputation,
   type FightClubComputation,
+  type EncryptedCard,
+  type EncryptedDeck,
+  type ShadowPokerDeckParams,
+  type ShadowPokerDecryptParams,
+  type ShadowPokerShowdownParams,
+  type PokerComputationResult,
 } from './client';
 
 // React Context and hooks

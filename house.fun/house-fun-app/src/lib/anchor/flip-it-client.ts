@@ -55,7 +55,13 @@ export function useFlipItProgram() {
   const wallet = useWallet();
 
   const program = useMemo(() => {
-    if (!wallet.publicKey || !wallet.signTransaction) return null;
+    if (!wallet.publicKey) return null;
+    // Some wallets don't expose signTransaction immediately - try both methods
+    const hasSigningCapability = wallet.signTransaction || wallet.signAllTransactions;
+    if (!hasSigningCapability) {
+      console.warn('[FlipIt] Wallet signing capability not available yet');
+      return null;
+    }
     const provider = createProvider(connection, wallet);
     return createFlipItProgram(provider);
   }, [connection, wallet]);

@@ -13,6 +13,40 @@ import {
   verifyArciumProofLocal,
 } from './client';
 
+// Poker computation parameters
+export interface PokerDeckParams {
+  tableId: string;
+  playerPublicKeys: string[];
+  numCards: number;
+  commitmentHash: string;
+  nonce: string;
+}
+
+export interface PokerDecryptParams {
+  encryptedCards: Array<{ ciphertext: number[]; playerPubkey: string; proofFragment: number[] }>;
+  playerPublicKey: string;
+}
+
+export interface PokerShowdownParams {
+  tableId: string;
+  encryptedDeck: {
+    commitment: string;
+    cards: Array<{ ciphertext: number[]; playerPubkey: string; proofFragment: number[] }>;
+    arciumProof: ArciumProof;
+  };
+}
+
+// Extended computation result for poker
+export interface PokerComputationResult extends ComputationResult {
+  encryptedDeck?: {
+    commitment: string;
+    cards: Array<{ ciphertext: number[]; playerPubkey: string; proofFragment: number[] }>;
+    arciumProof: ArciumProof;
+  };
+  cards?: Array<{ rank: string; suit: string }>;
+  allCards?: Array<{ rank: string; suit: string }>;
+}
+
 // Arcium Context State
 export interface ArciumContextState {
   isInitialized: boolean;
@@ -36,6 +70,12 @@ export interface ArciumContextState {
     action: 'shuffle' | 'deal' | 'showdown',
     params: Record<string, unknown>
   ) => Promise<ComputationResult>;
+  
+  // Poker-specific functions
+  generatePokerDeck: (params: PokerDeckParams) => Promise<PokerComputationResult>;
+  decryptPlayerCards: (params: PokerDecryptParams) => Promise<PokerComputationResult>;
+  generateShowdownReveal: (params: PokerShowdownParams) => Promise<PokerComputationResult>;
+  
   verifyProof: (proof: ArciumProof) => Promise<boolean>;
 }
 
@@ -186,6 +226,114 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [isConfigured]);
 
+  // Generate encrypted poker deck using Arcium MXE
+  const generatePokerDeck = useCallback(async (
+    params: PokerDeckParams
+  ): Promise<PokerComputationResult> => {
+    if (!isConfigured) {
+      return {
+        success: false,
+        error: 'Arcium not configured.',
+      };
+    }
+
+    setIsComputing(true);
+    setError(null);
+
+    try {
+      const { executePokerDeckGeneration } = await import('./client');
+      const result = await executePokerDeckGeneration(params);
+      setLastComputation(result);
+      
+      if (!result.success) {
+        setError(result.error ?? 'Deck generation failed');
+      }
+      
+      return result;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown deck generation error';
+      setError(errorMsg);
+      return {
+        success: false,
+        error: errorMsg,
+      };
+    } finally {
+      setIsComputing(false);
+    }
+  }, [isConfigured]);
+
+  // Decrypt player hole cards
+  const decryptPlayerCards = useCallback(async (
+    params: PokerDecryptParams
+  ): Promise<PokerComputationResult> => {
+    if (!isConfigured) {
+      return {
+        success: false,
+        error: 'Arcium not configured.',
+      };
+    }
+
+    setIsComputing(true);
+    setError(null);
+
+    try {
+      const { executePokerCardDecryption } = await import('./client');
+      const result = await executePokerCardDecryption(params);
+      setLastComputation(result);
+      
+      if (!result.success) {
+        setError(result.error ?? 'Card decryption failed');
+      }
+      
+      return result;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown decryption error';
+      setError(errorMsg);
+      return {
+        success: false,
+        error: errorMsg,
+      };
+    } finally {
+      setIsComputing(false);
+    }
+  }, [isConfigured]);
+
+  // Generate showdown proof
+  const generateShowdownReveal = useCallback(async (
+    params: PokerShowdownParams
+  ): Promise<PokerComputationResult> => {
+    if (!isConfigured) {
+      return {
+        success: false,
+        error: 'Arcium not configured.',
+      };
+    }
+
+    setIsComputing(true);
+    setError(null);
+
+    try {
+      const { executePokerShowdown } = await import('./client');
+      const result = await executePokerShowdown(params);
+      setLastComputation(result);
+      
+      if (!result.success) {
+        setError(result.error ?? 'Showdown proof generation failed');
+      }
+      
+      return result;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown showdown error';
+      setError(errorMsg);
+      return {
+        success: false,
+        error: errorMsg,
+      };
+    } finally {
+      setIsComputing(false);
+    }
+  }, [isConfigured]);
+
   // Verify Arcium proof
   const verifyProof = useCallback(async (proof: ArciumProof): Promise<boolean> => {
     return verifyArciumProofLocal(proof);
@@ -203,6 +351,9 @@ export const ArciumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         generateFlipOutcome,
         generateDerbyWinner,
         generatePokerAction,
+        generatePokerDeck,
+        decryptPlayerCards,
+        generateShowdownReveal,
         verifyProof,
       }}
     >

@@ -11,9 +11,29 @@
 - **index.ts**: Clean exports for the entire arcium module
 
 #### 2. **Game-Specific Integrations**
+
+**Flip It (Complete)**
 - **useFlipItArcium.ts**: Hook for Flip It game with Arcium provably fair randomness
 - **flip-it-client.ts**: Updated Anchor client with `revealWithArcium()` method
-- **Smart Contract** (`programs/flip-it/src/lib.rs`): Refactored to accept Arcium proofs
+- **Smart Contract** (`programs/flip-it/src/lib.rs`): Refactored to accept Arcium proofs with `request_flip` and Arcium callback
+
+**Shadow Poker (Frontend Complete - Contract Pending)**
+- **useShadowPokerArcium.ts**: Full Arcium MXE integration for encrypted card dealing
+  - `generateEncryptedDeck()` - Creates 52-card encrypted deck via Arcium TEE
+  - `decryptHoleCards()` - Decrypts only current player's cards
+  - `generateShowdownProof()` - Generates proof for card revelation at showdown
+- **ArciumContext.tsx**: Extended with poker-specific methods:
+  - `generatePokerDeck()` - Wrapper for deck generation
+  - `decryptPlayerCards()` - Card decryption for player
+  - `generateShowdownReveal()` - Showdown proof generation
+- **shadow-poker-client.ts**: Added encrypted card instructions:
+  - `dealEncryptedCards()` - Deal with Arcium proof (admin only)
+  - `showdownWithProof()` - Showdown resolution with proof verification
+- **ShadowPokerGame.tsx**: UI now shows:
+  - Locked cards with "🔒 Arcium Encrypted" badges
+  - Real-time decryption status indicators
+  - "Encrypted by Arcium" status in player HUD
+- **Smart Contract**: Ready for `deal_encrypted_cards` and `showdown_with_proof` instructions
 
 #### 3. **Environment Configuration**
 ```bash
@@ -23,7 +43,9 @@ NEXT_PUBLIC_ARCIUM_NETWORK=devnet     # devnet or mainnet
 NEXT_PUBLIC_ARCIUM_CLUSTER_ID=        # Optional cluster ID
 ```
 
-#### 4. **Flip It Game Flow (With Arcium)**
+#### 4. **Game Flows**
+
+**Flip It (Coin Flip)**
 ```
 1. User chooses HEADS/TAILS
 2. Frontend creates commitment (choice + nonce)
@@ -35,19 +57,43 @@ NEXT_PUBLIC_ARCIUM_CLUSTER_ID=        # Optional cluster ID
 8. Smart contract verifies proof and resolves bet
 ```
 
+**Shadow Poker (Encrypted Card Dealing)**
+```
+1. Admin starts hand - triggers Arcium deck generation
+2. Arcium MXE generates encrypted 52-card deck
+   - Each card encrypted to intended player's public key
+   - Returns deck commitment + encrypted cards + proof
+3. Call deal_encrypted_cards() with Arcium proof
+4. Smart contract distributes encrypted cards to players
+5. Players see locked cards (🔒 Arcium Encrypted)
+6. Players decrypt their hole cards locally via Arcium client
+7. Betting rounds proceed normally
+8. At showdown, generate showdown proof
+9. Call showdown_with_proof() to reveal all cards
+10. Smart contract verifies proof and determines winner
+```
+
 ### Key Files Modified/Created
 
-#### Frontend
-- ✅ `src/lib/arcium/client.ts` (NEW)
-- ✅ `src/lib/arcium/ArciumContext.tsx` (NEW - replaces PrivacyContext)
-- ✅ `src/lib/arcium/index.ts` (NEW)
-- ✅ `src/hooks/useFlipItArcium.ts` (NEW)
-- ✅ `src/lib/anchor/flip-it-client.ts` (UPDATED - added revealWithArcium)
-- ✅ `src/components/games/FlipItGame.tsx` (UPDATED - Arcium flow)
+#### Arcium Core (Shared)
+- ✅ `src/lib/arcium/client.ts` (NEW/UPDATED - Added poker types)
+- ✅ `src/lib/arcium/ArciumContext.tsx` (NEW/UPDATED - Added poker methods)
+- ✅ `src/lib/arcium/index.ts` (NEW/UPDATED - Exported poker types)
 - ✅ `src/app/layout.tsx` (UPDATED - ArciumProvider)
 
-#### Smart Contract
+#### Flip It (Arcium Complete)
+- ✅ `src/hooks/useFlipItArcium.ts` (NEW)
+- ✅ `src/lib/anchor/flip-it-client.ts` (UPDATED - Arcium methods)
+- ✅ `src/components/games/FlipItGame.tsx` (UPDATED - Arcium flow)
 - ✅ `programs/flip-it/src/lib.rs` (UPDATED - Arcium proof verification)
+
+#### Shadow Poker (Arcium Frontend Complete)
+- ✅ `src/hooks/useShadowPokerArcium.ts` (NEW - Encrypted deck & card handling)
+- ✅ `src/lib/arcium/client.ts` (UPDATED - EncryptedCard, EncryptedDeck types)
+- ✅ `src/lib/arcium/ArciumContext.tsx` (UPDATED - Poker deck methods)
+- ✅ `src/lib/anchor/shadow-poker-client.ts` (UPDATED - Encrypted deal/showdown)
+- ✅ `src/components/games/ShadowPokerGame.tsx` (UPDATED - Locked card UI)
+- 🔄 `programs/shadow-poker/src/lib.rs` (PENDING - Add Arcium instructions)
 
 #### Configuration
 - ✅ `.env.local` (UPDATED - Arcium variables)

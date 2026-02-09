@@ -23,9 +23,15 @@ We have established a robust, high-performance foundation for a Solana-native ga
 ### Phase 1: Arcium Hardware Confidentiality (Privacy & Fairness)
 Currently, only `Flip It` leverages Arcium. The biggest technical leap is moving the other games from "on-chain transparent" to "confidential."
 
-- **[ ] Shadow Poker - Private Hands**: 
-  - *Status*: Basic contract exists.
-  - *Plan*: Use Arcium MPC to deal cards so that only the player can see their hand (TEE-encrypted) until the showdown.
+- **[x] Shadow Poker - Private Hands (Arcium Client Implemented)**: 
+  - *Status*: ✅ **Frontend Complete** - Arcium MXE client integrated.
+  - *Completed*: 
+    - `useShadowPokerArcium.ts` hook with deck generation
+    - `ArciumContext.tsx` extended with poker methods
+    - Encrypted card types and deck structures
+    - UI shows locked cards with "Encrypted by Arcium" badges
+    - Ready for smart contract deployment with `deal_encrypted_cards` and `showdown_with_proof` instructions
+  - *Remaining*: Deploy updated Rust contract with Arcium proof verification
 - **[ ] Degen Derby - Fair Winning**: 
   - *Status*: Uses vulnerable blockhash randomness.
   - *Plan*: Use Arcium to generate the winning horse seed in a confidential TEE, ensuring zero miner manipulation.

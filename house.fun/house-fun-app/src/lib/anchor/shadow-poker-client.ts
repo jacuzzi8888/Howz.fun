@@ -65,6 +65,40 @@ export interface LeaveTableResult {
   remainingStack: number;
 }
 
+// Arcium Encrypted Card Types
+export interface EncryptedCardData {
+  ciphertext: number[];
+  playerPubkey: string;
+  proofFragment: number[];
+}
+
+export interface EncryptedDeckData {
+  commitment: string;
+  cards: EncryptedCardData[];
+  arciumProof: {
+    computationId: string;
+    outcome: number;
+    proof: Uint8Array;
+    publicInputs: Uint8Array;
+    timestamp: number;
+    clusterSignature: Uint8Array;
+  };
+}
+
+export interface DealEncryptedCardsResult {
+  signature: string;
+  tablePDA: web3.PublicKey;
+  playerEncryptedCards: EncryptedCardData[];
+}
+
+export interface ShowdownWithProofResult {
+  signature: string;
+  tablePDA: web3.PublicKey;
+  winnerIndex: number;
+  pot: number;
+  revealedCards: CardDisplay[];
+}
+
 export interface PlayerStateAccount {
   player: web3.PublicKey;
   table: web3.PublicKey;
@@ -112,7 +146,13 @@ export function useShadowPokerProgram() {
   const wallet = useWallet();
   
   const program = useMemo(() => {
-    if (!wallet.publicKey || !wallet.signTransaction) return null;
+    if (!wallet.publicKey) return null;
+    // Some wallets don't expose signTransaction immediately - try both methods
+    const hasSigningCapability = wallet.signTransaction || wallet.signAllTransactions;
+    if (!hasSigningCapability) {
+      console.warn('[ShadowPoker] Wallet signing capability not available yet');
+      return null;
+    }
     const provider = createProvider(connection, wallet);
     return createShadowPokerProgram(provider);
   }, [connection, wallet]);
@@ -407,6 +447,113 @@ export function useShadowPokerProgram() {
   }, [program, wallet.publicKey]);
 
   /**
+   * Deal encrypted cards using Arcium proof (admin only)
+   * 
+   * This distributes encrypted cards to all players. Each player can only
+   * decrypt the cards encrypted to their public key.
+   */
+  const dealEncryptedCards = useCallback(async (
+    tablePDA: web3.PublicKey,
+    encryptedDeck: EncryptedDeckData
+  ): Promise<DealEncryptedCardsResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+    if (!program || !wallet.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      // Serialize encrypted deck for on-chain storage
+      const serializedDeck = {
+        commitment: Array.from(new TextEncoder().encode(encryptedDeck.commitment)),
+        cards: encryptedDeck.cards.map((card: EncryptedCardData) => ({
+          ciphertext: card.ciphertext,
+          player_pubkey: Array.from(new TextEncoder().encode(card.playerPubkey)),
+          proof_fragment: card.proofFragment,
+        })),
+        proof: Array.from(encryptedDeck.arciumProof.proof),
+      };
+
+      const tx = await (program as any).methods
+        .deal_encrypted_cards(serializedDeck)
+        .accounts({
+          table: tablePDA,
+          authority: wallet.publicKey,
+          system_program: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      // Get encrypted cards for the current player
+      const playerCards = encryptedDeck.cards.filter(
+        (card: EncryptedCardData) => card.playerPubkey === wallet.publicKey?.toBase58()
+      );
+
+      return {
+        signature: tx,
+        tablePDA,
+        playerEncryptedCards: playerCards,
+      };
+    } catch (error) {
+      throw new Error(parseShadowPokerError(error));
+    }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+  }, [program, wallet.publicKey]);
+
+  /**
+   * Resolve showdown with Arcium proof (admin only)
+   * 
+   * Uses Arcium proof to verify and reveal all cards for showdown.
+   * Ensures cards weren't tampered with during the hand.
+   */
+  const showdownWithProof = useCallback(async (
+    tablePDA: web3.PublicKey,
+    encryptedDeck: EncryptedDeckData,
+    winnerIndex: number
+  ): Promise<ShowdownWithProofResult> => {
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
+    if (!program || !wallet.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const [housePDA] = getShadowPokerHousePDA();
+
+      // Serialize proof for on-chain verification
+      const proofData = {
+        computation_id: Array.from(new TextEncoder().encode(encryptedDeck.arciumProof.computationId)),
+        outcome: encryptedDeck.arciumProof.outcome,
+        proof: Array.from(encryptedDeck.arciumProof.proof),
+        public_inputs: Array.from(encryptedDeck.arciumProof.publicInputs),
+        timestamp: new BN(encryptedDeck.arciumProof.timestamp),
+        cluster_signature: Array.from(encryptedDeck.arciumProof.clusterSignature),
+      };
+
+      const tx = await (program as any).methods
+        .showdown_with_proof(winnerIndex, proofData)
+        .accounts({
+          table: tablePDA,
+          house: housePDA,
+          authority: wallet.publicKey,
+          system_program: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      // Fetch updated table to get pot amount and revealed cards
+      const tableAccount = await (program.account as any).Table.fetch(tablePDA);
+
+      return {
+        signature: tx,
+        tablePDA,
+        winnerIndex,
+        pot: lamportsToSol(tableAccount.pot.toNumber()),
+        revealedCards: tableAccount.communityCards.map((c: Card) => cardToDisplay(c)),
+      };
+    } catch (error) {
+      throw new Error(parseShadowPokerError(error));
+    }
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
+  }, [program, wallet.publicKey]);
+
+  /**
    * Leave table and withdraw remaining stack
    */
   const leaveTable = useCallback(async (
@@ -671,5 +818,8 @@ export function useShadowPokerProgram() {
     isPlayerTurn,
     getAvailableActions,
     getPlayerPosition,
+    // Arcium encrypted card methods
+    dealEncryptedCards,
+    showdownWithProof,
   };
 }

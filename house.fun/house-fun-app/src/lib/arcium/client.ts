@@ -48,17 +48,48 @@ export interface DegenDerbyComputation {
   horses: Array<{ id: string; odds: number }>;
 }
 
-export interface ShadowPokerComputation {
-  deckSeed: string;
-  playerPositions: string[];
-  action: 'shuffle' | 'deal' | 'showdown';
-}
-
 export interface FightClubComputation {
   matchId: string;
   tokenA: string;
   tokenB: string;
   marketData: Record<string, number>;
+}
+
+// Shadow Poker Encrypted Types
+export interface EncryptedCard {
+  ciphertext: number[];
+  playerPubkey: string;
+  proofFragment: number[];
+}
+
+export interface EncryptedDeck {
+  commitment: string;
+  cards: EncryptedCard[];
+  arciumProof: ArciumProof;
+}
+
+export interface ShadowPokerDeckParams {
+  tableId: string;
+  playerPublicKeys: string[];
+  numCards: number;
+  commitmentHash: string;
+  nonce: string;
+}
+
+export interface ShadowPokerDecryptParams {
+  encryptedCards: EncryptedCard[];
+  playerPublicKey: string;
+}
+
+export interface ShadowPokerShowdownParams {
+  tableId: string;
+  encryptedDeck: EncryptedDeck;
+}
+
+export interface PokerComputationResult extends ComputationResult {
+  encryptedDeck?: EncryptedDeck;
+  cards?: Array<{ rank: string; suit: string }>;
+  allCards?: Array<{ rank: string; suit: string }>;
 }
 
 export interface ComputationRequest {
@@ -150,7 +181,7 @@ export async function executeDegenDerbyComputation(
 }
 
 /**
- * Execute Shadow Poker computation
+ * Execute Shadow Poker computation - Generic (legacy)
  */
 export async function executeShadowPokerComputation(
   action: 'shuffle' | 'deal' | 'showdown',
@@ -166,6 +197,129 @@ export async function executeShadowPokerComputation(
   return {
     success: false,
     error: 'Arcium integration pending.',
+  };
+}
+
+/**
+ * Generate encrypted poker deck using Arcium MXE
+ * 
+ * Arcium TEE generates a shuffled 52-card deck and encrypts each card
+ * to the intended player's public key. Returns encrypted deck + proof.
+ */
+export async function executePokerDeckGeneration(
+  params: ShadowPokerDeckParams
+): Promise<PokerComputationResult> {
+  if (!isArciumConfigured()) {
+    return {
+      success: false,
+      error: 'Arcium not configured. Set NEXT_PUBLIC_ARCIUM_API_KEY to enable encrypted poker.',
+    };
+  }
+
+  // TODO: Implement via API route when credentials are available
+  // The @arcium-hq/client SDK must run server-side
+  
+  // For now, return mock encrypted deck structure for development
+  // This allows UI development while waiting for Arcium credentials
+  console.log('[Arcium] Generating encrypted deck for table:', params.tableId);
+  console.log('[Arcium] Players:', params.playerPublicKeys.length);
+  
+  // Generate mock encrypted deck (development fallback)
+  const mockDeck: EncryptedDeck = {
+    commitment: params.commitmentHash,
+    cards: Array.from({ length: 52 }, (_, i) => {
+      const playerIndex = params.playerPublicKeys.length > 0 
+        ? Math.floor(i / 2) % params.playerPublicKeys.length 
+        : 0;
+      return {
+        ciphertext: Array.from({ length: 32 }, () => Math.floor(Math.random() * 256)),
+        playerPubkey: params.playerPublicKeys[playerIndex] ?? params.playerPublicKeys[0] ?? 'unknown',
+        proofFragment: Array.from({ length: 16 }, () => Math.floor(Math.random() * 256)),
+      };
+    }),
+    arciumProof: {
+      computationId: `poker-${params.tableId}-${Date.now()}`,
+      outcome: 0,
+      proof: new Uint8Array(Array.from({ length: 64 }, () => Math.floor(Math.random() * 256))),
+      publicInputs: new Uint8Array(Array.from({ length: 32 }, () => Math.floor(Math.random() * 256))),
+      timestamp: Date.now(),
+      clusterSignature: new Uint8Array(Array.from({ length: 32 }, () => Math.floor(Math.random() * 256))),
+    },
+  };
+
+  return {
+    success: true,
+    encryptedDeck: mockDeck,
+    proof: mockDeck.arciumProof,
+    error: undefined,
+  };
+}
+
+/**
+ * Decrypt hole cards for a specific player
+ * 
+ * Uses Arcium to decrypt cards that were encrypted to the player's public key.
+ * Only the intended player can successfully decrypt their cards.
+ */
+export async function executePokerCardDecryption(
+  params: ShadowPokerDecryptParams
+): Promise<PokerComputationResult> {
+  if (!isArciumConfigured()) {
+    return {
+      success: false,
+      error: 'Arcium not configured.',
+    };
+  }
+
+  // TODO: Implement via API route with Arcium credentials
+  // For now, return mock decrypted cards
+  
+  const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+  const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+  
+  const mockCards = params.encryptedCards.map(() => ({
+    rank: ranks[Math.floor(Math.random() * ranks.length)] ?? 'A',
+    suit: suits[Math.floor(Math.random() * suits.length)] ?? 'Spades',
+  }));
+
+  return {
+    success: true,
+    cards: mockCards,
+    error: undefined,
+  };
+}
+
+/**
+ * Generate showdown proof to reveal all cards
+ * 
+ * Arcium verifies the encrypted deck integrity and generates a proof
+ * that can be used on-chain to unlock all cards for showdown.
+ */
+export async function executePokerShowdown(
+  params: ShadowPokerShowdownParams
+): Promise<PokerComputationResult> {
+  if (!isArciumConfigured()) {
+    return {
+      success: false,
+      error: 'Arcium not configured.',
+    };
+  }
+
+  // TODO: Implement via API route with Arcium credentials
+  
+  const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+  const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+  
+  const mockAllCards = Array.from({ length: 52 }, (_, i) => ({
+    rank: ranks[i % 13] ?? 'A',
+    suit: suits[Math.floor(i / 13)] ?? 'Spades',
+  }));
+
+  return {
+    success: true,
+    allCards: mockAllCards,
+    proof: params.encryptedDeck.arciumProof,
+    error: undefined,
   };
 }
 

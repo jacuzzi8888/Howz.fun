@@ -26,6 +26,9 @@ import {
   cardToDisplay,
   type CardDisplay
 } from '~/lib/anchor/shadow-poker-utils';
+import { useShadowPokerArcium } from '~/hooks/useShadowPokerArcium';
+import type { EncryptedCard, EncryptedDeck } from '~/lib/arcium/client';
+import type { EncryptedCardData } from '~/lib/anchor/shadow-poker-client';
 
 // Constants
 const MIN_BUY_IN = 0.5; // SOL
@@ -93,6 +96,24 @@ const ShadowPokerGameContent: React.FC = () => {
   const [isPlayerTurnState, setIsPlayerTurnState] = useState(false);
   const [opponents, setOpponents] = useState<OpponentPlayer[]>([]);
   const [lastAction, setLastAction] = useState<string | null>(null);
+  
+  // Arcium encrypted card state
+  const {
+    isGeneratingDeck,
+    isDecryptingCards,
+    encryptedDeck,
+    decryptedHoleCards,
+    arciumProof,
+    error: arciumError,
+    generateEncryptedDeck,
+    decryptHoleCards,
+    generateShowdownProof,
+    reset: resetArcium,
+    validateDeckIntegrity,
+  } = useShadowPokerArcium();
+  
+  const [encryptedHoleCards, setEncryptedHoleCards] = useState<EncryptedCardData[] | null>(null);
+  const [showEncryptedCards, setShowEncryptedCards] = useState(false);
   
   // Initialize table PDA on mount
   useEffect(() => {
@@ -299,6 +320,17 @@ const ShadowPokerGameContent: React.FC = () => {
   const canJoin = connected && isReady && !isProcessing && !isAtTable && buyInAmount >= MIN_BUY_IN && buyInAmount <= MAX_BUY_IN;
   const canLeave = connected && isReady && !isProcessing && isAtTable;
   const canAct = isPlayerTurnState && !isProcessing && isAtTable;
+  
+  // Debug helper to show why actions are disabled
+  const getDisabledReason = () => {
+    if (!connected) return 'Connect wallet';
+    if (!isReady) return 'Wallet not ready - reconnect or try a different wallet';
+    if (isProcessing) return 'Transaction in progress';
+    if (!isAtTable) return 'Join table first';
+    if (!isPlayerTurnState) return 'Waiting for your turn';
+    return null;
+  };
+  const disabledReason = getDisabledReason();
 
   // Calculate call amount
   const callAmount = table && playerState 
@@ -359,6 +391,36 @@ const ShadowPokerGameContent: React.FC = () => {
             >
               Dismiss
             </button>
+          </div>
+        )}
+
+        {/* Arcium Status Indicators */}
+        {(isGeneratingDeck || isDecryptingCards || arciumError) && (
+          <div className="absolute top-52 left-1/2 -translate-x-1/2 z-50 w-full max-w-md">
+            {isGeneratingDeck && (
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="size-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <span className="text-primary text-sm font-medium">Generating encrypted deck with Arcium...</span>
+                </div>
+              </div>
+            )}
+            {isDecryptingCards && (
+              <div className="p-4 bg-accentGold/10 border border-accentGold/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="size-4 border-2 border-accentGold/30 border-t-accentGold rounded-full animate-spin" />
+                  <span className="text-accentGold text-sm font-medium">Decrypting hole cards...</span>
+                </div>
+              </div>
+            )}
+            {arciumError && (
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-yellow-500 text-sm">warning</span>
+                  <p className="text-yellow-400 text-sm">{arciumError}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -558,28 +620,74 @@ const ShadowPokerGameContent: React.FC = () => {
                 />
               </div>
               
-              {/* Hole Cards */}
-              {playerState.holeCards && playerState.holeCards.length > 0 && (
+              {/* Hole Cards - Arcium Encrypted or Plain Text */}
+              {((playerState.holeCards && playerState.holeCards.length > 0) || (encryptedHoleCards && encryptedHoleCards.length > 0)) && (
                 <div className="absolute bottom-[80px] left-1/2 -translate-x-1/2 flex gap-3 z-0">
-                  {playerState.holeCards.map((card, idx) => (
-                    <div 
-                      key={idx}
-                      className={cn(
-                        "w-20 h-28 md:w-24 md:h-36 bg-white rounded-xl shadow-2xl flex flex-col items-center justify-center relative border border-gray-300 transform hover:translate-y-[-20px] transition-all duration-300",
-                        idx === 0 ? "-rotate-6" : "rotate-6"
-                      )}
-                    >
-                      <span className={cn("font-black text-2xl absolute top-1.5 left-2.5", getSuitColor(card.suit))}>
-                        {card.rank}
-                      </span>
-                      <span className={cn("material-symbols-outlined absolute top-2 right-2 text-sm italic opacity-40", getSuitColor(card.suit))}>
-                        {getSuitIcon(card.suit)}
-                      </span>
-                      <span className={cn("material-symbols-outlined text-5xl", getSuitColor(card.suit))}>
-                        {getSuitIcon(card.suit)}
-                      </span>
-                    </div>
-                  ))}
+                  {/* Show decrypted cards if available */}
+                  {decryptedHoleCards && decryptedHoleCards.length > 0 ? (
+                    decryptedHoleCards.map((card, idx) => (
+                      <div 
+                        key={`decrypted-${idx}`}
+                        className={cn(
+                          "w-20 h-28 md:w-24 md:h-36 bg-white rounded-xl shadow-2xl flex flex-col items-center justify-center relative border border-gray-300 transform hover:translate-y-[-20px] transition-all duration-300",
+                          idx === 0 ? "-rotate-6" : "rotate-6"
+                        )}
+                      >
+                        <span className={cn("font-black text-2xl absolute top-1.5 left-2.5", getSuitColor(card.suit))}>
+                          {card.rank}
+                        </span>
+                        <span className={cn("material-symbols-outlined absolute top-2 right-2 text-sm italic opacity-40", getSuitColor(card.suit))}>
+                          {getSuitIcon(card.suit)}
+                        </span>
+                        <span className={cn("material-symbols-outlined text-5xl", getSuitColor(card.suit))}>
+                          {getSuitIcon(card.suit)}
+                        </span>
+                        {/* Arcium decrypted badge */}
+                        <div className="absolute -top-2 -right-2 bg-primary/20 border border-primary/30 rounded-full px-1.5 py-0.5">
+                          <span className="material-symbols-outlined text-[10px] text-primary">lock_open</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : encryptedHoleCards && encryptedHoleCards.length > 0 ? (
+                    // Show encrypted/locked cards
+                    encryptedHoleCards.map((_, idx) => (
+                      <div 
+                        key={`encrypted-${idx}`}
+                        className={cn(
+                          "w-20 h-28 md:w-24 md:h-36 bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] rounded-xl shadow-2xl flex flex-col items-center justify-center relative border-2 border-dashed border-primary/30 transform hover:translate-y-[-20px] transition-all duration-300",
+                          idx === 0 ? "-rotate-6" : "rotate-6"
+                        )}
+                      >
+                        <span className="material-symbols-outlined text-4xl text-primary/40">lock</span>
+                        <span className="text-[8px] text-primary/60 uppercase tracking-widest mt-2 font-bold">Arcium</span>
+                        <span className="text-[6px] text-white/40 uppercase tracking-widest">Encrypted</span>
+                        
+                        {/* Lock overlay animation */}
+                        <div className="absolute inset-0 bg-primary/5 rounded-xl animate-pulse opacity-50"></div>
+                      </div>
+                    ))
+                  ) : playerState.holeCards && playerState.holeCards.length > 0 ? (
+                    // Fallback: Show plain cards (legacy mode)
+                    playerState.holeCards.map((card, idx) => (
+                      <div 
+                        key={`plain-${idx}`}
+                        className={cn(
+                          "w-20 h-28 md:w-24 md:h-36 bg-white rounded-xl shadow-2xl flex flex-col items-center justify-center relative border border-gray-300 transform hover:translate-y-[-20px] transition-all duration-300",
+                          idx === 0 ? "-rotate-6" : "rotate-6"
+                        )}
+                      >
+                        <span className={cn("font-black text-2xl absolute top-1.5 left-2.5", getSuitColor(card.suit))}>
+                          {card.rank}
+                        </span>
+                        <span className={cn("material-symbols-outlined absolute top-2 right-2 text-sm italic opacity-40", getSuitColor(card.suit))}>
+                          {getSuitIcon(card.suit)}
+                        </span>
+                        <span className={cn("material-symbols-outlined text-5xl", getSuitColor(card.suit))}>
+                          {getSuitIcon(card.suit)}
+                        </span>
+                      </div>
+                    ))
+                  ) : null}
                 </div>
               )}
             </div>
@@ -587,7 +695,18 @@ const ShadowPokerGameContent: React.FC = () => {
             {/* Hero Stats HUD */}
             <div className="glass-panel w-full bg-[#050a05]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl mb-8 flex flex-col md:flex-row items-center gap-8 border-t-2 border-t-primary/30">
               <div className="flex-1 flex flex-col gap-1 text-center md:text-left">
-                <h4 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Active Player</h4>
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.3em]">Active Player</h4>
+                  {/* Arcium Encryption Status Badge */}
+                  {(encryptedHoleCards || encryptedDeck) && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                      <span className="material-symbols-outlined text-[10px] text-primary">security</span>
+                      <span className="text-[8px] font-black text-primary uppercase tracking-wider">
+                        {decryptedHoleCards ? 'Decrypted' : 'Encrypted'}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-3 justify-center md:justify-start">
                   <span className="text-lg font-black text-white uppercase italic tracking-tighter">
                     {shortenAddress(publicKey?.toBase58() || '', 6)}
@@ -675,6 +794,14 @@ const ShadowPokerGameContent: React.FC = () => {
             >
               Leave Table
             </button>
+            
+            {/* Debug: Why buttons are disabled */}
+            {disabledReason && isAtTable && (
+              <div className="flex items-center gap-2 text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 mt-2">
+                <span className="material-symbols-outlined text-sm">info</span>
+                <span>{disabledReason}</span>
+              </div>
+            )}
           </div>
         )}
 

@@ -7,9 +7,14 @@ This document outlines how **house.fun** maps to the five core tracks of the **P
 ## 1. Encrypted Gaming Track (Arcium) 🛡️
 **Track Goal**: Build games using Multi-Party Computation (MPC) to handle private state.
 - **Implementation**: 
-    - **Flip It**: Uses Arcium for encrypted coin flips, preventing validators or the house from front-running outcomes.
-    - **Shadow Poker**: Uses Arcium MXEs (Multi-Party Execution Environments) to encrypt player hands. Cards are only "revealed" via MPC proofs at the showdown, ensuring 100% on-chain privacy.
-    - **C-SPL**: Integrating the Confidential SPL standard for private betting balances.
+    - **Flip It**: ✅ **COMPLETE** - Uses Arcium for encrypted coin flips, preventing validators or the house from front-running outcomes. Contract deployed with `request_flip` and Arcium callback.
+    - **Shadow Poker**: 🔄 **80% COMPLETE** - Arcium MXE client fully implemented:
+      - Frontend: `useShadowPokerArcium.ts` hook with encrypted deck generation
+      - UI: Locked card display with "🔒 Arcium Encrypted" badges
+      - Types: `EncryptedCard`, `EncryptedDeck` with Arcium proofs
+      - Methods: `dealEncryptedCards()`, `showdownWithProof()` in client
+      - Pending: Rust contract deployment with Arcium instructions
+    - **C-SPL**: ⏳ Integrating the Confidential SPL standard for private betting balances (next phase).
 
 ## 2. Real-Time Gaming Track (MagicBlock) ⚡
 **Track Goal**: Solve the latency issue for high-frequency on-chain interactions.

@@ -9,6 +9,7 @@ import { ButtonLoader, TransactionLoader } from '~/components/loading';
 import { useFlipItProgram, type BetResult, type RevealResult } from '~/lib/anchor/flip-it-client';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData';
+import { useWalletBalance, formatBalance } from '~/hooks/useWalletBalance';
 import { shortenAddress } from '~/lib/utils';
 
 const MIN_BET = 0.001; // 0.001 SOL
@@ -54,6 +55,9 @@ const FlipItGameContent: React.FC = () => {
     // Mutations for recording bets
     const recordBet = useRecordBet();
     const resolveBet = useResolveBet();
+
+    // Wallet balance for real-time SOL display
+    const { balance: walletBalance, isLoading: balanceLoading } = useWalletBalance();
 
     // Reset game state when component mounts
     useEffect(() => {
@@ -210,6 +214,18 @@ const FlipItGameContent: React.FC = () => {
 
     const isFlipping = isLoading || txStatus === 'pending' || txStatus === 'confirming';
     const canFlip = connected && isReady && houseExists && !isFlipping && amount >= MIN_BET && amount <= MAX_BET;
+    
+    // Debug why button is disabled
+    const getDisabledReason = () => {
+        if (!connected) return 'Connect wallet to play';
+        if (!isReady) return 'Wallet not ready - try reconnecting';
+        if (!houseExists) return 'Game house needs initialization';
+        if (isFlipping) return 'Transaction in progress...';
+        if (amount < MIN_BET) return `Minimum bet is ${MIN_BET} SOL`;
+        if (amount > MAX_BET) return `Maximum bet is ${MAX_BET} SOL`;
+        return null;
+    };
+    const disabledReason = getDisabledReason();
 
     return (
         <div className="flex flex-1 relative overflow-hidden">
@@ -396,6 +412,26 @@ const FlipItGameContent: React.FC = () => {
                                 </button>
                             </div>
 
+                            {/* Wallet Balance Display */}
+                            {connected && (
+                                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Balance</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span className="font-mono font-bold text-white">
+                                            {balanceLoading ? (
+                                                <span className="inline-block w-12 h-4 bg-white/10 rounded animate-pulse"></span>
+                                            ) : (
+                                                formatBalance(walletBalance)
+                                            )}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Bet Amount Input */}
                             <div className="flex flex-col gap-4">
                                 <div className="flex justify-between items-center text-xs font-bold text-gray-400 px-1 tracking-widest uppercase">
@@ -464,6 +500,14 @@ const FlipItGameContent: React.FC = () => {
                                     </>
                                 )}
                             </button>
+                            
+                            {/* Disabled Reason Helper */}
+                            {disabledReason && (
+                                <div className="flex items-center gap-2 text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2">
+                                    <span className="material-symbols-outlined text-sm">info</span>
+                                    <span>{disabledReason}</span>
+                                </div>
+                            )}
 
                             <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] px-1">
                                 <span>Multiplier: <span className="text-white">2.0x</span></span>

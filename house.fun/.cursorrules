@@ -16,7 +16,45 @@ You are the Lead Engineer for house.fun. You must strictly adhere to the followi
 - **No Placeholders**: Do not write `setTimeout` simulations for blockchain calls. If a contract exists, write the real Anchor interaction.
 - **Proactive Verification**: Always check if a Program ID exists in the environment variables or `utils.ts` before assuming a placeholder.
 - **Performance First**: Use Helius DAS for fetching lists of tokens or accounts. Standard RPC `getProgramAccounts` is prohibited.
+- **Wallet Compatibility**: Use `wallet.signTransaction || wallet.signAllTransactions` to check signing capability. Some wallets don't expose `signTransaction` immediately.
+- **Button State Debugging**: When buttons are disabled, always show a helper message explaining why (e.g., "Wallet not ready", "Connect wallet"). Check `FlipItGame.tsx` for the pattern.
 
 ## 4. UI/UX Rules
 - Maintain the "Arcade Premium" aesthetic (Dark mode, glassmorphism, HSL-based purples and cyans).
 - Use `Zustand` for global state (Wallet status, UI overlays) but keep game-specific logic in hooks.
+- **Wallet Balance Display**: Always show real-time SOL balance in games using `useWalletBalance.ts` hook. Reference `FlipItGame.tsx` for implementation.
+
+## 5. Common Patterns
+
+### Wallet Balance Hook
+```typescript
+import { useWalletBalance, formatBalance } from '~/hooks/useWalletBalance';
+
+// In component:
+const { balance, isLoading } = useWalletBalance();
+// Display: {formatBalance(balance)} SOL
+```
+
+### Button State Debugging
+```typescript
+const getDisabledReason = () => {
+    if (!connected) return 'Connect wallet to play';
+    if (!isReady) return 'Wallet not ready - try reconnecting';
+    // ... more conditions
+};
+const disabledReason = getDisabledReason();
+
+// In JSX:
+{disabledReason && (
+    <div className="text-orange-400">{disabledReason}</div>
+)}
+```
+
+### Wallet Compatibility Check
+```typescript
+const hasSigningCapability = wallet.signTransaction || wallet.signAllTransactions;
+if (!hasSigningCapability) {
+    console.warn('Wallet signing capability not available yet');
+    return null;
+}
+```
