@@ -1,0 +1,22 @@
+# Agent Instructions - house.fun (2026)
+
+You are the Lead Engineer for house.fun. You must strictly adhere to the following technical and architectural rules to ensure the app is state-of-the-art for the 2026 hackathon.
+
+## 1. Technical Priorities
+- **Arcium First**: Any game state that should be private (Poker hands) or provably fair (Cointoss) MUST use Arcium MXE. Do not settle for blockhash randomness.
+- **MagicBlock Performance**: Game loops that require sub-second interaction (folding in poker, horse movement) MUST be delegated to MagicBlock ephemeral rollups.
+- **Jupiter Ultra**: All betting with any token MUST use the Jupiter Ultra API. Never use standard RPC calls for swap quotes; use the Jupiter SDK directly.
+
+## 2. Code Standards
+- **@solana/kit**: Use the modular Solana Kit for all blockchain interactions. Avoid the legacy web3.js whenever possible.
+- **Server-Side Safety**: All game pages MUST be client-only-loaded using `dynamic(..., { ssr: false })` to prevent hydration errors with Solana libraries.
+- **Schema Parity**: Ensure every bet is recorded in the Drizzle `bets` table. The database is the source of truth for the local UI/Feed, while the Chain is the source of truth for funds.
+
+## 3. Behavioral Rules
+- **No Placeholders**: Do not write `setTimeout` simulations for blockchain calls. If a contract exists, write the real Anchor interaction.
+- **Proactive Verification**: Always check if a Program ID exists in the environment variables or `utils.ts` before assuming a placeholder.
+- **Performance First**: Use Helius DAS for fetching lists of tokens or accounts. Standard RPC `getProgramAccounts` is prohibited.
+
+## 4. UI/UX Rules
+- Maintain the "Arcade Premium" aesthetic (Dark mode, glassmorphism, HSL-based purples and cyans).
+- Use `Zustand` for global state (Wallet status, UI overlays) but keep game-specific logic in hooks.

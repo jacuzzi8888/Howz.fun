@@ -1,38 +1,43 @@
-# house.fun
+# house.fun (2026 Edition) 🎰
 
 The ultimate on-chain casino where memecoins battle, flip, race, and bluff — all provably fair on Solana.
 
-## Games
+### 🚀 Live Demo: [house-fun-app.vercel.app](https://house-fun-app.vercel.app)
 
-- 🪙 **Flip It** — Encrypted coin flips with Arcium
-- 🥊 **Memecoin Fight Club** — UFC-style token battles
-- 🏇 **Degen Derby** — 8-horse memecoin races
-- 🃏 **Shadow Poker** — Encrypted Texas Hold'em
+---
 
-## Tech Stack
+## 🎮 Games Status
 
-- **Frontend:** Next.js 14, Tailwind, shadcn/ui
-- **API:** tRPC
-- **Database:** Supabase + Drizzle
-- **Blockchain:** Solana, Jupiter, MagicBlock, Arcium
-- **Design:** Google Stitch (MCP integrated)
+- 🪙 **Flip It** — ✅ **Arcium Integrated**. Provably fair coin flips.
+- 🥊 **Memecoin Fight Club** — 🏗️ **Contract Built**. Automated price resolution coming next.
+- 🏇 **Degen Derby** — 🏗️ **Contract Built**. Real-time race simulation coming next.
+- 🃏 **Shadow Poker** — 🏗️ **Contract Built**. Arcium privacy & MagicBlock rollups coming next.
 
-## Getting Started
+## 🛠️ The 2026 Tech Stack
+
+- **Frontend:** Next.js 15+ (App Router, Server Actions, RSC)
+- **State & Data:** tRPC, Zustand, Drizzle ORM + Supabase
+- **Blockchain Core:** Solana Kit (@solana/kit), Anchor
+- **Privacy Layer:** [Arcium](https://arcium.com) MXE (Confidential Computing)
+- **Performance:** [MagicBlock](https://magicblock.gg) (Ephemeral Rollups for 1ms block times)
+- **Liquidity:** [Jupiter Ultra](https://jup.ag) (RPC-less Swap API)
+- **Oracles:** Pyth Entropy & Pull Oracles
+
+## 🚀 Getting Started
 
 ```bash
-# Install dependencies
+# Install 2026 dependencies
 npm install
 
 # Run development server
 npm run dev
 ```
 
-## Environment Variables
+## 📜 Roadmap & Research
+Detailed technical blueprints can be found in:
+- [ROADMAP.md](file:///C:/Users/USER/.gemini/antigravity/brain/c74e703d-368e-480e-a60f-aedc75824896/ROADMAP.md)
+- [TECH_STACK_2026.md](file:///C:/Users/USER/.gemini/antigravity/brain/c74e703d-368e-480e-a60f-aedc75824896/TECH_STACK_2026.md)
 
-Copy `.env.example` to `.env.local` and fill in your keys.
+---
 
-## Hackathon
-
-Built for **Playsolana Matrix Hackathon** (Jan-Feb 2026)
-
-Tracks: Jupiter, MagicBlock, Arcium, Metaplex
+Built for **Playsolana Matrix Hackathon** (Jan-Feb 2026) 🚀

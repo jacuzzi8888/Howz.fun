@@ -1,36 +1,35 @@
-# house.fun — Current Context
+# house.fun — Current Context (2026 Edition)
 
 ## Tech Stack
-- Next.js 14 (App Router)
-- TypeScript (strict mode)
+- Next.js 15+ (App Router, RSC, Server Actions)
+- TypeScript 5.x+ (Strict Mode)
 - tRPC for API
 - Drizzle ORM + Supabase (Postgres)
-- Tailwind CSS + shadcn/ui
-- Zustand for state
-- Solana wallet-adapter
+- Tailwind CSS 4+
+- Solana Kit (@solana/kit) - Replacement for web3.js v1
+- Arcium SDK v3+ (Confidential SPL & MXEs)
+- MagicBlock SDK (Ephemeral Rollups)
+- Jupiter SDK v6 (Ultra API / RPC-less)
 
 ## Design Tool
 - Google Stitch (MCP integrated)
 - Project ID: house-fun
 
 ## Current Task
-Project scaffold and configuration
+Implementation Phase 1: Moving from Simulations to On-Chain 2026 Integrations
 
 ## Key Decisions
-- All prices from Jupiter API
-- Real-time game state via MagicBlock
-- Encrypted randomness via Arcium
-- Wallet-only auth (no email)
-
-## Color Palette
-- Background: #0A0A0F
-- Surface: #141420
-- Primary: #8B5CF6 (purple)
-- Secondary: #06B6D4 (cyan)
-- Accent: #F59E0B (gold)
+- **Randomness**: Use Pyth Entropy + Arcium MXE for true provably fair logic.
+- **Liquidity**: Use Jupiter Ultra API (RPC-less) for all in-game swaps/bets.
+- **Performance**: Delegate high-frequency game loops (Poker, Derby) to MagicBlock rollups.
+- **Privacy**: Encrypt cards and sensitive game state using Arcium MPC.
+- **Transactions**: Prioritize Versioned Transactions and ALTs for atomic swap-and-bet flows.
+- **Auth**: Wallet-only auth (Solana Standard).
 
 ## DO NOT
-- Use Prisma (we use Drizzle)
-- Create new utility files without checking existing
-- Install dependencies without asking
-- Use any other ORM
+- Use `getProgramAccounts` (Use Helius DAS API instead).
+- Use legacy `@solana/web3.js` (Use `@solana/kit`).
+- Use old "Flash Fill" patterns (Use Jupiter CPI).
+- Use Prisma (we use Drizzle).
+- Create new utility files without checking existing.
+- Install dependencies without checking compatibility with Next.js 15.

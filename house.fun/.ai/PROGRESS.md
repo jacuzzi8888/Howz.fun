@@ -1,29 +1,23 @@
-# house.fun — Progress Log
+# house.fun — Progress Log (2026)
 
-## Session: 2026-01-28
+## Phase 0: Scaffolding & Initial Logic
+- [x] Next.js project initialization (T3 Stack)
+- [x] Solana Anchor programs defined for all four games
+- [x] Database schema designed and deployed via Supabase
+- [x] Initial Stitch UI integration complete
 
-### Completed
-- [x] Hackathon research (Playsolana Matrix)
-- [x] Game concepts (Flip, MFC, Derby, Poker)
-- [x] Systems architecture
-- [x] Game mechanics design
-- [x] UI/UX mockups (5 images)
-- [x] Brand guide + taglines
-- [x] Advanced mechanics (seasons, sponsorship, $HOUSE)
-- [x] Vibe coding best practices guide
-- [x] Tech stack finalization (T3 Stack)
-- [x] Stitch MCP integration guide
-- [x] Project folder created
-- [x] Environment variables configured
-- [x] MCP config set up
+## Phase 1: Production Readiness (Current)
+- [x] Arcium Client integration for Flip It
+- [x] Vercel Deployment configured (Next.js 15 compatibility)
+- [x] Local build verification (`npm run build`)
+- [x] Environment variable audit (RPCs, Program IDs)
+- [x] **Live on production**: https://house-fun-app.vercel.app
 
-### In Progress
-- [ ] Next.js project initialization
-- [ ] Core folder structure
-- [ ] Design token setup
+## Phase 2: Arcium & MagicBlock Scaling (Next)
+- [ ] Migrate Shadow Poker to Arcium MXE for hand privacy
+- [ ] Integrate MagicBlock for sub-second poker interaction
+- [ ] Implement Pyth Pull Oracles for automated Fight Club resolution
+- [ ] Swap-to-Bet integration using Jupiter Ultra SDK
 
-### Next Steps
-1. Initialize Next.js with create-t3-app
-2. Install dependencies
-3. Create first Stitch design
-4. Export and integrate lobby
+## 📅 Status Update: 2026-02-09
+Project successfully deployed. Primary game (Flip It) is fully on-chain with Arcium. Remaining games are in "simulation-to-contract" transition phase.
