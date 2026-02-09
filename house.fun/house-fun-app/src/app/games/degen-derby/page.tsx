@@ -1,4 +1,11 @@
-import { DegenDerbyGame } from "~/components/games/DegenDerbyGame";
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const DegenDerbyGame = dynamic(
+    () => import("~/components/games/DegenDerbyGame").then((mod) => mod.DegenDerbyGame),
+    { ssr: false }
+);
 
 export default function DegenDerbyPage() {
     return (

@@ -1,4 +1,11 @@
-import { ShadowPokerGame } from "~/components/games/ShadowPokerGame";
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const ShadowPokerGame = dynamic(
+    () => import("~/components/games/ShadowPokerGame").then((mod) => mod.ShadowPokerGame),
+    { ssr: false }
+);
 
 export default function ShadowPokerPage() {
     return (

@@ -8,5 +8,12 @@
     "NEXT_PUBLIC_FLIP_IT_PROGRAM_ID": "BWGSySnUGc9GRW4KdesmNAzp9Y2KoCioUfrz1Q5cdcqu",
     "SKIP_ENV_VALIDATION": "1",
     "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "SKIP_ENV_VALIDATION": "1",
+      "DATABASE_URL": "postgresql://postgres:jacuzzi@db.zogrywzfggwdoozenhta.supabase.co:5432/postgres",
+      "NEXT_PUBLIC_SOLANA_RPC": "https://api.devnet.solana.com"
+    }
   }
 }

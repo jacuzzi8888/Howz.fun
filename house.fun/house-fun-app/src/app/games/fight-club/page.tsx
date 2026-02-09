@@ -1,4 +1,11 @@
-import { FightClubGame } from "~/components/games/FightClubGame";
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const FightClubGame = dynamic(
+    () => import("~/components/games/FightClubGame").then((mod) => mod.FightClubGame),
+    { ssr: false }
+);
 
 export default function FightClubPage() {
     return (

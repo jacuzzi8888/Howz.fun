@@ -1,4 +1,11 @@
-import { FlipItGame } from "~/components/games/FlipItGame";
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const FlipItGame = dynamic(
+    () => import("~/components/games/FlipItGame").then((mod) => mod.FlipItGame),
+    { ssr: false }
+);
 
 export default function FlipItPage() {
     return (
