@@ -29,28 +29,28 @@ const FlipItGameContent: React.FC = () => {
     const [gameResult, setGameResult] = useState<RevealResult | null>(null);
     const [showResult, setShowResult] = useState(false);
     const [useArciumMode, setUseArciumMode] = useState(false); // Arcium integration pending
-    
+
     const { setIsUsingRollup } = useMagicBlock();
     const { connected, publicKey } = useWallet();
-    const { 
-        isLoading, 
-        error, 
-        txStatus, 
-        setTxStatus, 
+    const {
+        isLoading,
+        error,
+        txStatus,
+        setTxStatus,
         reset,
-        executeGameAction 
+        executeGameAction
     } = useGameState();
-    
-    const { isReady, placeBet, reveal, initializeHouse, fetchHouse } = useFlipItProgram();
+
+    const { isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram();
     const [houseExists, setHouseExists] = useState<boolean | null>(null);
     const [isInitializingHouse, setIsInitializingHouse] = useState(false);
-    
+
     // Arcium integration status
     const isArciumReady = true; // Arcium deployed successfully!
-    
+
     // Fetch real recent bets from database
     const { data: recentBets, isLoading: isLoadingBets } = useRecentBets('FLIP_IT', 10);
-    
+
     // Mutations for recording bets
     const recordBet = useRecordBet();
     const resolveBet = useResolveBet();
@@ -75,10 +75,10 @@ const FlipItGameContent: React.FC = () => {
 
     const handleInitializeHouse = async () => {
         if (!initializeHouse) return;
-        
+
         setIsInitializingHouse(true);
         setTxStatus('pending');
-        
+
         try {
             const tx = await initializeHouse();
             console.log('House initialized:', tx);
@@ -99,7 +99,7 @@ const FlipItGameContent: React.FC = () => {
         }
 
         // Validate wallet connection
-        if (!connected || !isReady) {
+        if (!connected || !isReady || !publicKey) {
             return;
         }
 
@@ -132,30 +132,49 @@ const FlipItGameContent: React.FC = () => {
                 });
             } catch (dbError) {
                 console.error('Failed to record bet in database:', dbError);
-                // Continue even if DB fails - bet is on-chain
             }
 
-            // Step 3: Wait a moment for commitment to be mined
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Step 4: Reveal and resolve on-chain
-            // NOTE: Arcium integration coming soon - using legacy reveal for now
-            let result: RevealResult | null = null;
-            
+            // Step 3: Arcium Provably Fair Flow
             if (isArciumReady && useArciumMode) {
-                // Arcium integration will go here after deployment
-                console.log('Arcium mode requested but not yet deployed');
-            }
-            
-            // Use legacy reveal
-            console.log('Revealing bet...');
-            result = await executeGameAction(async () => {
-                return await reveal(bet.betPDA, side, bet.nonce);
-            });
+                setTxStatus('confirming'); // Show Arcium transition
+                console.log('Starting Arcium computation flow...');
 
-            if (!result) {
-                throw new Error('Failed to reveal bet');
+                // For now, we simulate the Arcium wait since credentials are pending
+                // In a real flow, this would call useFlipItArcium.generateProvablyFairOutcome
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Note: requestFlip would be called here with the proof
+                // const proofTx = await requestFlip(bet.betPDA, ...);
+                console.log('Arcium computation complete (simulation)');
             }
+
+            // Step 4: Wait for Resolution
+            // Since resolution is now an async callback from Arcium to the Smart Contract,
+            // we poll the account or listen for events.
+            setTxStatus('confirming');
+            let resolvedAccount: any = null;
+            let attempts = 0;
+
+            while (attempts < 10) {
+                const fetchedAccount: any = await fetchBet(bet.betPDA);
+                if (fetchedAccount && (fetchedAccount.status as string) === 'Resolved') {
+                    resolvedAccount = fetchedAccount;
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                attempts++;
+            }
+
+            if (!resolvedAccount) {
+                throw new Error('Timeout waiting for Arcium resolution. Check your transaction history.');
+            }
+
+            const result: RevealResult = {
+                signature: bet.signature, // Use original sig or find resolution sig
+                outcome: resolvedAccount.playerWins ? side : (side === 'HEADS' ? 'TAILS' : 'HEADS'),
+                playerWon: resolvedAccount.playerWins || false,
+                payout: resolvedAccount.payout,
+            };
 
             // Step 5: Update bet in database with result
             try {
@@ -164,7 +183,7 @@ const FlipItGameContent: React.FC = () => {
                     outcome: result.outcome,
                     playerWon: result.playerWon,
                     payoutAmount: result.playerWon ? result.payout * 1_000_000_000 : 0,
-                    houseFee: amount * 1_000_000_000 * 0.01, // 1% house fee
+                    houseFee: amount * 1_000_000_000 * 0.01,
                 });
             } catch (dbError) {
                 console.error('Failed to update bet in database:', dbError);
@@ -238,7 +257,7 @@ const FlipItGameContent: React.FC = () => {
                     {/* Arcium Mode Indicator */}
                     <div className={cn(
                         "w-full p-3 rounded-lg border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2",
-                        !isArciumReady 
+                        !isArciumReady
                             ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
                             : "bg-primary/10 border-primary/20 text-primary"
                     )}>
@@ -246,7 +265,7 @@ const FlipItGameContent: React.FC = () => {
                             {!isArciumReady ? 'warning' : 'verified'}
                         </span>
                         <span>
-                            {!isArciumReady 
+                            {!isArciumReady
                                 ? 'Demo Mode - Arcium Deploy Pending'
                                 : 'Provably Fair via Arcium'
                             }
@@ -261,8 +280,8 @@ const FlipItGameContent: React.FC = () => {
                     {/* Transaction Status */}
                     {txStatus !== 'idle' && (
                         <div className="w-full">
-                            <TransactionLoader 
-                                status={txStatus} 
+                            <TransactionLoader
+                                status={txStatus}
                                 message={txStatus === 'pending' ? 'Waiting for wallet approval...' : undefined}
                             />
                         </div>
@@ -275,7 +294,7 @@ const FlipItGameContent: React.FC = () => {
                                 <span className="material-symbols-outlined text-red-500 text-sm">error</span>
                                 <p className="text-red-400 text-sm">{error}</p>
                             </div>
-                            <button 
+                            <button
                                 onClick={handleReset}
                                 className="mt-2 text-xs text-red-400/60 hover:text-red-400 underline"
                             >
@@ -288,8 +307,8 @@ const FlipItGameContent: React.FC = () => {
                     {showResult && gameResult && (
                         <div className={cn(
                             "w-full p-6 rounded-2xl border-2 text-center",
-                            gameResult.playerWon 
-                                ? "bg-primary/10 border-primary/30" 
+                            gameResult.playerWon
+                                ? "bg-primary/10 border-primary/30"
                                 : "bg-danger/10 border-danger/30"
                         )}>
                             <div className={cn(
@@ -427,8 +446,8 @@ const FlipItGameContent: React.FC = () => {
                                 onClick={handleFlip}
                                 className={cn(
                                     "w-full h-16 text-xl font-black tracking-[0.1em] uppercase rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(7,204,0,0.3)] disabled:shadow-none",
-                                    isFlipping 
-                                        ? "bg-gray-700 cursor-not-allowed text-gray-400" 
+                                    isFlipping
+                                        ? "bg-gray-700 cursor-not-allowed text-gray-400"
                                         : canFlip
                                             ? "bg-primary hover:bg-primaryHover text-[#0A0A0F] hover:shadow-[0_0_40px_rgba(7,204,0,0.5)]"
                                             : "bg-gray-700 cursor-not-allowed text-gray-500"

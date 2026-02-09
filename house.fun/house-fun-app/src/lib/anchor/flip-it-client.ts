@@ -2,14 +2,14 @@ import { Program, web3, BN } from '@coral-xyz/anchor';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useMemo } from 'react';
 import { type FlipIt } from './idl';
-import { 
-  createFlipItProgram, 
-  createProvider, 
-  getHousePDA, 
+import {
+  createFlipItProgram,
+  createProvider,
+  getHousePDA,
   getBetPDA,
   generateCommitment,
   parseFlipItError,
-  solToLamports 
+  solToLamports
 } from './utils';
 
 export interface BetResult {
@@ -53,7 +53,7 @@ export interface BetAccount {
 export function useFlipItProgram() {
   const { connection } = useConnection();
   const wallet = useWallet();
-  
+
   const program = useMemo(() => {
     if (!wallet.publicKey || !wallet.signTransaction) return null;
     const provider = createProvider(connection, wallet);
@@ -70,8 +70,8 @@ export function useFlipItProgram() {
 
     try {
       const [housePDA] = getHousePDA();
-      
-      const tx = await program.methods
+
+      const tx = await (program.methods as any)
         .initialize_house()
         .accounts({
           house: housePDA,
@@ -87,7 +87,7 @@ export function useFlipItProgram() {
   }, [program, wallet.publicKey]);
 
   /**
-   * Place a bet with commitment (legacy method - pre-Arcium)
+   * Place a bet (Arcium-compatible)
    */
   const placeBet = useCallback(async (
     amount: number,
@@ -98,25 +98,20 @@ export function useFlipItProgram() {
     }
 
     try {
-      // Generate random nonce
-      const nonce = Math.floor(Math.random() * 1000000000);
-      const choiceNum = choice === 'HEADS' ? 0 : 1;
-      
-      // Generate commitment
-      const commitment = await generateCommitment(choiceNum, nonce);
-      
+      const choiceBool = choice === 'HEADS';
+
       // Get PDAs
       const [housePDA] = getHousePDA();
       const houseAccount = await (program.account as any).House.fetchNullable(housePDA);
       const betIndex = houseAccount ? houseAccount.totalBets.toNumber() : 0;
       const [betPDA] = getBetPDA(wallet.publicKey, betIndex);
-      
+
       // Convert amount to lamports
       const lamports = solToLamports(amount);
 
       // Send transaction
-      const tx = await program.methods
-        .place_bet(new BN(lamports), Array.from(commitment))
+      const tx = await (program.methods as any)
+        .place_bet(new BN(lamports), choiceBool)
         .accounts({
           bet: betPDA,
           house: housePDA,
@@ -128,8 +123,8 @@ export function useFlipItProgram() {
       return {
         signature: tx,
         betPDA,
-        commitment,
-        nonce,
+        commitment: new Uint8Array(), // No longer using commitment choice
+        nonce: 0, // No longer using client-side nonce
       };
     } catch (error) {
       throw new Error(parseFlipItError(error));
@@ -137,47 +132,55 @@ export function useFlipItProgram() {
   }, [program, wallet.publicKey]);
 
   /**
-   * Reveal bet and resolve game (legacy method - uses on-chain randomness)
-   * NOTE: This is exploitable and should not be used for real stakes.
-   * Use Arcium integration (coming after IDL update) for provably fair flips.
+   * Request Arcium Flip
    */
-  const reveal = useCallback(async (
+  const requestFlip = useCallback(async (
     betPDA: web3.PublicKey,
-    choice: 'HEADS' | 'TAILS',
+    computationOffset: number,
+    userChoice: number[],
+    pubKey: number[],
     nonce: number
-  ): Promise<RevealResult> => {
+  ): Promise<string> => {
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
 
     try {
       const [housePDA] = getHousePDA();
-      const choiceNum = choice === 'HEADS' ? 0 : 1;
 
-      // Send reveal transaction
-      const tx = await program.methods
-        .reveal(choiceNum, new BN(nonce))
+      const tx = await (program.methods as any)
+        .flip(
+          new BN(computationOffset),
+          userChoice,
+          pubKey,
+          new BN(nonce)
+        )
         .accounts({
+          payer: wallet.publicKey,
           bet: betPDA,
           house: housePDA,
-          player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          // Sign PDA and other Arcium accounts are handled via Anchor's account resolution
+          // or manually if needed in the component
         } as any)
         .rpc();
 
-      // Fetch updated bet account
-      const betAccount = await (program.account as any).Bet.fetch(betPDA);
-
-      return {
-        signature: tx,
-        outcome: betAccount.outcome === 0 ? 'HEADS' : 'TAILS',
-        playerWon: betAccount.playerWins,
-        payout: betAccount.payout.toNumber() / web3.LAMPORTS_PER_SOL,
-      };
+      return tx;
     } catch (error) {
       throw new Error(parseFlipItError(error));
     }
   }, [program, wallet.publicKey]);
+
+  /**
+   * Reveal is no longer a separate instruction, it's handled via Arcium callback.
+   * This is kept for interface compatibility but should be replaced by event listeners.
+   */
+  const reveal = useCallback(async (
+    _betPDA: web3.PublicKey,
+    _choice: 'HEADS' | 'TAILS',
+    _nonce: number
+  ): Promise<RevealResult> => {
+    throw new Error('Reveal instruction deprecated. Results are now handled via Arcium callback.');
+  }, []);
 
   /**
    * Claim winnings from resolved bet
@@ -190,7 +193,7 @@ export function useFlipItProgram() {
     }
 
     try {
-      const tx = await program.methods
+      const tx = await (program.methods as any)
         .claim_winnings()
         .accounts({
           bet: betPDA,
@@ -215,7 +218,7 @@ export function useFlipItProgram() {
 
     try {
       const bet = await (program.account as any).Bet.fetch(betPDA);
-      
+
       return {
         player: bet.player,
         amount: bet.amount.toNumber() / web3.LAMPORTS_PER_SOL,
@@ -237,7 +240,7 @@ export function useFlipItProgram() {
     try {
       const [housePDA] = getHousePDA();
       const house = await (program.account as any).House.fetch(housePDA);
-      
+
       return {
         authority: house.authority,
         treasury: house.treasury.toNumber() / web3.LAMPORTS_PER_SOL,
@@ -254,6 +257,7 @@ export function useFlipItProgram() {
     isReady: !!program,
     initializeHouse,
     placeBet,
+    requestFlip,
     reveal,
     claimWinnings,
     fetchBet,

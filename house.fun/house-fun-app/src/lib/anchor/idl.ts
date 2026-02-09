@@ -1,4 +1,7 @@
-{
+// Type definition derived from IDL
+export type FlipIt = typeof IDL;
+
+export const IDL = {
   "address": "BWGSySnUGc9GRW4KdesmNAzp9Y2KoCioUfrz1Q5cdcqu",
   "metadata": {
     "name": "flip_it",
@@ -1649,4 +1652,4 @@
       }
     }
   ]
-}
+} as const;

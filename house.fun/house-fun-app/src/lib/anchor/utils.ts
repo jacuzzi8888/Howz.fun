@@ -31,8 +31,8 @@ export function createProvider(connection: web3.Connection, wallet: WalletAdapte
 /**
  * Create Flip It program instance
  */
-export function createFlipItProgram(provider: AnchorProvider): Program<FlipIt> {
-  return new Program(IDL, provider);
+export function createFlipItProgram(provider: AnchorProvider): Program<any> {
+  return new Program(IDL as any, provider);
 }
 
 /**
