@@ -1,8 +1,10 @@
 import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type FlipIt, IDL } from './idl';
 
-// Program ID from deployment
-export const PROGRAM_ID = new web3.PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+// Program ID from deployment - uses env var with fallback
+export const PROGRAM_ID = new web3.PublicKey(
+  process.env.NEXT_PUBLIC_FLIP_IT_PROGRAM_ID || '6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ'
+);
 
 // House PDA seeds
 export const HOUSE_SEED = Buffer.from('house');
@@ -78,11 +80,11 @@ export function lamportsToSol(lamports: number): number {
 export async function generateCommitment(choice: 0 | 1, nonce: number): Promise<Uint8Array> {
   const data = new Uint8Array(9);
   data[0] = choice;
-  
+
   // Write nonce as 8 bytes (little-endian)
   const view = new DataView(data.buffer);
   view.setBigUint64(1, BigInt(nonce), true);
-  
+
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   return new Uint8Array(hashBuffer);
 }
@@ -119,17 +121,17 @@ export function parseFlipItError(error: unknown): string {
   if (!isProgramError(error)) {
     return 'Unknown error occurred';
   }
-  
+
   if (error.code) {
     const errorMsg = FlipItErrors[error.code];
     if (errorMsg) {
       return errorMsg;
     }
   }
-  
+
   if (error.message) {
     return error.message;
   }
-  
+
   return 'Unknown error occurred';
 }

@@ -5,7 +5,7 @@ use arcium_anchor::prelude::*;
 const COMP_DEF_OFFSET_FLIP: u32 = comp_def_offset("flip");
 
 // Program ID - will be set during deployment
-declare_id!("5SLSFwTtdbomiw8fyo4obKvjBhKLaA7s7EbnWmpkgLkg");
+declare_id!("BWGSySnUGc9GRW4KdesmNAzp9Y2KoCioUfrz1Q5cdcqu");
 
 // Constants
 pub const HOUSE_FEE_BPS: u16 = 100; // 1% = 100 basis points
@@ -54,8 +54,8 @@ pub mod flip_it {
         choice: bool, // true = HEADS, false = TAILS
     ) -> Result<()> {
         // Validate bet amount
-        require!(amount >= MIN_BET_LAMPORTS, FlipItError::BetTooSmall);
-        require!(amount <= MAX_BET_LAMPORTS, FlipItError::BetTooLarge);
+        require!(amount >= MIN_BET_LAMPORTS, ErrorCode::BetTooSmall);
+        require!(amount <= MAX_BET_LAMPORTS, ErrorCode::BetTooLarge);
 
         let bet = &mut ctx.accounts.bet;
         let player = &ctx.accounts.player;
@@ -156,7 +156,7 @@ pub mod flip_it {
             &ctx.accounts.computation_account,
         ) {
             Ok(FlipOutput { field_0 }) => field_0,
-            Err(_) => return Err(FlipItError::ArciumVerificationFailed.into()),
+            Err(_) => return Err(ErrorCode::ArciumVerificationFailed.into()),
         };
 
         let bet = &mut ctx.accounts.bet;
@@ -200,11 +200,8 @@ pub mod flip_it {
         let bet = &ctx.accounts.bet;
         let player = &ctx.accounts.player;
 
-        require!(
-            bet.status == BetStatus::Resolved,
-            FlipItError::BetNotResolved
-        );
-        require!(bet.player == player.key(), FlipItError::UnauthorizedPlayer);
+        require!(bet.status == BetStatus::Resolved, ErrorCode::BetNotResolved);
+        require!(bet.player == player.key(), ErrorCode::UnauthorizedPlayer);
 
         if bet.payout > 0 {
             let bet_key = bet.key();
@@ -246,9 +243,9 @@ pub mod flip_it {
 
         require!(
             house.authority == ctx.accounts.authority.key(),
-            FlipItError::UnauthorizedHouse
+            ErrorCode::UnauthorizedHouse
         );
-        require!(amount <= house.treasury, FlipItError::InsufficientTreasury);
+        require!(amount <= house.treasury, ErrorCode::InsufficientTreasury);
 
         // Update house treasury BEFORE transferring (avoids double borrow)
         house.treasury -= amount;
@@ -394,21 +391,21 @@ pub struct Flip<'info> {
 
     #[account(
         mut,
-        address = derive_mempool_pda!(mxe_account)
+        address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet)
     )]
     /// CHECK: mempool_account, checked by arcium program
     pub mempool_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
-        address = derive_execpool_pda!(mxe_account)
+        address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet)
     )]
     /// CHECK: executing_pool, checked by arcium program
     pub executing_pool: UncheckedAccount<'info>,
 
     #[account(
         mut,
-        address = derive_comp_pda!(computation_offset, mxe_account)
+        address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet)
     )]
     /// CHECK: computation_account, checked by arcium program
     pub computation_account: UncheckedAccount<'info>,
@@ -418,7 +415,7 @@ pub struct Flip<'info> {
 
     #[account(
         mut,
-        address = derive_cluster_pda!(mxe_account)
+        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet)
     )]
     pub cluster_account: Account<'info, Cluster>,
 
@@ -446,7 +443,7 @@ pub struct FlipCallback<'info> {
     /// CHECK: computation_account, checked by arcium program
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account))]
+    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
@@ -465,8 +462,8 @@ pub struct FlipCallback<'info> {
 pub struct ClaimWinnings<'info> {
     #[account(
         mut,
-        constraint = bet.player == player.key() @ FlipItError::UnauthorizedPlayer,
-        constraint = bet.status == BetStatus::Resolved @ FlipItError::BetNotResolved
+        constraint = bet.player == player.key() @ ErrorCode::UnauthorizedPlayer,
+        constraint = bet.status == BetStatus::Resolved @ ErrorCode::BetNotResolved
     )]
     pub bet: Account<'info, Bet>,
 
@@ -482,7 +479,7 @@ pub struct WithdrawTreasury<'info> {
         mut,
         seeds = [b"house"],
         bump = house.bump,
-        has_one = authority @ FlipItError::UnauthorizedHouse
+        has_one = authority @ ErrorCode::UnauthorizedHouse
     )]
     pub house: Account<'info, House>,
 
@@ -567,7 +564,7 @@ pub struct FlipEvent {
 // ============================================================
 
 #[error_code]
-pub enum FlipItError {
+pub enum ErrorCode {
     #[msg("Bet amount too small (min 0.001 SOL)")]
     BetTooSmall,
     #[msg("Bet amount too large (max 100 SOL)")]

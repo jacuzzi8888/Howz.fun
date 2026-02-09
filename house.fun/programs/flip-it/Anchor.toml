@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-flip_it = "5SLSFwTtdbomiw8fyo4obKvjBhKLaA7s7EbnWmpkgLkg"
+flip_it = "BWGSySnUGc9GRW4KdesmNAzp9Y2KoCioUfrz1Q5cdcqu"
 
 [programs.devnet]
-flip_it = "5SLSFwTtdbomiw8fyo4obKvjBhKLaA7s7EbnWmpkgLkg"
+flip_it = "BWGSySnUGc9GRW4KdesmNAzp9Y2KoCioUfrz1Q5cdcqu"
 
 [registry]
 url = "https://api.apr.dev"

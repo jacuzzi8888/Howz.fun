@@ -41,7 +41,9 @@ const FlipItGameContent: React.FC = () => {
         executeGameAction 
     } = useGameState();
     
-    const { isReady, placeBet, reveal } = useFlipItProgram();
+    const { isReady, placeBet, reveal, initializeHouse, fetchHouse } = useFlipItProgram();
+    const [houseExists, setHouseExists] = useState<boolean | null>(null);
+    const [isInitializingHouse, setIsInitializingHouse] = useState(false);
     
     // Arcium integration status
     const isArciumReady = true; // Arcium deployed successfully!
@@ -59,6 +61,36 @@ const FlipItGameContent: React.FC = () => {
         setGameResult(null);
         setShowResult(false);
     }, []);
+
+    // Check if house exists
+    useEffect(() => {
+        if (isReady) {
+            fetchHouse().then(house => {
+                setHouseExists(!!house);
+            }).catch(() => {
+                setHouseExists(false);
+            });
+        }
+    }, [isReady, fetchHouse]);
+
+    const handleInitializeHouse = async () => {
+        if (!initializeHouse) return;
+        
+        setIsInitializingHouse(true);
+        setTxStatus('pending');
+        
+        try {
+            const tx = await initializeHouse();
+            console.log('House initialized:', tx);
+            setHouseExists(true);
+            setTxStatus('confirmed');
+        } catch (err) {
+            console.error('Failed to initialize house:', err);
+            setTxStatus('failed');
+        } finally {
+            setIsInitializingHouse(false);
+        }
+    };
 
     const handleFlip = async () => {
         // Validate bet amount
@@ -158,7 +190,7 @@ const FlipItGameContent: React.FC = () => {
     };
 
     const isFlipping = isLoading || txStatus === 'pending' || txStatus === 'confirming';
-    const canFlip = connected && isReady && !isFlipping && amount >= MIN_BET && amount <= MAX_BET;
+    const canFlip = connected && isReady && houseExists && !isFlipping && amount >= MIN_BET && amount <= MAX_BET;
 
     return (
         <div className="flex flex-1 relative overflow-hidden">
@@ -173,6 +205,33 @@ const FlipItGameContent: React.FC = () => {
                                 <span className="material-symbols-outlined text-yellow-500 text-sm">wallet</span>
                                 <p className="text-yellow-400 text-sm">Connect your wallet to play</p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* House Not Initialized Warning */}
+                    {connected && houseExists === false && (
+                        <div className="w-full p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="material-symbols-outlined text-orange-500 text-sm">house</span>
+                                <p className="text-orange-400 text-sm font-bold">House Account Not Initialized</p>
+                            </div>
+                            <p className="text-orange-400/70 text-xs mb-3">
+                                This is a one-time setup step required after deployment.
+                            </p>
+                            <button
+                                onClick={handleInitializeHouse}
+                                disabled={isInitializingHouse}
+                                className="w-full py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-bold rounded-lg transition-colors text-sm"
+                            >
+                                {isInitializingHouse ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <span className="size-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
+                                        Initializing...
+                                    </span>
+                                ) : (
+                                    'Initialize House Account'
+                                )}
+                            </button>
                         </div>
                     )}
 

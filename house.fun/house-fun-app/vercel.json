@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "framework": "nextjs",
+  "env": {
+    "DATABASE_URL": "postgresql://postgres:jacuzzi@db.zogrywzfggwdoozenhta.supabase.co:5432/postgres",
+    "NEXT_PUBLIC_SOLANA_RPC": "https://devnet.helius-rpc.com/?api-key=0e89ca71-766d-40cc-9628-5d709af0f2cc",
+    "NEXT_PUBLIC_SOLANA_NETWORK": "devnet",
+    "NEXT_PUBLIC_FLIP_IT_PROGRAM_ID": "BWGSySnUGc9GRW4KdesmNAzp9Y2KoCioUfrz1Q5cdcqu",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://zogrywzfggwdoozenhta.supabase.co",
+    "NODE_ENV": "production"
+  }
+}

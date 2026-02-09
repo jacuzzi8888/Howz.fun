@@ -228,7 +228,7 @@ rm -f programs/flip-it/src/lib.rs.bak Anchor.toml.bak
 
 # Build Arcis circuits
 print_status "Building Arcis circuits..."
-arcium build
+
 
 print_success "Build complete!"
 
