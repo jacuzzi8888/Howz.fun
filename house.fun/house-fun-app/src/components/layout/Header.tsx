@@ -46,6 +46,15 @@ export const Header: React.FC = () => {
         };
     }, [publicKey, connection]);
 
+    // Auto-start session when connected
+    useEffect(() => {
+        if (connected && !isSessionActive && isMounted) {
+            console.log('[Header] Auto-starting session...');
+            SessionManager.createEphemeralKeypair();
+            refreshSession();
+        }
+    }, [connected, isSessionActive, isMounted, refreshSession]);
+
     const formattedBalance = balance !== null ? balance.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "0.00";
 
     if (!isMounted) return <div className="h-20 w-full bg-[#0A0A0F]/80 border-b border-white/5" />;
@@ -105,21 +114,11 @@ export const Header: React.FC = () => {
                                         <div className="flex items-center gap-2">
                                             <span className={`size-1.5 rounded-full ${isSessionActive ? 'bg-primary animate-pulse shadow-[0_0_5px_#BBFF00]' : 'bg-gray-500'}`}></span>
                                             <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
-                                                {isSessionActive ? 'Session Active' : 'No Session'}
+                                                {isSessionActive ? 'Session Active' : 'Initializing...'}
                                             </span>
                                         </div>
-                                        {isSessionActive ? (
+                                        {isSessionActive && (
                                             <span className="text-[10px] font-mono font-bold text-primary">{sessionRemainingTime} left</span>
-                                        ) : (
-                                            <button
-                                                onClick={() => {
-                                                    SessionManager.createEphemeralKeypair();
-                                                    refreshSession();
-                                                }}
-                                                className="text-[10px] font-black text-accentGold hover:text-white transition-colors animate-pulse"
-                                            >
-                                                Start Session
-                                            </button>
                                         )}
                                     </div>
 

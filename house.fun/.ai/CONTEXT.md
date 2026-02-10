@@ -1,35 +1,23 @@
-# house.fun — Current Context (2026 Edition)
+# Project Context: house.fun
 
-## Tech Stack
-- Next.js 15+ (App Router, RSC, Server Actions)
-- TypeScript 5.x+ (Strict Mode)
-- tRPC for API
-- Drizzle ORM + Supabase (Postgres)
-- Tailwind CSS 4+
-- Solana Kit (@solana/kit) - Replacement for web3.js v1
-- Arcium SDK v3+ (Confidential SPL & MXEs)
-- MagicBlock SDK (Ephemeral Rollups)
-- Jupiter SDK v6 (Ultra API / RPC-less)
+## Overview
+house.fun is a high-performance gaming platform built on Solana, utilizing **MagicBlock Ephemeral Rollups** for 0-latency gameplay and **Arcium** for provably fair randomness.
 
-## Design Tool
-- Google Stitch (MCP integrated)
-- Project ID: house-fun
+## Key Components
+- **Flip It Game**: A coin-flip game.
+- **MagicBlock**: Provides the rollup connection for sub-second transactions.
+- **Arcium**: Handles confidential computing for randomness.
+- **Session Keys**: Allows users to play without signing every transaction.
 
-## Current Task
-Implementation Phase 1: Moving from Simulations to On-Chain 2026 Integrations
+## Current State & Active Tasks
+- **UI/UX Upgrade (COMPLETED)**: Refactored Flip It game to fit on one screen; 3D coin scaled, padding reduced, gaps tightened.
+- **Logic & Balance (COMPLETED)**: Implemented robust result polling, manual check backup, and immediate SOL balance refresh.
+- **Automation (IN PROGRESS)**:
+    - Auto-session start implemented.
+    - **Auto-House Initialization**: Implementing auto-detection and setup for the House Account.
 
-## Key Decisions
-- **Randomness**: Use Pyth Entropy + Arcium MXE for true provably fair logic.
-- **Liquidity**: Use Jupiter Ultra API (RPC-less) for all in-game swaps/bets.
-- **Performance**: Delegate high-frequency game loops (Poker, Derby) to MagicBlock rollups.
-- **Privacy**: Encrypt cards and sensitive game state using Arcium MPC.
-- **Transactions**: Prioritize Versioned Transactions and ALTs for atomic swap-and-bet flows.
-- **Auth**: Wallet-only auth (Solana Standard).
-
-## DO NOT
-- Use `getProgramAccounts` (Use Helius DAS API instead).
-- Use legacy `@solana/web3.js` (Use `@solana/kit`).
-- Use old "Flash Fill" patterns (Use Jupiter CPI).
-- Use Prisma (we use Drizzle).
-- Create new utility files without checking existing.
-- Install dependencies without checking compatibility with Next.js 15.
+## Agent Instructions
+- Consult `.agent/rules.md` before every task.
+- Implementation requires explicit user approval.
+- Logic/Design decisions must be offered as options to the user.
+- Log major tasks in this file after user approval.

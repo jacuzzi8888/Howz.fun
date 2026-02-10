@@ -57,7 +57,7 @@ const FlipItGameContent: React.FC = () => {
     const resolveBet = useResolveBet();
 
     // Wallet balance for real-time SOL display
-    const { balance: walletBalance, isLoading: balanceLoading } = useWalletBalance();
+    const { balance: walletBalance, isLoading: balanceLoading, refetch: refetchBalance } = useWalletBalance();
 
     // Reset game state when component mounts
     useEffect(() => {
@@ -77,6 +77,14 @@ const FlipItGameContent: React.FC = () => {
             });
         }
     }, [isReady, fetchHouse]);
+
+    // Auto-initialize house if it doesn't exist and wallet is connected
+    useEffect(() => {
+        if (connected && isReady && houseExists === false && !isInitializingHouse) {
+            console.log('[FlipIt] Auto-initializing house account...');
+            handleInitializeHouse();
+        }
+    }, [connected, isReady, houseExists, isInitializingHouse]);
 
 
     const handleInitializeHouse = async () => {
@@ -211,6 +219,10 @@ const FlipItGameContent: React.FC = () => {
             setTxStatus('confirmed');
             setShowResult(true);
 
+            // Step 6: Force refresh balance
+            setTimeout(() => refetchBalance(), 1000);
+            setTimeout(() => refetchBalance(), 3000); // Second refresh for confirmation
+
         } catch (err) {
             setTxStatus('failed');
             console.error('Flip failed:', err);
@@ -244,8 +256,8 @@ const FlipItGameContent: React.FC = () => {
     return (
         <div className="flex flex-1 relative overflow-hidden">
             {/* Game Area (Center) */}
-            <div className="flex-1 flex flex-col items-center justify-center p-4 lg:p-10 relative z-10 overflow-y-auto">
-                <div className="w-full max-w-lg flex flex-col items-center gap-8">
+            <div className="flex-1 flex flex-col items-center justify-center p-2 lg:p-4 relative z-10 overflow-hidden">
+                <div className="w-full max-w-lg flex flex-col items-center gap-4">
 
                     {/* Wallet Not Connected Warning */}
                     {!connected && (
@@ -332,12 +344,28 @@ const FlipItGameContent: React.FC = () => {
                                 <span className="material-symbols-outlined text-red-500 text-sm">error</span>
                                 <p className="text-red-400 text-sm">{error}</p>
                             </div>
-                            <button
-                                onClick={handleReset}
-                                className="mt-2 text-xs text-red-400/60 hover:text-red-400 underline"
-                            >
-                                Try Again
-                            </button>
+                            <div className="mt-2 flex gap-4">
+                                <button
+                                    onClick={handleReset}
+                                    className="text-xs text-red-400/60 hover:text-red-400 underline"
+                                >
+                                    Try Again
+                                </button>
+                                {betResult && (
+                                    <button
+                                        onClick={() => {
+                                            setTxStatus('confirming');
+                                            // Trigger the polling logic again or a simplified version
+                                            // For now, allow retry from existing betPDA
+                                            setShowResult(false);
+                                            // we reuse handleFlip but it might need adjustment if we want to "resume"
+                                        }}
+                                        className="text-xs text-primary/60 hover:text-primary underline"
+                                    >
+                                        Check Result Again
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -391,11 +419,11 @@ const FlipItGameContent: React.FC = () => {
 
                             {/* Coin Graphic */}
                             <div className={cn(
-                                "relative size-[200px] rounded-full bg-gradient-to-br from-[#FFD700] via-[#F59E0B] to-[#B45309] shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)] flex items-center justify-center border-4 border-[#FCD34D] transform transition-all duration-500",
+                                "relative size-[150px] rounded-full bg-gradient-to-br from-[#FFD700] via-[#F59E0B] to-[#B45309] shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)] flex items-center justify-center border-4 border-[#FCD34D] transform transition-all duration-500",
                                 isFlipping ? "animate-spin" : "group-hover:scale-105 group-hover:rotate-y-12"
                             )}>
                                 <div className="absolute inset-2 rounded-full border-2 border-[#B45309]/50 border-dashed"></div>
-                                <span className="text-8xl font-black text-[#92400E] drop-shadow-[0_2px_2px_rgba(255,255,255,0.4)]">
+                                <span className="text-7xl font-black text-[#92400E] drop-shadow-[0_2px_2px_rgba(255,255,255,0.4)]">
                                     {side === 'HEADS' ? 'H' : 'T'}
                                 </span>
                                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-50"></div>
@@ -405,9 +433,9 @@ const FlipItGameContent: React.FC = () => {
 
                     {/* Betting Controls Container */}
                     {!showResult && (
-                        <div className="w-full glass-panel rounded-3xl p-8 flex flex-col gap-8 shadow-2xl">
+                        <div className="w-full glass-panel rounded-3xl p-6 flex flex-col gap-4 shadow-2xl">
                             {/* Heads / Tails Toggle */}
-                            <div className="grid grid-cols-2 gap-4 p-1.5 bg-black/40 rounded-2xl">
+                            <div className="grid grid-cols-2 gap-4 p-1 bg-black/40 rounded-2xl">
                                 <button
                                     onClick={() => !isFlipping && setSide('HEADS')}
                                     disabled={isFlipping}
@@ -424,7 +452,7 @@ const FlipItGameContent: React.FC = () => {
                                     onClick={() => !isFlipping && setSide('TAILS')}
                                     disabled={isFlipping}
                                     className={cn(
-                                        "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
+                                        "h-12 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
                                         side === 'TAILS'
                                             ? "bg-danger border-danger/50 text-white shadow-[0_0_20px_-5px_rgba(255,63,51,0.5)]"
                                             : "border-transparent text-white/50 hover:text-white"
@@ -464,7 +492,7 @@ const FlipItGameContent: React.FC = () => {
                                     <button
                                         onClick={() => setAmount(Math.max(MIN_BET, amount - 0.5))}
                                         disabled={isFlipping}
-                                        className="size-14 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
+                                        className="size-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
                                     >-</button>
                                     <div className="flex-1 relative">
                                         <input
@@ -480,14 +508,14 @@ const FlipItGameContent: React.FC = () => {
                                             max={MAX_BET}
                                             step={0.1}
                                             disabled={isFlipping}
-                                            className="w-full h-14 bg-black/40 border border-white/10 rounded-xl pl-4 pr-12 text-white font-mono text-xl font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center disabled:opacity-50"
+                                            className="w-full h-12 bg-black/40 border border-white/10 rounded-xl pl-4 pr-12 text-white font-mono text-xl font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center disabled:opacity-50"
                                         />
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-500 pointer-events-none tracking-tighter">SOL</div>
                                     </div>
                                     <button
                                         onClick={() => setAmount(Math.min(MAX_BET, amount + 0.5))}
                                         disabled={isFlipping}
-                                        className="size-14 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
+                                        className="size-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
                                     >+</button>
                                 </div>
                                 {amount < MIN_BET && (
@@ -503,7 +531,7 @@ const FlipItGameContent: React.FC = () => {
                                 disabled={!canFlip}
                                 onClick={handleFlip}
                                 className={cn(
-                                    "w-full h-16 text-xl font-black tracking-[0.1em] uppercase rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(7,204,0,0.3)] disabled:shadow-none",
+                                    "w-full h-14 text-xl font-black tracking-[0.1em] uppercase rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(7,204,0,0.3)] disabled:shadow-none",
                                     isFlipping
                                         ? "bg-gray-700 cursor-not-allowed text-gray-400"
                                         : canFlip
