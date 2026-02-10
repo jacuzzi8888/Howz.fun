@@ -28,13 +28,15 @@ export const MagicBlockProvider: React.FC<{
     const [sessionRemainingTime, setSessionRemainingTime] = useState('00:00');
 
     // Standard Mainnet/Devnet Connection
-    const standardConnection = useMemo(() =>
-        new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com', 'confirmed'),
-        []);
+    const standardConnection = useMemo(() => {
+        const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com';
+        console.log('[MagicBlock] Initializing Standard Connection with RPC:', rpc);
+        return new Connection(rpc, 'confirmed');
+    }, []);
 
     // MagicBlock Ephemeral Rollup Connection
     const rollupConnection = useMemo(() =>
-        new Connection('https://mainnet.magicblock.app', 'confirmed'),
+        new Connection('https://devnet.magicblock.app', 'confirmed'),
         []);
 
     const refreshSession = () => {

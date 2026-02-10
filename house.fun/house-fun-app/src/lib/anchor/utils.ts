@@ -3,7 +3,7 @@ import { type FlipIt, IDL } from './idl';
 
 // Program ID from deployment - uses env var with fallback
 export const PROGRAM_ID = new web3.PublicKey(
-  process.env.NEXT_PUBLIC_FLIP_IT_PROGRAM_ID || '6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSayfCk3tdRKQ'
+  process.env.NEXT_PUBLIC_FLIP_IT_PROGRAM_ID || 'BWGSySnUGc9GRW4KdesmNAzp9Y2KoCioUfrz1Q5cdcqu'
 );
 
 // House PDA seeds

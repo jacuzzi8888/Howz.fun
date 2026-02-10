@@ -71,11 +71,13 @@ const FlipItGameContent: React.FC = () => {
         if (isReady) {
             fetchHouse().then(house => {
                 setHouseExists(!!house);
-            }).catch(() => {
+            }).catch((err) => {
+                console.error('[FlipIt] Fetch house failed:', err);
                 setHouseExists(false);
             });
         }
     }, [isReady, fetchHouse]);
+
 
     const handleInitializeHouse = async () => {
         if (!initializeHouse) return;
@@ -255,30 +257,38 @@ const FlipItGameContent: React.FC = () => {
                         </div>
                     )}
 
-                    {/* House Not Initialized Warning */}
-                    {connected && houseExists === false && (
+                    {/* House Not Initialized Warning or Loading */}
+                    {connected && (houseExists === false || houseExists === null) && (
                         <div className="w-full p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                             <div className="flex items-center gap-2 mb-3">
-                                <span className="material-symbols-outlined text-orange-500 text-sm">house</span>
-                                <p className="text-orange-400 text-sm font-bold">House Account Not Initialized</p>
+                                <span className="material-symbols-outlined text-orange-500 text-sm">
+                                    {houseExists === null ? 'hourglass_empty' : 'house'}
+                                </span>
+                                <p className="text-orange-400 text-sm font-bold">
+                                    {houseExists === null ? 'Loading game state...' : 'House Account Not Initialized'}
+                                </p>
                             </div>
-                            <p className="text-orange-400/70 text-xs mb-3">
-                                This is a one-time setup step required after deployment.
-                            </p>
-                            <button
-                                onClick={handleInitializeHouse}
-                                disabled={isInitializingHouse}
-                                className="w-full py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-bold rounded-lg transition-colors text-sm"
-                            >
-                                {isInitializingHouse ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <span className="size-4 size-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
-                                        Initializing...
-                                    </span>
-                                ) : (
-                                    'Initialize House Account'
-                                )}
-                            </button>
+                            {houseExists === false && (
+                                <>
+                                    <p className="text-orange-400/70 text-xs mb-3">
+                                        This is a one-time setup step required after deployment.
+                                    </p>
+                                    <button
+                                        onClick={handleInitializeHouse}
+                                        disabled={isInitializingHouse}
+                                        className="w-full py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 font-bold rounded-lg transition-colors text-sm"
+                                    >
+                                        {isInitializingHouse ? (
+                                            <span className="flex items-center justify-center gap-2">
+                                                <span className="size-4 size-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
+                                                Initializing...
+                                            </span>
+                                        ) : (
+                                            'Initialize House Account'
+                                        )}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
 

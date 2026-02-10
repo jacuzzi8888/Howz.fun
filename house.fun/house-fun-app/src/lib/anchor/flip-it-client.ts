@@ -52,24 +52,28 @@ export interface BetAccount {
  *   - deposit_treasury (NEW)
  */
 export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
-  const { activeConnection } = useMagicBlock();
+  const { activeConnection, standardConnection } = useMagicBlock();
   const wallet = useWallet();
 
+  // Program instance using the active connection (could be L1 or L2)
   const program = useMemo(() => {
     if (!wallet.publicKey && !sessionKey) return null;
 
-    // In session mode, we use the session key to sign.
     if (!sessionKey) {
       const hasSigningCapability = wallet.signTransaction || wallet.signAllTransactions;
-      if (!hasSigningCapability) {
-        console.warn('[FlipIt] Wallet signing capability not available yet');
-        return null;
-      }
+      if (!hasSigningCapability) return null;
     }
 
     const provider = createProvider(activeConnection, wallet, sessionKey);
     return createFlipItProgram(provider);
-  }, [activeConnection, wallet, sessionKey]);
+  }, [activeConnection, wallet.publicKey, !!wallet.signTransaction, sessionKey]);
+
+  // ALWAYS L1 instance for fetching persistent state
+  const standardProgram = useMemo(() => {
+    if (!wallet.publicKey && !sessionKey) return null;
+    const provider = createProvider(standardConnection, wallet, sessionKey);
+    return createFlipItProgram(provider);
+  }, [standardConnection, wallet.publicKey, !!wallet.signTransaction, sessionKey]);
 
   /**
    * Initialize house (admin only)
@@ -104,7 +108,7 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
     amount: number,
     choice: 'HEADS' | 'TAILS'
   ): Promise<BetResult> => {
-    if (!program || !wallet.publicKey) {
+    if (!program || !wallet.publicKey || !standardProgram) {
       throw new Error('Wallet not connected');
     }
 
@@ -113,7 +117,11 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
 
       // Get PDAs
       const [housePDA] = getHousePDA();
-      const houseAccount = await (program.account as any).House.fetchNullable(housePDA);
+
+      // Resilient account fetching (try camelCase house and PascalCase House)
+      const accountGate = (standardProgram.account as any).house || (standardProgram.account as any).House;
+      const houseAccount = accountGate ? await accountGate.fetchNullable(housePDA) : null;
+
       const betIndex = houseAccount ? houseAccount.totalBets.toNumber() : 0;
       const [betPDA] = getBetPDA(wallet.publicKey, betIndex);
 
@@ -134,13 +142,13 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
       return {
         signature: tx,
         betPDA,
-        commitment: new Uint8Array(), // No longer using commitment choice
-        nonce: 0, // No longer using client-side nonce
+        commitment: new Uint8Array(),
+        nonce: 0,
       };
     } catch (error) {
       throw new Error(parseFlipItError(error));
     }
-  }, [program, wallet.publicKey]);
+  }, [program, standardProgram, wallet.publicKey]);
 
   /**
    * Request Arcium Flip
@@ -170,8 +178,6 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
           payer: wallet.publicKey,
           bet: betPDA,
           house: housePDA,
-          // Sign PDA and other Arcium accounts are handled via Anchor's account resolution
-          // or manually if needed in the component
         } as any)
         .rpc();
 
@@ -182,15 +188,14 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
   }, [program, wallet.publicKey]);
 
   /**
-   * Reveal is no longer a separate instruction, it's handled via Arcium callback.
-   * This is kept for interface compatibility but should be replaced by event listeners.
+   * Reveal is no longer a separate instruction.
    */
   const reveal = useCallback(async (
     _betPDA: web3.PublicKey,
     _choice: 'HEADS' | 'TAILS',
     _nonce: number
   ): Promise<RevealResult> => {
-    throw new Error('Reveal instruction deprecated. Results are now handled via Arcium callback.');
+    throw new Error('Reveal instruction deprecated.');
   }, []);
 
   /**
@@ -225,10 +230,14 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
   const fetchBet = useCallback(async (
     betPDA: web3.PublicKey
   ): Promise<BetAccount | null> => {
-    if (!program) return null;
+    const activeProg = program ?? standardProgram;
+    if (!activeProg) return null;
 
     try {
-      const bet = await (program.account as any).Bet.fetch(betPDA);
+      const accountGate = (activeProg.account as any).bet || (activeProg.account as any).Bet;
+      if (!accountGate) return null;
+
+      const bet = await accountGate.fetch(betPDA);
 
       return {
         player: bet.player,
@@ -240,17 +249,20 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
     } catch {
       return null;
     }
-  }, [program]);
+  }, [program, standardProgram]);
 
   /**
    * Fetch house account data
    */
   const fetchHouse = useCallback(async () => {
-    if (!program) return null;
+    if (!standardProgram) return null;
 
     try {
       const [housePDA] = getHousePDA();
-      const house = await (program.account as any).House.fetch(housePDA);
+      const accountGate = (standardProgram.account as any).house || (standardProgram.account as any).House;
+      if (!accountGate) return null;
+
+      const house = await accountGate.fetch(housePDA);
 
       return {
         authority: house.authority,
@@ -258,10 +270,11 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
         totalBets: house.totalBets.toNumber(),
         totalVolume: house.totalVolume.toNumber() / web3.LAMPORTS_PER_SOL,
       };
-    } catch {
+    } catch (err) {
+      console.error('[FlipIt] fetchHouse failed:', err);
       return null;
     }
-  }, [program]);
+  }, [standardProgram]);
 
   return {
     program,
