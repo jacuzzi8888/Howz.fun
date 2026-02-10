@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '~/lib/utils';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
@@ -42,12 +42,14 @@ const DegenDerbyGameContent: React.FC = () => {
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [currentRace, setCurrentRace] = useState<RaceAccount | null>(null);
   const [userBet, setUserBet] = useState<{ horseIndex: number; amount: number } | null>(null);
-  
+  const [houseExists, setHouseExists] = useState<boolean | null>(null);
+  const [isInitializingHouse, setIsInitializingHouse] = useState(false);
+
   const { setIsUsingRollup } = useMagicBlock();
   const { connected } = useWallet();
   const { isLoading, error, txStatus, setTxStatus, reset, executeGameAction } = useGameState();
-  const { isReady, placeBet, claimWinnings, fetchRace, getCurrentOdds } = useDegenDerbyProgram();
-  
+  const { isReady, placeBet, claimWinnings, fetchRace, getCurrentOdds, fetchHouse, initializeHouse } = useDegenDerbyProgram();
+
   const { data: recentBets, isLoading: isLoadingBets } = useRecentBets('DEGEN_DERBY', 10);
   const recordBet = useRecordBet();
   const resolveBet = useResolveBet();
@@ -67,6 +69,42 @@ const DegenDerbyGameContent: React.FC = () => {
       resolvedAt: null,
     });
   }, []);
+
+  // Check if house exists
+  useEffect(() => {
+    const checkHouse = async () => {
+      if (!isReady || !fetchHouse) return;
+      const house = await fetchHouse();
+      setHouseExists(!!house);
+    };
+    checkHouse();
+  }, [isReady, fetchHouse]);
+
+  const handleInitializeHouse = async () => {
+    if (!initializeHouse) return;
+
+    setIsInitializingHouse(true);
+    setTxStatus('pending');
+
+    try {
+      const tx = await initializeHouse();
+      console.log('House initialized:', tx);
+      setHouseExists(true);
+      setTxStatus('confirmed');
+    } catch (err) {
+      console.error('Failed to initialize house:', err);
+      setTxStatus('failed');
+    } finally {
+      setIsInitializingHouse(false);
+    }
+  };
+
+  // Auto-initialize house if it doesn't exist
+  useEffect(() => {
+    if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
+      handleInitializeHouse();
+    }
+  }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
 
   const handlePlaceBet = async () => {
     if (selectedHorseId === null || !connected || !isReady || !currentRace) return;
@@ -131,7 +169,7 @@ const DegenDerbyGameContent: React.FC = () => {
 
   const handleClaim = async () => {
     if (!userBet || !connected || !isReady) return;
-    
+
     setTxStatus('pending');
     try {
       await executeGameAction(async () => {
@@ -209,8 +247,8 @@ const DegenDerbyGameContent: React.FC = () => {
 
         {/* Transaction Status */}
         {txStatus !== 'idle' && (
-          <TransactionLoader 
-            status={txStatus} 
+          <TransactionLoader
+            status={txStatus}
             message={txStatus === 'pending' ? 'Confirm in wallet...' : undefined}
           />
         )}
@@ -267,7 +305,7 @@ const DegenDerbyGameContent: React.FC = () => {
 
         {/* Race Track */}
         {gameState === 'RACING' && (
-          <DerbyTrack 
+          <DerbyTrack
             horses={MOCK_HORSES.map((h, i) => ({ id: i, name: h.name, image: '' }))}
             onRaceEnd={handleRaceEnd}
           />
@@ -398,7 +436,7 @@ const DegenDerbyGameContent: React.FC = () => {
             <span className="material-symbols-outlined text-gray-400">history</span>
             Recent Races
           </h3>
-          
+
           {isLoadingBets ? (
             <div className="flex justify-center py-8">
               <div className="size-6 border-2 border-white/10 border-t-primary rounded-full animate-spin" />

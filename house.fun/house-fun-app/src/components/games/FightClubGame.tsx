@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '~/lib/utils';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useGameState } from '~/hooks/useGameState';
@@ -36,23 +36,27 @@ const FightClubGameContent: React.FC = () => {
     const [wager, setWager] = useState(1.5);
     const [currentMatch, setCurrentMatch] = useState<MatchData | null>(null);
     const [userBet, setUserBet] = useState<{ side: 'A' | 'B'; amount: number } | null>(null);
-    
+    const [houseExists, setHouseExists] = useState<boolean | null>(null);
+    const [isInitializingHouse, setIsInitializingHouse] = useState(false);
+
     const { connected } = useWallet();
-    const { 
-        isLoading, 
-        error, 
-        txStatus, 
-        setTxStatus, 
+    const {
+        isLoading,
+        error,
+        txStatus,
+        setTxStatus,
         reset,
-        executeGameAction 
+        executeGameAction
     } = useGameState();
-    
-    const { 
-        isReady, 
-        placeBet, 
-        claimWinnings, 
+
+    const {
+        isReady,
+        placeBet,
+        claimWinnings,
         fetchMatch,
-        calculatePotentialWinnings 
+        fetchHouse,
+        initializeHouse,
+        calculatePotentialWinnings
     } = useFightClubProgram();
 
     // Mock current match - in production, fetch from database
@@ -68,6 +72,42 @@ const FightClubGameContent: React.FC = () => {
         });
     }, []);
 
+    // Check if house exists
+    useEffect(() => {
+        const checkHouse = async () => {
+            if (!isReady || !fetchHouse) return;
+            const house = await fetchHouse();
+            setHouseExists(!!house);
+        };
+        checkHouse();
+    }, [isReady, fetchHouse]);
+
+    const handleInitializeHouse = async () => {
+        if (!initializeHouse) return;
+
+        setIsInitializingHouse(true);
+        setTxStatus('pending');
+
+        try {
+            const tx = await initializeHouse();
+            console.log('House initialized:', tx);
+            setHouseExists(true);
+            setTxStatus('confirmed');
+        } catch (err) {
+            console.error('Failed to initialize house:', err);
+            setTxStatus('failed');
+        } finally {
+            setIsInitializingHouse(false);
+        }
+    };
+
+    // Auto-initialize house if it doesn't exist
+    useEffect(() => {
+        if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
+            handleInitializeHouse();
+        }
+    }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
+
     const handlePlaceBet = async () => {
         if (!selectedSide || !connected || !isReady || !currentMatch) return;
         if (wager < MIN_BET || wager > MAX_BET) return;
@@ -80,12 +120,12 @@ const FightClubGameContent: React.FC = () => {
             await executeGameAction(async () => {
                 // Simulate blockchain call
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                
+
                 setUserBet({
                     side: selectedSide,
                     amount: wager
                 });
-                
+
                 return { success: true };
             }, {
                 onSuccess: () => {
@@ -159,8 +199,8 @@ const FightClubGameContent: React.FC = () => {
             {/* Transaction Status */}
             {txStatus !== 'idle' && (
                 <div className="w-full max-w-[960px] mb-6">
-                    <TransactionLoader 
-                        status={txStatus} 
+                    <TransactionLoader
+                        status={txStatus}
                         message={txStatus === 'pending' ? 'Confirm in wallet...' : undefined}
                     />
                 </div>
@@ -173,7 +213,7 @@ const FightClubGameContent: React.FC = () => {
                         <span className="material-symbols-outlined text-red-500 text-sm">error</span>
                         <p className="text-red-400 text-sm">{error}</p>
                     </div>
-                    <button 
+                    <button
                         onClick={reset}
                         className="mt-2 text-xs text-red-400/60 hover:text-red-400 underline"
                     >

@@ -80,6 +80,8 @@ const ShadowPokerGameContent: React.FC = () => {
     getAvailableActions,
     delegateAccount,
     undelegateAccount,
+    fetchHouse,
+    initializeHouse,
   } = useShadowPokerProgram(sessionKey);
 
   // Fetch real recent bets from database
@@ -101,6 +103,8 @@ const ShadowPokerGameContent: React.FC = () => {
   const [isPlayerTurnState, setIsPlayerTurnState] = useState(false);
   const [opponents, setOpponents] = useState<OpponentPlayer[]>([]);
   const [lastAction, setLastAction] = useState<string | null>(null);
+  const [houseExists, setHouseExists] = useState<boolean | null>(null);
+  const [isInitializingHouse, setIsInitializingHouse] = useState(false);
 
   // Arcium encrypted card state
   const {
@@ -147,6 +151,42 @@ const ShadowPokerGameContent: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [tablePDA, isReady, fetchTable]);
+
+  // Check if house exists
+  useEffect(() => {
+    const checkHouse = async () => {
+      if (!isReady || !fetchHouse) return;
+      const house = await fetchHouse();
+      setHouseExists(!!house);
+    };
+    checkHouse();
+  }, [isReady, fetchHouse]);
+
+  const handleInitializeHouse = async () => {
+    if (!initializeHouse) return;
+
+    setIsInitializingHouse(true);
+    setTxStatus('pending');
+
+    try {
+      const tx = await initializeHouse();
+      console.log('House initialized:', tx);
+      setHouseExists(true);
+      setTxStatus('confirmed');
+    } catch (err) {
+      console.error('Failed to initialize house:', err);
+      setTxStatus('failed');
+    } finally {
+      setIsInitializingHouse(false);
+    }
+  };
+
+  // Auto-initialize house if it doesn't exist
+  useEffect(() => {
+    if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
+      handleInitializeHouse();
+    }
+  }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
 
   // Fetch player state when at table
   useEffect(() => {
