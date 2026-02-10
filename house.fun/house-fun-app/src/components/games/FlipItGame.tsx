@@ -531,6 +531,42 @@ const FlipItGameContent: React.FC = () => {
                                 </div>
                             )}
 
+                            {/* Debug Info (Temporary) */}
+                            <div className="p-3 bg-black/60 rounded-xl border border-white/10 text-[10px] font-mono space-y-1">
+                                <p className="text-gray-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Debug Status</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">Wallet:</span>
+                                        <span className={connected ? "text-green-400" : "text-red-400"}>{connected ? "Connected" : "Not Connected"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">Ready:</span>
+                                        <span className={isReady ? "text-green-400" : "text-red-400"}>{isReady ? "Yes" : "No"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">House:</span>
+                                        <span className={houseExists ? "text-green-400" : "text-red-400"}>{houseExists === null ? "Loading..." : (houseExists ? "Active" : "Not Found")}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">Status:</span>
+                                        <span className={isFlipping ? "text-yellow-400" : "text-blue-400"}>{isFlipping ? "Flipping" : "Idle"}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-400">Amount:</span>
+                                        <span className={(amount >= MIN_BET && amount <= MAX_BET) ? "text-green-400" : "text-red-400"}>{amount} SOL</span>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            console.log('[FlipIt] Manual refresh triggered');
+                                            fetchHouse().then(house => setHouseExists(!!house));
+                                        }}
+                                        className="col-span-2 mt-2 py-1 px-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded text-white text-[9px] font-black uppercase tracking-tighter transition-all"
+                                    >
+                                        Force Refresh Status
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] px-1">
                                 <span>Multiplier: <span className="text-white">2.0x</span></span>
                                 <span>Win Chance: <span className="text-white">50%</span></span>
