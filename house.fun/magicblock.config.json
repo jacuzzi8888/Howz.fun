@@ -18,8 +18,8 @@
         }
     ],
     "engine": {
-        "rpc": "https://mainnet.magicblock.app",
-        "ws": "wss://mainnet.magicblock.app",
+        "rpc": "https://devnet.magicblock.app",
+        "ws": "wss://devnet.magicblock.app",
         "commitment": "confirmed"
     }
 }

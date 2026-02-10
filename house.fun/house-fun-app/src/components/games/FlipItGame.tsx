@@ -124,9 +124,12 @@ const FlipItGameContent: React.FC = () => {
         setShowResult(false);
 
         try {
+            console.log('[FlipIt] Starting flip sequence...', { amount, side, usingRollup });
             // Step 1: Place bet on-chain
             const bet = await executeGameAction(async () => {
-                return await placeBet(amount, side);
+                const result = await placeBet(amount, side);
+                console.log('[FlipIt] Place bet result:', result);
+                return result;
             });
 
             if (!bet) {
@@ -223,9 +226,10 @@ const FlipItGameContent: React.FC = () => {
             setTimeout(() => refetchBalance(), 1000);
             setTimeout(() => refetchBalance(), 3000); // Second refresh for confirmation
 
-        } catch (err) {
+        } catch (err: any) {
             setTxStatus('failed');
-            console.error('Flip failed:', err);
+            console.error('[FlipIt] Flip failed:', err);
+            setError(err.message || 'Transaction failed. Check console for details.');
         } finally {
             setIsUsingRollup(false);
         }
@@ -244,14 +248,22 @@ const FlipItGameContent: React.FC = () => {
     // Debug why button is disabled
     const getDisabledReason = () => {
         if (!connected) return 'Connect wallet to play';
-        if (!isReady) return 'Wallet not ready - try reconnecting';
-        if (!houseExists) return 'Game house needs initialization';
+        if (!isReady) return 'Wallet not ready - check provider';
+        if (houseExists === null) return 'Checking house account status...';
+        if (houseExists === false) return 'Game house needs initialization';
         if (isFlipping) return 'Transaction in progress...';
         if (amount < MIN_BET) return `Minimum bet is ${MIN_BET} SOL`;
         if (amount > MAX_BET) return `Maximum bet is ${MAX_BET} SOL`;
         return null;
     };
     const disabledReason = getDisabledReason();
+
+    // Log why button is disabled when it changes
+    useEffect(() => {
+        if (disabledReason && connected) {
+            console.log('[FlipIt] Button disabled:', disabledReason);
+        }
+    }, [disabledReason, connected]);
 
     return (
         <div className="flex flex-1 relative overflow-hidden">

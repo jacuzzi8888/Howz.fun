@@ -29,7 +29,7 @@ export const MagicBlockProvider: React.FC<{
 
     // Standard Mainnet/Devnet Connection
     const standardConnection = useMemo(() => {
-        const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com';
+        const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC ?? 'https://api.devnet.solana.com';
         console.log('[MagicBlock] Initializing Standard Connection with RPC:', rpc);
         return new Connection(rpc, 'confirmed');
     }, []);
