@@ -92,9 +92,12 @@ export const Header: React.FC = () => {
                                 onClick={() => setIsUsingRollup(!isUsingRollup)}
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group cursor-pointer"
                             >
-                                <span className={`size-1.5 rounded-full ${isUsingRollup ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(7,204,0,0.8)]' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]'}`}></span>
+                                <span className={`size-1.5 rounded-full ${isUsingRollup
+                                    ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(7,204,0,0.8)]'
+                                    : (process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet' ? 'bg-yellow-400 animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]')
+                                    }`}></span>
                                 <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest group-hover:text-white transition-colors">
-                                    {isUsingRollup ? 'Ephemeral Rollup Active' : 'Solana L1 Mainnet'}
+                                    {isUsingRollup ? 'Ephemeral Rollup Active' : `Solana L1 ${process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'Mainnet'}`}
                                 </span>
                             </button>
                             {isUsingRollup && (
