@@ -2,10 +2,10 @@ import { Program, web3, BN } from '@coral-xyz/anchor';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useMemo } from 'react';
 import { type DegenDerby } from './degen-derby-idl';
-import { 
-  createDegenDerbyProgram, 
-  createProvider, 
-  getDegenDerbyHousePDA, 
+import {
+  createDegenDerbyProgram,
+  createProvider,
+  getDegenDerbyHousePDA,
   getRacePDA,
   getPlayerBetPDA,
   parseDegenDerbyError,
@@ -86,7 +86,7 @@ export interface DegenDerbyHouseAccount {
 export function useDegenDerbyProgram() {
   const { connection } = useConnection();
   const wallet = useWallet();
-  
+
   const program = useMemo(() => {
     if (!wallet.publicKey || !wallet.signTransaction) return null;
     const provider = createProvider(connection, wallet);
@@ -103,7 +103,7 @@ export function useDegenDerbyProgram() {
 
     try {
       const [housePDA] = getDegenDerbyHousePDA();
-      
+
       const tx = await (program as any).methods
         .initialize_house()
         .accounts({
@@ -134,7 +134,7 @@ export function useDegenDerbyProgram() {
       const houseAccount = await (program.account as any).DegenDerbyHouse.fetchNullable(housePDA);
       const raceIndex = houseAccount ? houseAccount.totalRaces.toNumber() : 0;
       const [racePDA] = getRacePDA(raceIndex);
-      
+
       const tx = await (program as any).methods
         .create_race(horses)
         .accounts({
@@ -171,7 +171,7 @@ export function useDegenDerbyProgram() {
     try {
       const [housePDA] = getDegenDerbyHousePDA();
       const [playerBetPDA] = getPlayerBetPDA(racePDA, wallet.publicKey);
-      
+
       const lamports = solToLamports(amount);
 
       const tx = await (program as any).methods
@@ -407,7 +407,7 @@ export function useDegenDerbyProgram() {
 
     try {
       const bet = await (program.account as any).PlayerBet.fetch(playerBetPDA);
-      
+
       return {
         player: bet.player,
         raceIndex: bet.raceIndex.toNumber(),
@@ -431,7 +431,7 @@ export function useDegenDerbyProgram() {
 
     try {
       const race = await (program.account as any).Race.fetch(racePDA);
-      
+
       return {
         index: race.index.toNumber(),
         horses: race.horses.map((h: any) => ({
@@ -462,7 +462,7 @@ export function useDegenDerbyProgram() {
     try {
       const [housePDA] = getDegenDerbyHousePDA();
       const house = await (program.account as any).DegenDerbyHouse.fetch(housePDA);
-      
+
       return {
         authority: house.authority,
         treasury: lamportsToSol(house.treasury.toNumber()),
@@ -492,27 +492,27 @@ export function useDegenDerbyProgram() {
       const betLamports = solToLamports(betAmount);
       const currentBetsOnHorse = solToLamports(race.totalBets[horseIndex] || 0);
       const totalPool = race.totalBets.reduce((sum, bet) => sum + solToLamports(bet), 0) + betLamports;
-      
+
       // Calculate new bets array with this bet added
       const newBetsOnHorse = currentBetsOnHorse + betLamports;
-      const allBets = race.totalBets.map((bet, idx) => 
+      const allBets = race.totalBets.map((bet, idx) =>
         idx === horseIndex ? newBetsOnHorse : solToLamports(bet)
       );
-      
+
       // House fee is 1% (100 bps)
       const houseFeeBps = 100;
       const houseFee = Math.floor(totalPool * houseFeeBps / 10000);
       const payoutPool = totalPool - houseFee;
-      
+
       // Calculate weighted odds (inverse of bet proportion)
       const totalInverseBets = allBets.reduce((sum, bet) => sum + (1 / Math.max(bet, 1)), 0);
       const horseInverseWeight = 1 / Math.max(newBetsOnHorse, 1);
       const oddsMultiplier = totalInverseBets / horseInverseWeight;
-      
+
       // Proportional winnings
       const playerShare = betLamports / Math.max(newBetsOnHorse, 1);
       const winnings = Math.floor(playerShare * oddsMultiplier * payoutPool / totalPool);
-      
+
       return lamportsToSol(winnings);
     } catch {
       return 0;
@@ -533,7 +533,7 @@ export function useDegenDerbyProgram() {
 
       const allBets = race.totalBets.map(bet => solToLamports(bet));
       const totalPool = allBets.reduce((sum, bet) => sum + bet, 0);
-      
+
       if (totalPool === 0) {
         // If no bets yet, return initial odds from horse data
         return race.horses.map(h => h.oddsNumerator / h.oddsDenominator);
@@ -541,16 +541,16 @@ export function useDegenDerbyProgram() {
 
       // Calculate inverse-weighted odds
       const totalInverseBets = allBets.reduce((sum, bet) => sum + (1 / Math.max(bet, 1)), 0);
-      
+
       return allBets.map(bet => {
         const horseInverseWeight = 1 / Math.max(bet, 1);
         const oddsMultiplier = totalInverseBets / horseInverseWeight;
-        
+
         // Apply house fee
         const houseFeeBps = 100;
         const houseFee = Math.floor(totalPool * houseFeeBps / 10000);
         const payoutPool = totalPool - houseFee;
-        
+
         return (payoutPool / totalPool) * oddsMultiplier;
       });
     } catch {
