@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type FightClub, FIGHT_CLUB_IDL } from './fight-club-idl';
 
 // Program ID from deployment
-export const FIGHT_CLUB_PROGRAM_ID = new web3.PublicKey('FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
+export const FIGHT_CLUB_PROGRAM_ID = new web3.PublicKey('FiGhT5PaoXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;
@@ -68,7 +68,7 @@ export function getMatchPDA(matchIndex: number): [web3.PublicKey, number] {
  * Get Player Bet PDA address
  */
 export function getPlayerBetPDA(
-  matchPDA: web3.PublicKey, 
+  matchPDA: web3.PublicKey,
   player: web3.PublicKey
 ): [web3.PublicKey, number] {
   return web3.PublicKey.findProgramAddressSync(
@@ -127,16 +127,16 @@ export function calculateOdds(
 ): number {
   const totalPool = totalBetA + totalBetB;
   if (totalPool === 0) return 0;
-  
+
   const houseFee = calculateHouseFee(solToLamports(totalPool));
   const payoutPool = solToLamports(totalPool) - houseFee;
-  
+
   const winningPool = side === 'A' ? totalBetA : totalBetB;
   if (winningPool === 0) return 0;
-  
+
   const winningPoolLamports = solToLamports(winningPool);
   const odds = payoutPool / winningPoolLamports;
-  
+
   return odds;
 }
 
@@ -168,7 +168,7 @@ export function parseFightClubError(error: any): string {
   if (error?.code && FightClubErrors[error.code]) {
     return FightClubErrors[error.code]!;
   }
-  
+
   // Check for error message containing code
   const codeMatch = error?.message?.match(/custom program error: (0x[0-9a-fA-F]+|\d+)/);
   if (codeMatch) {
@@ -177,7 +177,7 @@ export function parseFightClubError(error: any): string {
       return FightClubErrors[code];
     }
   }
-  
+
   // Check for Anchor error format
   if (error?.error?.errorCode?.code) {
     const anchorCode = error.error.errorCode.code;
@@ -191,11 +191,11 @@ export function parseFightClubError(error: any): string {
       return FightClubErrors[parseInt(numericCode)]!;
     }
   }
-  
+
   if (error?.message) {
     return error.message;
   }
-  
+
   return 'Unknown error occurred';
 }
 
@@ -226,7 +226,7 @@ export function formatSide(side: MatchSide): string {
  * Get match display name
  */
 export function getMatchDisplayName(
-  tokenASymbol: string, 
+  tokenASymbol: string,
   tokenBSymbol: string
 ): string {
   return `${tokenASymbol} vs ${tokenBSymbol}`;
@@ -238,15 +238,15 @@ export function getMatchDisplayName(
 export function validateBetAmount(amount: number): { valid: boolean; error?: string } {
   const MIN_BET = 0.001;
   const MAX_BET = 1000;
-  
+
   if (amount < MIN_BET) {
     return { valid: false, error: `Minimum bet is ${MIN_BET} SOL` };
   }
-  
+
   if (amount > MAX_BET) {
     return { valid: false, error: `Maximum bet is ${MAX_BET} SOL` };
   }
-  
+
   return { valid: true };
 }
 

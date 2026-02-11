@@ -131,26 +131,49 @@ const ShadowPokerGameContent: React.FC = () => {
     setTablePDA(pda);
   }, []);
 
-  // Fetch table data periodically
+  // Consolidated polling logic for table and player state
   useEffect(() => {
     if (!tablePDA || !isReady) return;
 
-    const fetchTableData = async () => {
+    const pollData = async () => {
+      // Only poll if tab is visible to save RPC units
+      if (document.visibilityState !== 'visible') return;
+
       try {
+        // 1. Fetch table data
         const tableData = await fetchTable(tablePDA);
         if (tableData) {
           setTable(tableData);
+
+          // 2. Fetch player state if at table
+          if (isAtTable && playerStatePDA) {
+            const playerData = await fetchPlayerState(playerStatePDA);
+            if (playerData) {
+              setPlayerState(playerData);
+            }
+
+            // 3. Check turn and actions
+            const turn = await isPlayerTurn(tablePDA, playerStatePDA);
+            setIsPlayerTurnState(turn);
+
+            if (turn) {
+              const actions = await getAvailableActions(tablePDA, playerStatePDA);
+              setAvailableActions(actions);
+            } else {
+              setAvailableActions([]);
+            }
+          }
         }
       } catch (err) {
-        console.error('Failed to fetch table:', err);
+        console.error('[ShadowPoker] Polling failed:', err);
       }
     };
 
-    fetchTableData();
-    const interval = setInterval(fetchTableData, 3000); // Poll every 3 seconds
+    pollData();
+    const interval = setInterval(pollData, 5000); // Consolidated 5s poll
 
     return () => clearInterval(interval);
-  }, [tablePDA, isReady, fetchTable]);
+  }, [tablePDA, playerStatePDA, isReady, isAtTable, fetchTable, fetchPlayerState, isPlayerTurn, getAvailableActions]);
 
   // Check if house exists
   useEffect(() => {
@@ -188,56 +211,9 @@ const ShadowPokerGameContent: React.FC = () => {
     }
   }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
 
-  // Fetch player state when at table
-  useEffect(() => {
-    if (!playerStatePDA || !isReady || !isAtTable) return;
 
-    const fetchPlayerData = async () => {
-      try {
-        const playerData = await fetchPlayerState(playerStatePDA);
-        if (playerData) {
-          setPlayerState(playerData);
-        }
-      } catch (err) {
-        console.error('Failed to fetch player state:', err);
-      }
-    };
 
-    fetchPlayerData();
-    const interval = setInterval(fetchPlayerData, 2000);
 
-    return () => clearInterval(interval);
-  }, [playerStatePDA, isReady, isAtTable, fetchPlayerState]);
-
-  // Check if it's player's turn and get available actions
-  useEffect(() => {
-    if (!tablePDA || !playerStatePDA || !isReady || !isAtTable) {
-      setIsPlayerTurnState(false);
-      setAvailableActions([]);
-      return;
-    }
-
-    const checkTurn = async () => {
-      try {
-        const turn = await isPlayerTurn(tablePDA, playerStatePDA);
-        setIsPlayerTurnState(turn);
-
-        if (turn) {
-          const actions = await getAvailableActions(tablePDA, playerStatePDA);
-          setAvailableActions(actions);
-        } else {
-          setAvailableActions([]);
-        }
-      } catch (err) {
-        console.error('Failed to check turn:', err);
-      }
-    };
-
-    checkTurn();
-    const interval = setInterval(checkTurn, 1000);
-
-    return () => clearInterval(interval);
-  }, [tablePDA, playerStatePDA, isReady, isAtTable, isPlayerTurn, getAvailableActions]);
 
   // Generate mock opponents based on table state
   useEffect(() => {
