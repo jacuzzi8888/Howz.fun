@@ -106,7 +106,8 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
    */
   const placeBet = useCallback(async (
     amount: number,
-    choice: 'HEADS' | 'TAILS'
+    choice: 'HEADS' | 'TAILS',
+    betIndex?: number
   ): Promise<BetResult> => {
     if (!program || !wallet.publicKey || !standardProgram) {
       throw new Error('Wallet not connected');
@@ -118,12 +119,16 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
       // Get PDAs
       const [housePDA] = getHousePDA();
 
-      // Resilient account fetching (try camelCase house and PascalCase House)
-      const accountGate = (standardProgram.account as any).house || (standardProgram.account as any).House;
-      const houseAccount = accountGate ? await accountGate.fetchNullable(housePDA) : null;
+      let finalBetIndex = betIndex;
 
-      const betIndex = houseAccount ? houseAccount.totalBets.toNumber() : 0;
-      const [betPDA] = getBetPDA(wallet.publicKey, betIndex);
+      if (finalBetIndex === undefined) {
+        // Resilient account fetching (try camelCase house and PascalCase House)
+        const accountGate = (standardProgram.account as any).house || (standardProgram.account as any).House;
+        const houseAccount = accountGate ? await accountGate.fetchNullable(housePDA) : null;
+        finalBetIndex = houseAccount ? houseAccount.totalBets.toNumber() : 0;
+      }
+
+      const [betPDA] = getBetPDA(wallet.publicKey, finalBetIndex);
 
       // Convert amount to lamports
       const lamports = solToLamports(amount);

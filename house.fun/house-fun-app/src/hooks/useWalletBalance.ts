@@ -60,8 +60,12 @@ export function useWalletBalance(): WalletBalanceState {
       'confirmed'
     );
 
-    // Refresh every 10 seconds as backup
-    const intervalId = setInterval(fetchBalance, 10000);
+    // Refresh every 30 seconds as backup, but only if the tab is visible
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchBalance();
+      }
+    }, 30000);
 
     return () => {
       connection.removeAccountChangeListener(subscriptionId);

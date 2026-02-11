@@ -44,6 +44,7 @@ const FlipItGameContent: React.FC = () => {
 
     const { isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram(sessionKey);
     const [houseExists, setHouseExists] = useState<boolean | null>(null);
+    const [houseData, setHouseData] = useState<any>(null);
     const [isInitializingHouse, setIsInitializingHouse] = useState(false);
 
     // Arcium integration status
@@ -68,9 +69,10 @@ const FlipItGameContent: React.FC = () => {
 
     // Check if house exists
     useEffect(() => {
-        if (isReady) {
+        if (isReady && document.visibilityState === 'visible') {
             fetchHouse().then(house => {
                 setHouseExists(!!house);
+                setHouseData(house);
             }).catch((err) => {
                 console.error('[FlipIt] Fetch house failed:', err);
                 setHouseExists(false);
@@ -125,9 +127,11 @@ const FlipItGameContent: React.FC = () => {
 
         try {
             console.log('[FlipIt] Starting flip sequence...', { amount, side, usingRollup });
+            const betIndex = houseData?.totalBets;
+
             // Step 1: Place bet on-chain
             const bet = await executeGameAction(async () => {
-                const result = await placeBet(amount, side);
+                const result = await placeBet(amount, side, betIndex);
                 console.log('[FlipIt] Place bet result:', result);
                 return result;
             });
@@ -153,49 +157,59 @@ const FlipItGameContent: React.FC = () => {
                 console.error('Failed to record bet in database:', dbError);
             }
 
-            // Step 2.5: Auto-delegate if using Rollup
-            if (usingRollup) {
-                try {
-                    console.log('[MagicBlock] Auto-delegating bet PDA to Ephemeral Rollup...');
-                    // Note: Client routing handles this via activeConnection
-                } catch (delError) {
-                    console.error('Auto-delegation failed:', delError);
-                }
-            }
-
-            // Step 3: Arcium Provably Fair Flow
-            if (isArciumReady && useArciumMode) {
-                setTxStatus('confirming'); // Show Arcium transition
-                console.log('Starting Arcium computation flow...');
-
-                // For now, we simulate the Arcium wait since credentials are pending
-                // In a real flow, this would call useFlipItArcium.generateProvablyFairOutcome
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                // Note: requestFlip would be called here with the proof
-                // const proofTx = await requestFlip(bet.betPDA, ...);
-                console.log('Arcium computation complete (simulation)');
-            }
-
-            // Step 4: Wait for Resolution
-            // Since resolution is now an async callback from Arcium to the Smart Contract,
-            // we poll the account or listen for events.
+            // Step 3: Wait for Resolution via Websocket (Resilient)
             setTxStatus('confirming');
-            let resolvedAccount: any = null;
-            let attempts = 0;
 
-            while (attempts < 10) {
-                const fetchedAccount: any = await fetchBet(bet.betPDA);
-                if (fetchedAccount && (fetchedAccount.status as string) === 'Resolved') {
-                    resolvedAccount = fetchedAccount;
-                    break;
-                }
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                attempts++;
-            }
+            const resolvedAccount = await new Promise<any>((resolve, reject) => {
+                const { activeConnection } = useMagicBlock.getState?.() || (window as any).magicBlockState || {};
+                const connection = activeConnection || (program as any).provider.connection;
+
+                console.log('[FlipIt] Subscribing to bet resolution...', bet.betPDA.toString());
+
+                const subId = connection.onAccountChange(
+                    bet.betPDA,
+                    (accountInfo: any) => {
+                        try {
+                            const accountGate = (program?.account as any).bet || (program?.account as any).Bet;
+                            const decoded = accountGate.coder.accounts.decode('Bet', accountInfo.data);
+                            console.log('[FlipIt] Account change detected:', decoded.status);
+
+                            if (Object.keys(decoded.status)[0] === 'Resolved') {
+                                connection.removeAccountChangeListener(subId);
+                                resolve({
+                                    ...decoded,
+                                    status: 'Resolved',
+                                    playerWins: decoded.playerWins,
+                                    payout: decoded.payout.toNumber() / 1_000_000_000
+                                });
+                            }
+                        } catch (err) {
+                            console.error('[FlipIt] Decode failed during websocket update:', err);
+                        }
+                    },
+                    'confirmed'
+                );
+
+                // Fallback polling (much slower) in case websocket fails
+                const interval = setInterval(async () => {
+                    const fetched: any = await fetchBet(bet.betPDA);
+                    if (fetched && fetched.status === 'Resolved') {
+                        connection.removeAccountChangeListener(subId);
+                        clearInterval(interval);
+                        resolve(fetched);
+                    }
+                }, 10000);
+
+                // Timeout after 30s
+                setTimeout(() => {
+                    connection.removeAccountChangeListener(subId);
+                    clearInterval(interval);
+                    reject(new Error('Timeout waiting for flip resolution.'));
+                }, 30000);
+            });
 
             if (!resolvedAccount) {
-                throw new Error('Timeout waiting for Arcium resolution. Check your transaction history.');
+                throw new Error('Failed to resolve bet.');
             }
 
             const result: RevealResult = {
