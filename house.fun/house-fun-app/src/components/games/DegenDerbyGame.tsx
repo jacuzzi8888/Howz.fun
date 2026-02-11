@@ -78,7 +78,7 @@ const DegenDerbyGameContent: React.FC = () => {
       setHouseExists(!!house);
     };
     checkHouse();
-  }, [isReady, fetchHouse]);
+  }, [isReady]); // Removed fetchHouse to prevent infinite render loops
 
   const handleInitializeHouse = async () => {
     if (!initializeHouse) return;

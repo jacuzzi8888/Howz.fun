@@ -78,15 +78,15 @@ const FlipItGameContent: React.FC = () => {
                 setHouseExists(false);
             });
         }
-    }, [isReady, fetchHouse]);
+    }, [isReady]); // Removed fetchHouse to prevent infinite render loops
 
     // Auto-initialize house if it doesn't exist and wallet is connected
     useEffect(() => {
-        if (connected && isReady && houseExists === false && !isInitializingHouse) {
+        if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
             console.log('[FlipIt] Auto-initializing house account...');
             handleInitializeHouse();
         }
-    }, [connected, isReady, houseExists, isInitializingHouse]);
+    }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
 
 
     const handleInitializeHouse = async () => {

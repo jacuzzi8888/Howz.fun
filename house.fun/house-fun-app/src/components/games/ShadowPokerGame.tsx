@@ -173,7 +173,7 @@ const ShadowPokerGameContent: React.FC = () => {
     const interval = setInterval(pollData, 5000); // Consolidated 5s poll
 
     return () => clearInterval(interval);
-  }, [tablePDA, playerStatePDA, isReady, isAtTable, fetchTable, fetchPlayerState, isPlayerTurn, getAvailableActions]);
+  }, [tablePDA, playerStatePDA, isReady, isAtTable]); // Removed functions from dependencies to prevent infinite render loops
 
   // Check if house exists
   useEffect(() => {
