@@ -95,14 +95,15 @@ export const GameCard: React.FC<Readonly<GameCardProps>> = ({
                             </span>
                         </div>
 
-                        <div
-                            className="group/btn flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 text-sm font-bold text-white transition-all duration-200 group-hover:border-transparent group-hover:bg-primary group-hover:text-black group-hover:shadow-[0_0_15px_rgba(7,204,0,0.4)]"
+                        <a
+                            href={href}
+                            className="group/btn flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 text-sm font-bold text-white transition-all duration-200 hover:border-transparent hover:bg-primary hover:text-black hover:shadow-[0_0_15px_rgba(7,204,0,0.4)]"
                         >
                             {isLive || title === 'FLIP IT' ? 'PLAY NOW' : title === 'DEGEN DERBY' ? 'PLACE BETS' : 'JOIN TABLE'}
                             <span className="material-symbols-outlined text-[16px] transition-transform group-hover/btn:translate-x-1">
                                 arrow_forward
                             </span>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>

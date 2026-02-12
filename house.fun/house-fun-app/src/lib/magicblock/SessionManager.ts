@@ -17,9 +17,10 @@ export class SessionManager {
         const keypair = Keypair.generate();
         if (typeof window !== 'undefined') {
             localStorage.setItem(this.SESSION_KEY_STORAGE_KEY, bs58.encode(keypair.secretKey));
-            // Set expiry for 1 hour from now
+            // Set expiry for 1 hour from now - use a stable timestamp
             const expiry = Date.now() + 3600 * 1000;
             localStorage.setItem(this.SESSION_EXPIRY_KEY, expiry.toString());
+            console.log('[SessionManager] Created session key, expires at:', new Date(expiry).toLocaleTimeString());
         }
         return keypair;
     }
