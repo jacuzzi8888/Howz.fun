@@ -2,10 +2,10 @@ import { Program, web3, BN } from '@coral-xyz/anchor';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useMemo } from 'react';
 import { type FightClub } from './fight-club-idl';
-import { 
-  createFightClubProgram, 
-  createProvider, 
-  getFightClubHousePDA, 
+import {
+  createFightClubProgram,
+  createProvider,
+  getFightClubHousePDA,
   getMatchPDA,
   getPlayerBetPDA,
   parseFightClubError,
@@ -79,7 +79,7 @@ export interface FightClubHouseAccount {
 export function useFightClubProgram() {
   const { connection } = useConnection();
   const wallet = useWallet();
-  
+
   const program = useMemo(() => {
     if (!wallet.publicKey || !wallet.signTransaction) return null;
     const provider = createProvider(connection, wallet);
@@ -96,13 +96,13 @@ export function useFightClubProgram() {
 
     try {
       const [housePDA] = getFightClubHousePDA();
-      
+
       const tx = await program.methods
-        .initialize_house()
+        .initializeHouse()
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -128,14 +128,14 @@ export function useFightClubProgram() {
       const houseAccount = await (program.account as any).FightClubHouse.fetchNullable(housePDA);
       const matchIndex = houseAccount ? houseAccount.totalMatches.toNumber() : 0;
       const [matchPDA] = getMatchPDA(matchIndex);
-      
+
       const tx = await program.methods
-        .create_match(tokenA, tokenB)
+        .createMatch(tokenA, tokenB)
         .accounts({
           match: matchPDA,
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -165,18 +165,18 @@ export function useFightClubProgram() {
     try {
       const [housePDA] = getFightClubHousePDA();
       const [playerBetPDA] = getPlayerBetPDA(matchPDA, wallet.publicKey);
-      
+
       const lamports = solToLamports(amount);
       const sideNum = side === 'A' ? 0 : 1;
 
       const tx = await program.methods
-        .place_bet(new BN(lamports), sideNum)
+        .placeBet(new BN(lamports), sideNum)
         .accounts({
-          player_bet: playerBetPDA,
+          playerBet: playerBetPDA,
           match: matchPDA,
           house: housePDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -208,12 +208,12 @@ export function useFightClubProgram() {
       const winnerNum = winnerSide === 'A' ? 0 : 1;
 
       const tx = await program.methods
-        .resolve_match(winnerNum)
+        .resolveMatch(winnerNum)
         .accounts({
           match: matchPDA,
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -242,13 +242,13 @@ export function useFightClubProgram() {
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await program.methods
-        .claim_winnings()
+        .claimWinnings()
         .accounts({
-          player_bet: playerBetPDA,
+          playerBet: playerBetPDA,
           match: matchPDA,
           house: housePDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -279,12 +279,12 @@ export function useFightClubProgram() {
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await program.methods
-        .cancel_match()
+        .cancelMatch()
         .accounts({
           match: matchPDA,
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -309,13 +309,13 @@ export function useFightClubProgram() {
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await program.methods
-        .refund_bet()
+        .refundBet()
         .accounts({
-          player_bet: playerBetPDA,
+          playerBet: playerBetPDA,
           match: matchPDA,
           house: housePDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -335,7 +335,7 @@ export function useFightClubProgram() {
 
     try {
       const bet = await (program.account as any).PlayerBet.fetch(playerBetPDA);
-      
+
       return {
         player: bet.player,
         matchIndex: bet.matchIndex.toNumber(),
@@ -359,7 +359,7 @@ export function useFightClubProgram() {
 
     try {
       const match = await (program.account as any).FightMatch.fetch(matchPDA);
-      
+
       return {
         index: match.index.toNumber(),
         tokenA: match.tokenA,
@@ -388,7 +388,7 @@ export function useFightClubProgram() {
     try {
       const [housePDA] = getFightClubHousePDA();
       const house = await (program.account as any).FightClubHouse.fetch(housePDA);
-      
+
       return {
         authority: house.authority,
         treasury: lamportsToSol(house.treasury.toNumber()),
@@ -417,19 +417,19 @@ export function useFightClubProgram() {
 
       const betLamports = solToLamports(betAmount);
       const totalPool = solToLamports(match.totalBetA + match.totalBetB) + betLamports;
-      const winningPool = side === 'A' 
+      const winningPool = side === 'A'
         ? solToLamports(match.totalBetA) + betLamports
         : solToLamports(match.totalBetB) + betLamports;
-      
+
       // House fee is 1% (100 bps)
       const houseFeeBps = 100;
       const houseFee = Math.floor(totalPool * houseFeeBps / 10000);
       const payoutPool = totalPool - houseFee;
-      
+
       // Proportional winnings
       const playerShare = betLamports / winningPool;
       const winnings = Math.floor(payoutPool * playerShare);
-      
+
       return lamportsToSol(winnings);
     } catch {
       return 0;

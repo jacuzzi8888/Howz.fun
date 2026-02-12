@@ -87,11 +87,11 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
       const [housePDA] = getHousePDA();
 
       const tx = await (program.methods as any)
-        .initialize_house()
+        .initializeHouse()
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -135,12 +135,12 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
 
       // Send transaction
       const tx = await (program.methods as any)
-        .place_bet(new BN(lamports), choiceBool)
+        .placeBet(new BN(lamports), choiceBool)
         .accounts({
           bet: betPDA,
           house: housePDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -215,11 +215,11 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
 
     try {
       const tx = await (program.methods as any)
-        .claim_winnings()
+        .claimWinnings()
         .accounts({
           bet: betPDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 

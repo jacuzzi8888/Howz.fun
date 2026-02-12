@@ -105,11 +105,11 @@ export function useDegenDerbyProgram() {
       const [housePDA] = getDegenDerbyHousePDA();
 
       const tx = await (program as any).methods
-        .initialize_house()
+        .initializeHouse()
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -136,12 +136,12 @@ export function useDegenDerbyProgram() {
       const [racePDA] = getRacePDA(raceIndex);
 
       const tx = await (program as any).methods
-        .create_race(horses)
+        .createRace(horses)
         .accounts({
           race: racePDA,
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -175,13 +175,13 @@ export function useDegenDerbyProgram() {
       const lamports = solToLamports(amount);
 
       const tx = await (program as any).methods
-        .place_bet(new BN(lamports), horseIndex)
+        .placeBet(new BN(lamports), horseIndex)
         .accounts({
-          player_bet: playerBetPDA,
+          playerBet: playerBetPDA,
           race: racePDA,
           house: housePDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -211,12 +211,12 @@ export function useDegenDerbyProgram() {
       const [housePDA] = getDegenDerbyHousePDA();
 
       const tx = await (program as any).methods
-        .start_race()
+        .startRace()
         .accounts({
           race: racePDA,
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -247,13 +247,13 @@ export function useDegenDerbyProgram() {
       const recentBlockhashAccount = new web3.PublicKey('SysvarRecentB1ockHashes11111111111111111111');
 
       const tx = await (program as any).methods
-        .resolve_race()
+        .resolveRace()
         .accounts({
           race: racePDA,
           house: housePDA,
           authority: wallet.publicKey,
-          recent_blockhashes: recentBlockhashAccount,
-          system_program: web3.SystemProgram.programId,
+          recentBlockhashes: recentBlockhashAccount,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -285,13 +285,13 @@ export function useDegenDerbyProgram() {
       const [housePDA] = getDegenDerbyHousePDA();
 
       const tx = await (program as any).methods
-        .claim_winnings()
+        .claimWinnings()
         .accounts({
-          player_bet: playerBetPDA,
+          playerBet: playerBetPDA,
           race: racePDA,
           house: housePDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -322,12 +322,12 @@ export function useDegenDerbyProgram() {
       const [housePDA] = getDegenDerbyHousePDA();
 
       const tx = await (program as any).methods
-        .cancel_race()
+        .cancelRace()
         .accounts({
           race: racePDA,
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -352,13 +352,13 @@ export function useDegenDerbyProgram() {
       const [housePDA] = getDegenDerbyHousePDA();
 
       const tx = await (program as any).methods
-        .refund_bet()
+        .refundBet()
         .accounts({
-          player_bet: playerBetPDA,
+          playerBet: playerBetPDA,
           race: racePDA,
           house: housePDA,
           player: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -383,11 +383,11 @@ export function useDegenDerbyProgram() {
       const lamports = solToLamports(amount);
 
       const tx = await (program as any).methods
-        .withdraw_treasury(new BN(lamports))
+        .withdrawTreasury(new BN(lamports))
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,
-          system_program: web3.SystemProgram.programId,
+          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
