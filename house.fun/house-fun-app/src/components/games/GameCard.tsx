@@ -37,10 +37,9 @@ export const GameCard: React.FC<Readonly<GameCardProps>> = ({
     };
 
     return (
-        <Link
-            href={href}
-            className="group block"
-            onClick={handleCardClick}
+        <div
+            className="group block cursor-pointer"
+            onClick={() => window.location.href = href}
         >
             <div className="glass-panel relative flex h-[380px] flex-col overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-1 hover:border-primary/30">
                 {status && (
@@ -97,6 +96,7 @@ export const GameCard: React.FC<Readonly<GameCardProps>> = ({
 
                         <a
                             href={href}
+                            onClick={(e) => e.stopPropagation()}
                             className="group/btn flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 text-sm font-bold text-white transition-all duration-200 hover:border-transparent hover:bg-primary hover:text-black hover:shadow-[0_0_15px_rgba(7,204,0,0.4)]"
                         >
                             {isLive || title === 'FLIP IT' ? 'PLAY NOW' : title === 'DEGEN DERBY' ? 'PLACE BETS' : 'JOIN TABLE'}
@@ -107,6 +107,6 @@ export const GameCard: React.FC<Readonly<GameCardProps>> = ({
                     </div>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };
