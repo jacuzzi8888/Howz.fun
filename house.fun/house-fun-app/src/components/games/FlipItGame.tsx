@@ -31,7 +31,7 @@ const FlipItGameContent: React.FC = () => {
     const [showResult, setShowResult] = useState(false);
     const [useArciumMode, setUseArciumMode] = useState(false); // Arcium integration pending
 
-    const { isUsingRollup, setIsUsingRollup, sessionKey } = useMagicBlock();
+    const { isUsingRollup, setIsUsingRollup, sessionKey, isSessionActive } = useMagicBlock();
     const { connected, publicKey } = useWallet();
     const {
         isLoading,
@@ -120,8 +120,8 @@ const FlipItGameContent: React.FC = () => {
         }
 
         setTxStatus('pending');
-        // We set rollup to true for 0-latency mode if session is active
-        const usingRollup = !!sessionKey;
+        // Only use rollup if session is genuinely active (not just key present)
+        const usingRollup = isSessionActive && !!sessionKey;
         setIsUsingRollup(usingRollup);
         setShowResult(false);
 

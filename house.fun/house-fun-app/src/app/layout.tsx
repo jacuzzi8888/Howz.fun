@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { Header } from "~/components/layout/Header";
@@ -30,6 +31,17 @@ export const metadata: Metadata = {
   },
 };
 
+function PageLoadingFallback() {
+  return (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="size-8 border-2 border-white/10 border-t-[#07CC00] rounded-full animate-spin" />
+        <span className="text-sm font-bold text-white/40 uppercase tracking-widest">Loading...</span>
+      </div>
+    </div>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -48,9 +60,11 @@ export default function RootLayout({
               <ArciumProvider>
                 <div className="flex flex-col min-h-screen">
                   <Header />
-                  <div className="flex-1 overflow-y-auto">
-                    {children}
-                  </div>
+                  <Suspense fallback={<PageLoadingFallback />}>
+                    <div className="flex-1 overflow-y-auto">
+                      {children}
+                    </div>
+                  </Suspense>
                 </div>
               </ArciumProvider>
             </MagicBlockProvider>

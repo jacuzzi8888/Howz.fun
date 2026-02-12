@@ -97,7 +97,7 @@ export const Header: React.FC = () => {
                                     : (process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet' ? 'bg-yellow-400 animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]')
                                     }`}></span>
                                 <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest group-hover:text-white transition-colors">
-                                    {isUsingRollup ? 'Ephemeral Rollup Active' : `Solana L1 ${process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'Mainnet'}`}
+                                    {isUsingRollup ? 'Ephemeral Rollup Active' : `Solana L1 ${process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet-beta' ? 'Mainnet' : 'Devnet'}`}
                                 </span>
                             </button>
                             {isUsingRollup && (
