@@ -66,11 +66,20 @@ export const Header: React.FC = () => {
                     <div className="flex items-center justify-between h-20">
                         {/* Left Section: Logo + Navigation */}
                         <div className="flex items-center gap-6">
-                            <Link href="/" className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
+                            <Link
+                                href="/"
+                                className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={(e) => {
+                                    if (window.location.pathname === '/') {
+                                        e.preventDefault();
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }
+                                }}
+                            >
                                 <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20 group-hover:border-primary/50 transition-colors">
                                     <span className="material-symbols-outlined text-primary text-2xl">house</span>
                                 </div>
-                                <span className="text-2xl font-black tracking-tighter text-white group-hover:text-glow transition-all">house.fun</span>
+                                <span className="text-xl md:text-2xl font-black tracking-tighter text-white group-hover:text-glow transition-all hidden sm:block">Howz.fun</span>
                             </Link>
 
                             {/* Navigation */}
@@ -109,36 +118,34 @@ export const Header: React.FC = () => {
                         </div>
 
                         {/* Right Actions */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4">
                             {connected && (
                                 <>
-                                    {/* Session Key Status */}
-                                    <div className="hidden sm:flex flex-col items-end px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`size-1.5 rounded-full ${isSessionActive ? 'bg-primary animate-pulse shadow-[0_0_5px_#BBFF00]' : 'bg-gray-500'}`}></span>
-                                            <span className="text-xs font-black text-white/40 uppercase tracking-widest">
-                                                {isSessionActive ? 'Session Active' : 'Initializing...'}
-                                            </span>
+                                    {/* Session Key Status (Hidden on Home) */}
+                                    {typeof window !== 'undefined' && window.location.pathname !== '/' && (
+                                        <div className="hidden lg:flex flex-col items-end px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`size-1.5 rounded-full ${isSessionActive ? 'bg-primary animate-pulse shadow-[0_0_5px_#BBFF00]' : 'bg-gray-500'}`}></span>
+                                                <span className="text-xs font-black text-white/40 uppercase tracking-widest">
+                                                    {isSessionActive ? 'Session Active' : 'Initializing...'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        {isSessionActive && (
-                                            <span className="text-xs font-mono font-bold text-primary">{sessionRemainingTime} left</span>
-                                        )}
-                                    </div>
+                                    )}
 
                                     <div
                                         onClick={() => setIsCashierOpen(true)}
-                                        className="flex flex-col items-end mr-4 cursor-pointer group"
+                                        className="flex flex-col items-end cursor-pointer group"
                                     >
-                                        <span className="text-xs text-gray-400 font-bold tracking-[0.2em] group-hover:text-primary transition-colors">BALANCE</span>
+                                        <span className="text-[10px] text-gray-400 font-bold tracking-[0.2em] group-hover:text-primary transition-colors leading-none">SOL</span>
                                         <div className="flex items-center gap-1">
-                                            <span className="font-bold text-lg text-white group-hover:text-glow transition-all">{formattedBalance}</span>
-                                            <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
+                                            <span className="font-bold text-sm sm:text-lg text-white group-hover:text-glow transition-all">{formattedBalance}</span>
                                         </div>
                                     </div>
                                 </>
                             )}
 
-                            <div className="custom-wallet-button">
+                            <div className="custom-wallet-button scale-90 sm:scale-100 origin-right">
                                 <WalletMultiButton />
                             </div>
                         </div>

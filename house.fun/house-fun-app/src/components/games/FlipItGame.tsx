@@ -82,8 +82,12 @@ const FlipItGameContent: React.FC = () => {
 
     // Check if house exists
     useEffect(() => {
-        if (isReady && document.visibilityState === 'visible') {
+        if (isReady) {
+            console.log('[FlipIt] Checking house account status...');
+            setHouseExists(null); // Reset to loading when program becomes ready
+
             fetchHouse().then(house => {
+                console.log('[FlipIt] House status:', !!house);
                 setHouseExists(!!house);
                 setHouseData(house);
             }).catch((err) => {
@@ -91,7 +95,7 @@ const FlipItGameContent: React.FC = () => {
                 setHouseExists(false);
             });
         }
-    }, [isReady]); // Removed fetchHouse to prevent infinite render loops
+    }, [isReady]);
 
     // Auto-initialize house if it doesn't exist and wallet is connected
     useEffect(() => {
@@ -329,8 +333,8 @@ const FlipItGameContent: React.FC = () => {
     return (
         <div className="flex flex-1 relative overflow-y-auto overflow-x-hidden">
             {/* Game Area (Center) */}
-            <div className="flex-1 flex flex-col items-center justify-start py-4 px-3 sm:px-4 lg:px-6 lg:justify-center relative z-10 min-w-0">
-                <div className="w-full max-w-lg flex flex-col items-center gap-4">
+            <div className="flex-1 flex flex-col items-center justify-start py-4 px-3 sm:px-4 lg:px-6 lg:justify-center relative z-10 min-w-0 min-h-[500px]">
+                <div className="w-full max-w-lg flex flex-col items-center gap-4 bg-black/5 rounded-3xl p-2 sm:p-4">
 
                     {/* Wallet Not Connected Warning */}
                     {!connected && (

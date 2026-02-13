@@ -14,20 +14,20 @@ import { WalletSync } from "~/components/wallet/WalletSync";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "house.fun | The House Always Wins. So Can You.",
+  title: "Howz.fun | The House Always Wins. So Can You.",
   description:
     "The ultimate on-chain casino where memecoins battle, flip, race, and bluff — all provably fair on Solana.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
   openGraph: {
-    title: "house.fun",
+    title: "Howz.fun",
     description: "On-chain casino on Solana",
-    siteName: "house.fun",
+    siteName: "Howz.fun",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "house.fun",
+    title: "Howz.fun",
     description: "The ultimate on-chain casino on Solana",
   },
 };

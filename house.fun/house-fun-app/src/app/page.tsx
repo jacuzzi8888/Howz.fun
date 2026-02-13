@@ -30,18 +30,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Games Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-8">
+        <section className="w-full">
+          <div className="flex items-center justify-between mb-8 px-2 sm:px-0">
             <h2 className="text-xl font-bold flex items-center gap-2 tracking-tight">
               <span className="material-symbols-outlined text-primary">casino</span>
               FEATURED GAMES
             </h2>
-            <Link href="#" className="text-xs font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1 uppercase tracking-wider">
-              View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full px-2 sm:px-0">
             {LOBBY_GAMES.map((game) => (
               <GameCard
                 key={game.id}
@@ -61,7 +57,7 @@ export default function Home() {
         </section>
 
         {/* Stats Bar */}
-        <section className="glass-panel rounded-xl p-6 md:p-10 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-0 mt-8">
+        <section className="glass-panel rounded-xl p-4 sm:p-6 md:p-10 flex flex-col md:flex-row justify-between items-center gap-8 md:gap-0 mt-8 w-full overflow-hidden">
           {LOBBY_STATS.map((stat, i) => (
             <div
               key={stat.label}
@@ -80,6 +76,14 @@ export default function Home() {
               <span className="text-4xl font-black tracking-tighter text-white">{stat.value}</span>
             </div>
           ))}
+        </section>
+        <section className="flex justify-center py-10">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20 group-hover:border-primary/50 transition-colors">
+              <span className="material-symbols-outlined text-primary text-2xl">house</span>
+            </div>
+            <span className="text-2xl font-black tracking-tighter text-white group-hover:text-glow transition-all">Howz.fun</span>
+          </Link>
         </section>
       </main>
 

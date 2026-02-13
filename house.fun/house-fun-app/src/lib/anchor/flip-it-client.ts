@@ -93,7 +93,10 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
           authority: wallet.publicKey,
           systemProgram: web3.SystemProgram.programId,
         } as any)
-        .rpc();
+        .rpc({
+          skipPreflight: true,
+          commitment: 'confirmed'
+        });
 
       return tx;
     } catch (error) {
@@ -142,7 +145,10 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
           player: wallet.publicKey,
           systemProgram: web3.SystemProgram.programId,
         } as any)
-        .rpc();
+        .rpc({
+          skipPreflight: true,
+          commitment: 'confirmed'
+        });
 
       return {
         signature: tx,
@@ -184,7 +190,10 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
           bet: betPDA,
           house: housePDA,
         } as any)
-        .rpc();
+        .rpc({
+          skipPreflight: true,
+          commitment: 'confirmed'
+        });
 
       return tx;
     } catch (error) {
@@ -221,7 +230,10 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
           player: wallet.publicKey,
           systemProgram: web3.SystemProgram.programId,
         } as any)
-        .rpc();
+        .rpc({
+          skipPreflight: true,
+          commitment: 'confirmed'
+        });
 
       return tx;
     } catch (error) {
