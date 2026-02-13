@@ -96,14 +96,14 @@ export const Header: React.FC = () => {
                                     ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(7,204,0,0.8)]'
                                     : (process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet' ? 'bg-yellow-400 animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]')
                                     }`}></span>
-                                <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest group-hover:text-white transition-colors">
+                                <span className="text-xs font-bold text-white/70 uppercase tracking-widest group-hover:text-white transition-colors">
                                     {isUsingRollup ? 'Ephemeral Rollup Active' : `Solana L1 ${process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet-beta' ? 'Mainnet' : 'Devnet'}`}
                                 </span>
                             </button>
                             {isUsingRollup && (
                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
                                     <span className="material-symbols-outlined text-[14px] text-primary">speed</span>
-                                    <span className="text-[10px] font-black text-primary uppercase tracking-tighter">0-Latency Mode</span>
+                                    <span className="text-xs font-black text-primary uppercase tracking-tighter">0-Latency Mode</span>
                                 </div>
                             )}
                         </div>
@@ -116,12 +116,12 @@ export const Header: React.FC = () => {
                                     <div className="hidden sm:flex flex-col items-end px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
                                         <div className="flex items-center gap-2">
                                             <span className={`size-1.5 rounded-full ${isSessionActive ? 'bg-primary animate-pulse shadow-[0_0_5px_#BBFF00]' : 'bg-gray-500'}`}></span>
-                                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
+                                            <span className="text-xs font-black text-white/40 uppercase tracking-widest">
                                                 {isSessionActive ? 'Session Active' : 'Initializing...'}
                                             </span>
                                         </div>
                                         {isSessionActive && (
-                                            <span className="text-[10px] font-mono font-bold text-primary">{sessionRemainingTime} left</span>
+                                            <span className="text-xs font-mono font-bold text-primary">{sessionRemainingTime} left</span>
                                         )}
                                     </div>
 
@@ -129,10 +129,10 @@ export const Header: React.FC = () => {
                                         onClick={() => setIsCashierOpen(true)}
                                         className="flex flex-col items-end mr-4 cursor-pointer group"
                                     >
-                                        <span className="text-[10px] text-gray-400 font-bold tracking-[0.2em] group-hover:text-primary transition-colors">BALANCE</span>
+                                        <span className="text-xs text-gray-400 font-bold tracking-[0.2em] group-hover:text-primary transition-colors">BALANCE</span>
                                         <div className="flex items-center gap-1">
                                             <span className="font-bold text-lg text-white group-hover:text-glow transition-all">{formattedBalance}</span>
-                                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
+                                            <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
                                         </div>
                                     </div>
                                 </>

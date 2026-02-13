@@ -98,7 +98,7 @@ export function useFightClubProgram() {
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await program.methods
-        .initializeHouse()
+        .initialize_house()
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,
@@ -130,7 +130,7 @@ export function useFightClubProgram() {
       const [matchPDA] = getMatchPDA(matchIndex);
 
       const tx = await program.methods
-        .createMatch(tokenA, tokenB)
+        .create_match(tokenA, tokenB)
         .accounts({
           match: matchPDA,
           house: housePDA,
@@ -170,7 +170,7 @@ export function useFightClubProgram() {
       const sideNum = side === 'A' ? 0 : 1;
 
       const tx = await program.methods
-        .placeBet(new BN(lamports), sideNum)
+        .place_bet(new BN(lamports), sideNum)
         .accounts({
           playerBet: playerBetPDA,
           match: matchPDA,
@@ -208,7 +208,7 @@ export function useFightClubProgram() {
       const winnerNum = winnerSide === 'A' ? 0 : 1;
 
       const tx = await program.methods
-        .resolveMatch(winnerNum)
+        .resolve_match(winnerNum)
         .accounts({
           match: matchPDA,
           house: housePDA,
@@ -242,7 +242,7 @@ export function useFightClubProgram() {
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await program.methods
-        .claimWinnings()
+        .claim_winnings()
         .accounts({
           playerBet: playerBetPDA,
           match: matchPDA,
@@ -279,7 +279,7 @@ export function useFightClubProgram() {
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await program.methods
-        .cancelMatch()
+        .cancel_match()
         .accounts({
           match: matchPDA,
           house: housePDA,
@@ -309,7 +309,7 @@ export function useFightClubProgram() {
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await program.methods
-        .refundBet()
+        .refund_bet()
         .accounts({
           playerBet: playerBetPDA,
           match: matchPDA,

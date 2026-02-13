@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '~/lib/utils';
 import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 import { useGameState } from '~/hooks/useGameState';
@@ -11,6 +11,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData';
 import { useWalletBalance, formatBalance } from '~/hooks/useWalletBalance';
 import { shortenAddress } from '~/lib/utils';
+import { useGameSounds } from '~/hooks/useGameSounds';
+import Link from 'next/link';
 
 const MIN_BET = 0.001; // 0.001 SOL
 const MAX_BET = 100;   // 100 SOL
@@ -43,7 +45,18 @@ const FlipItGameContent: React.FC = () => {
     } = useGameState();
 
     const { isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram(sessionKey);
+    const { play, isMuted, toggleMute } = useGameSounds();
     const [houseExists, setHouseExists] = useState<boolean | null>(null);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [playTimeMinutes, setPlayTimeMinutes] = useState(0);
+
+    // Session timer for responsible gambling
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setPlayTimeMinutes(prev => prev + 1);
+        }, 60000);
+        return () => clearInterval(timer);
+    }, []);
     const [houseData, setHouseData] = useState<any>(null);
     const [isInitializingHouse, setIsInitializingHouse] = useState(false);
 
@@ -124,6 +137,7 @@ const FlipItGameContent: React.FC = () => {
         const usingRollup = isSessionActive && !!sessionKey;
         setIsUsingRollup(usingRollup);
         setShowResult(false);
+        play('flip');
 
         try {
             console.log('[FlipIt] Starting flip sequence...', { amount, side, usingRollup });
@@ -235,6 +249,7 @@ const FlipItGameContent: React.FC = () => {
             setGameResult(result);
             setTxStatus('confirmed');
             setShowResult(true);
+            play(result.playerWon ? 'win' : 'loss');
 
             // Step 6: Force refresh balance
             setTimeout(() => refetchBalance(), 1000);
@@ -258,6 +273,38 @@ const FlipItGameContent: React.FC = () => {
 
     const isFlipping = isLoading || txStatus === 'pending' || txStatus === 'confirming';
     const canFlip = connected && isReady && houseExists && !isFlipping && amount >= MIN_BET && amount <= MAX_BET;
+
+    // Keyboard shortcuts: Space/Enter to flip, H/T for side, R to reset, M to mute
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't trigger shortcuts when typing in inputs
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            switch (e.key.toLowerCase()) {
+                case ' ':
+                case 'enter':
+                    e.preventDefault();
+                    if (canFlip) handleFlip();
+                    break;
+                case 'h':
+                    setSide('HEADS');
+                    play('click');
+                    break;
+                case 't':
+                    setSide('TAILS');
+                    play('click');
+                    break;
+                case 'r':
+                    handleReset();
+                    break;
+                case 'm':
+                    toggleMute();
+                    break;
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [canFlip, play, toggleMute]);
 
     // Debug why button is disabled
     const getDisabledReason = () => {
@@ -330,28 +377,37 @@ const FlipItGameContent: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Arcium Mode Indicator */}
-                    <div className={cn(
-                        "w-full p-3 rounded-lg border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2",
-                        !isArciumReady
-                            ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
-                            : "bg-primary/10 border-primary/20 text-primary"
-                    )}>
-                        <span className="material-symbols-outlined text-sm">
-                            {!isArciumReady ? 'warning' : 'verified'}
-                        </span>
-                        <span>
-                            {!isArciumReady
-                                ? 'Demo Mode - Arcium Deploy Pending'
-                                : 'Provably Fair via Arcium'
-                            }
-                        </span>
-                        {!isArciumReady && (
-                            <span className="ml-2 text-[10px] opacity-60">
-                                (Dev Only)
-                            </span>
-                        )}
-                    </div>
+                    {/* Session Advisory */}
+                    {playTimeMinutes >= 30 && (
+                        <div className="w-full p-2.5 bg-warning/10 border border-warning/20 rounded-xl flex items-center justify-center gap-3 text-warning/80 text-xs font-black uppercase tracking-widest mb-4 animate-pulse">
+                            <span className="material-symbols-outlined text-sm">timer</span>
+                            <span>Session Advisory: {playTimeMinutes}m active • Play Responsibly</span>
+                        </div>
+                    )}
+
+                    {/* Provably Fair Indicator + Controls */}
+                    <Link href="/verify" target="_blank" className="w-full group/pf">
+                        <div className="w-full p-3 rounded-lg border bg-primary/10 border-primary/20 text-xs font-bold uppercase tracking-wider flex items-center justify-between group-hover/pf:bg-primary/20 transition-all">
+                            <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined text-sm text-primary">verified</span>
+                                <span className="text-primary">Provably Fair</span>
+                                <span className="text-gray-500">·</span>
+                                <span className="text-gray-400 normal-case tracking-normal">98% RTP</span>
+                                <span className="material-symbols-outlined text-[10px] text-gray-500 group-hover/pf:text-primary transition-colors">open_in_new</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMute(); }}
+                                    className="p-1 rounded hover:bg-white/10 transition-colors"
+                                    title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
+                                >
+                                    <span className="material-symbols-outlined text-sm text-gray-400">
+                                        {isMuted ? 'volume_off' : 'volume_up'}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </Link>
 
                     {/* Transaction Status */}
                     {txStatus !== 'idle' && (
@@ -478,7 +534,7 @@ const FlipItGameContent: React.FC = () => {
                                     onClick={() => !isFlipping && setSide('TAILS')}
                                     disabled={isFlipping}
                                     className={cn(
-                                        "h-12 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
+                                        "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
                                         side === 'TAILS'
                                             ? "bg-danger border-danger/50 text-white shadow-[0_0_20px_-5px_rgba(255,63,51,0.5)]"
                                             : "border-transparent text-white/50 hover:text-white"
@@ -493,7 +549,7 @@ const FlipItGameContent: React.FC = () => {
                                 <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Balance</span>
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Balance</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <span className="font-mono font-bold text-white">
@@ -503,7 +559,7 @@ const FlipItGameContent: React.FC = () => {
                                                 formatBalance(walletBalance)
                                             )}
                                         </span>
-                                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
+                                        <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
                                     </div>
                                 </div>
                             )}
@@ -585,45 +641,48 @@ const FlipItGameContent: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Debug Info (Temporary) */}
-                            <div className="p-3 bg-black/60 rounded-xl border border-white/10 text-[10px] font-mono space-y-1">
-                                <p className="text-gray-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Debug Status</p>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-400">Wallet:</span>
-                                        <span className={connected ? "text-green-400" : "text-red-400"}>{connected ? "Connected" : "Not Connected"}</span>
+                            {/* Debug Info (Dev Only) */}
+                            {process.env.NODE_ENV === 'development' && (
+                                <div className="p-3 bg-black/60 rounded-xl border border-white/10 text-xs font-mono space-y-1">
+                                    <p className="text-gray-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Debug Status</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Wallet:</span>
+                                            <span className={connected ? "text-green-400" : "text-red-400"}>{connected ? "Connected" : "Not Connected"}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Ready:</span>
+                                            <span className={isReady ? "text-green-400" : "text-red-400"}>{isReady ? "Yes" : "No"}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">House:</span>
+                                            <span className={houseExists ? "text-green-400" : "text-red-400"}>{houseExists === null ? "Loading..." : (houseExists ? "Active" : "Not Found")}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Status:</span>
+                                            <span className={isFlipping ? "text-yellow-400" : "text-blue-400"}>{isFlipping ? "Flipping" : "Idle"}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-400">Amount:</span>
+                                            <span className={(amount >= MIN_BET && amount <= MAX_BET) ? "text-green-400" : "text-red-400"}>{amount} SOL</span>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                console.log('[FlipIt] Manual refresh triggered');
+                                                fetchHouse().then(house => setHouseExists(!!house));
+                                            }}
+                                            className="col-span-2 mt-2 py-1 px-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded text-white text-xs font-black uppercase tracking-tighter transition-all"
+                                        >
+                                            Force Refresh Status
+                                        </button>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-400">Ready:</span>
-                                        <span className={isReady ? "text-green-400" : "text-red-400"}>{isReady ? "Yes" : "No"}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-400">House:</span>
-                                        <span className={houseExists ? "text-green-400" : "text-red-400"}>{houseExists === null ? "Loading..." : (houseExists ? "Active" : "Not Found")}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-400">Status:</span>
-                                        <span className={isFlipping ? "text-yellow-400" : "text-blue-400"}>{isFlipping ? "Flipping" : "Idle"}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-400">Amount:</span>
-                                        <span className={(amount >= MIN_BET && amount <= MAX_BET) ? "text-green-400" : "text-red-400"}>{amount} SOL</span>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            console.log('[FlipIt] Manual refresh triggered');
-                                            fetchHouse().then(house => setHouseExists(!!house));
-                                        }}
-                                        className="col-span-2 mt-2 py-1 px-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded text-white text-[9px] font-black uppercase tracking-tighter transition-all"
-                                    >
-                                        Force Refresh Status
-                                    </button>
                                 </div>
-                            </div>
+                            )}
 
-                            <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] px-1">
+                            <div className="flex justify-between items-center text-xs text-gray-500 font-bold uppercase tracking-[0.2em] px-1">
                                 <span>Multiplier: <span className="text-white">2.0x</span></span>
                                 <span>Win Chance: <span className="text-white">50%</span></span>
+                                <span>House Edge: <span className="text-white">2%</span></span>
                             </div>
                         </div>
                     )}
@@ -634,8 +693,28 @@ const FlipItGameContent: React.FC = () => {
                 <div className="absolute bottom-1/4 right-1/4 size-96 bg-danger/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse delay-700"></div>
             </div>
 
+            {/* Mobile History Toggle */}
+            <button
+                onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                className="lg:hidden fixed bottom-6 right-6 z-50 size-14 rounded-full bg-primary text-black shadow-[0_0_20px_rgba(7,204,0,0.5)] flex items-center justify-center active:scale-95 transition-transform"
+            >
+                <span className="material-symbols-outlined">{isHistoryOpen ? 'close' : 'history'}</span>
+            </button>
+
+            {/* Mobile History Backdrop */}
+            {isHistoryOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-30"
+                    onClick={() => setIsHistoryOpen(false)}
+                />
+            )}
+
             {/* Sidebar (Recent Flips) */}
-            <aside className="w-80 border-l border-white/5 bg-[#0A0A0F]/50 backdrop-blur-xl hidden xl:flex flex-col z-20">
+            <aside className={cn(
+                "w-80 border-l border-white/5 bg-[#0A0A0F] lg:bg-[#0A0A0F]/50 backdrop-blur-xl flex flex-col transition-transform duration-300 z-40 lg:z-20",
+                "fixed inset-y-0 right-0 translate-x-full lg:translate-x-0 lg:static",
+                isHistoryOpen && "translate-x-0"
+            )}>
                 <div className="p-6 border-b border-white/5 flex justify-between items-center">
                     <h3 className="font-bold text-white tracking-tighter flex items-center gap-2 uppercase text-sm">
                         <span className="material-symbols-outlined text-gray-400 text-lg">history</span>
@@ -643,7 +722,7 @@ const FlipItGameContent: React.FC = () => {
                     </h3>
                     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
                         <span className="size-1.5 rounded-full bg-primary animate-pulse"></span>
-                        <span className="text-[9px] font-black text-primary uppercase tracking-widest">Live</span>
+                        <span className="text-xs font-black text-primary uppercase tracking-widest">Live</span>
                     </div>
                 </div>
 
@@ -666,10 +745,10 @@ const FlipItGameContent: React.FC = () => {
                                         </span>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] font-mono text-gray-500">
+                                        <span className="text-xs font-mono text-gray-500">
                                             {shortenAddress(bet.player?.walletAddress || 'Unknown', 4)}
                                         </span>
-                                        <span className="text-[11px] font-black text-white uppercase tracking-tighter">
+                                        <span className="text-xs font-black text-white uppercase tracking-tighter">
                                             {bet.outcome}
                                         </span>
                                     </div>
@@ -678,8 +757,22 @@ const FlipItGameContent: React.FC = () => {
                                     <div className={cn("text-sm font-black tracking-tighter", bet.playerWon ? "text-primary" : "text-gray-500")}>
                                         {bet.playerWon ? '+' : '-'}{((bet.payoutAmount || bet.amount) / 1_000_000_000).toFixed(2)} SOL
                                     </div>
-                                    <div className="text-[9px] font-bold text-gray-500 uppercase">
-                                        {bet.resolvedAt ? new Date(bet.resolvedAt).toLocaleTimeString() : 'Pending'}
+                                    <div className="flex items-center gap-1 justify-end">
+                                        <span className="text-xs font-bold text-gray-500 uppercase">
+                                            {bet.resolvedAt ? new Date(bet.resolvedAt).toLocaleTimeString() : 'Pending'}
+                                        </span>
+                                        {bet.transactionSignature && (
+                                            <a
+                                                href={`https://solscan.io/tx/${bet.transactionSignature}?cluster=devnet`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="text-gray-600 hover:text-primary transition-colors"
+                                                title="View on Solscan"
+                                            >
+                                                <span className="material-symbols-outlined text-xs">open_in_new</span>
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -694,7 +787,7 @@ const FlipItGameContent: React.FC = () => {
                 </div>
 
                 <div className="p-4 border-t border-white/5">
-                    <button className="w-full py-3 rounded-xl border border-white/5 hover:border-white/20 text-[10px] font-black text-gray-500 hover:text-white transition-all uppercase tracking-widest bg-white/5">
+                    <button className="w-full py-3 rounded-xl border border-white/5 hover:border-white/20 text-xs font-black text-gray-500 hover:text-white transition-all uppercase tracking-widest bg-white/5">
                         View All History
                     </button>
                 </div>

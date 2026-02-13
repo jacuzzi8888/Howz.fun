@@ -3,10 +3,172 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   
+  /* Primary */
   --color-primary: #07cc00;
   --color-primaryHover: #06ad00;
   --color-accentGold: #F59E0B;
   --color-background-dark: #0A0A0F;
+  
+  /* Semantic */
+  --color-danger: #EF4444;
+  --color-dangerHover: #DC2626;
+  --color-warning: #F59E0B;
+  --color-success: #07cc00;
+  
+  /* Surfaces */
+  --color-surface: rgba(255, 255, 255, 0.03);
+  --color-surfaceHover: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.08);
+  
+  /* Text */
+  --color-textMuted: #6B7280;
+  --color-textDim: #9CA3AF;
+}
+
+/* ============================================================
+   CUSTOM SCROLLBARS — Cyberpunk themed, replaces browser defaults
+   ============================================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(7, 204, 0, 0.3);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ============================================================
+   NUMBER INPUT — Hide browser-default spinner arrows
+   ============================================================ */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ============================================================
+   RANGE SLIDER — Custom track and thumb styling
+   ============================================================ */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 6px;
+}
+
+/* Track */
+input[type="range"]::-webkit-slider-runnable-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  height: 6px;
+}
+
+input[type="range"]::-moz-range-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  height: 6px;
+  border: none;
+}
+
+/* Thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #07cc00;
+  border: 2px solid rgba(7, 204, 0, 0.5);
+  box-shadow: 0 0 10px rgba(7, 204, 0, 0.4);
+  margin-top: -6px;
+  transition: box-shadow 0.2s, transform 0.1s;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #07cc00;
+  border: 2px solid rgba(7, 204, 0, 0.5);
+  box-shadow: 0 0 10px rgba(7, 204, 0, 0.4);
+  transition: box-shadow 0.2s, transform 0.1s;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 15px rgba(7, 204, 0, 0.6);
+  transform: scale(1.1);
+}
+
+input[type="range"]:hover::-moz-range-thumb {
+  box-shadow: 0 0 15px rgba(7, 204, 0, 0.6);
+  transform: scale(1.1);
+}
+
+input[type="range"]:disabled::-webkit-slider-thumb {
+  background: #374151;
+  border-color: #4B5563;
+  box-shadow: none;
+}
+
+input[type="range"]:disabled::-moz-range-thumb {
+  background: #374151;
+  border-color: #4B5563;
+  box-shadow: none;
+}
+
+/* ============================================================
+   FOCUS RINGS — Consistent green glow (replaces browser blue)
+   ============================================================ */
+*:focus-visible {
+  outline: 2px solid rgba(7, 204, 0, 0.5);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid rgba(7, 204, 0, 0.5);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(7, 204, 0, 0.1);
+}
+
+/* ============================================================
+   TEXT SELECTION — Green highlight
+   ============================================================ */
+::selection {
+  background: rgba(7, 204, 0, 0.3);
+  color: #fff;
+}
+
+::-moz-selection {
+  background: rgba(7, 204, 0, 0.3);
+  color: #fff;
 }
 
 @layer utilities {
@@ -82,3 +244,4 @@
 body {
   background-color: #0A0A0F;
 }
+

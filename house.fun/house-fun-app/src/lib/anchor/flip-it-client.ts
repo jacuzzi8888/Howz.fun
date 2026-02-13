@@ -128,7 +128,7 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
         finalBetIndex = houseAccount ? houseAccount.totalBets.toNumber() : 0;
       }
 
-      const [betPDA] = getBetPDA(wallet.publicKey, finalBetIndex);
+      const [betPDA] = getBetPDA(wallet.publicKey, finalBetIndex!);
 
       // Convert amount to lamports
       const lamports = solToLamports(amount);
@@ -215,7 +215,7 @@ export function useFlipItProgram(sessionKey?: web3.Keypair | null) {
 
     try {
       const tx = await (program.methods as any)
-        .claimWinnings()
+        .claim_winnings()
         .accounts({
           bet: betPDA,
           player: wallet.publicKey,

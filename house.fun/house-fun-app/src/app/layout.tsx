@@ -9,6 +9,7 @@ import { Header } from "~/components/layout/Header";
 import { SolanaWalletProvider } from "~/providers/SolanaWalletProvider";
 import { MagicBlockProvider } from "~/lib/magicblock/MagicBlockContext";
 import { ArciumProvider } from "~/lib/arcium/ArciumContext";
+import { WalletSync } from "~/components/wallet/WalletSync";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -56,6 +57,7 @@ export default function RootLayout({
       <body className="bg-[#0A0A0F] font-sans text-white antialiased">
         <TRPCReactProvider>
           <SolanaWalletProvider>
+            <WalletSync />
             <MagicBlockProvider>
               <ArciumProvider>
                 <div className="flex flex-col min-h-screen">

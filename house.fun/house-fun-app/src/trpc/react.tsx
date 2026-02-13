@@ -25,6 +25,21 @@ const getQueryClient = () => {
 export const api = createTRPCReact<AppRouter>();
 
 /**
+ * Module-level ref for the connected wallet address.
+ * Updated by WalletSync component (rendered inside SolanaWalletProvider).
+ * Read by the TRPC client headers callback on every request.
+ */
+const walletAddressRef = { current: null as string | null };
+
+/**
+ * Call this from a component that has access to the wallet context
+ * to keep the TRPC headers in sync with the connected wallet.
+ */
+export function setTRPCWalletAddress(address: string | null) {
+  walletAddressRef.current = address;
+}
+
+/**
  * Inference helper for inputs.
  *
  * @example type HelloInput = RouterInputs['example']['hello']
@@ -55,6 +70,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           headers: () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
+            if (walletAddressRef.current) {
+              headers.set("x-wallet-address", walletAddressRef.current);
+            }
             return headers;
           },
         }),
@@ -76,3 +94,4 @@ function getBaseUrl() {
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
+

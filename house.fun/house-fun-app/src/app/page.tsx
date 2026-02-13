@@ -23,7 +23,7 @@ export default function Home() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400">So Can You.</span>
           </h1>
           <div className="glass-panel px-8 py-4 rounded-2xl flex flex-col items-center gap-1 mt-4 border-t border-accentGold/20 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
-            <span className="text-[10px] font-bold text-accentGold tracking-[0.3em] uppercase">Current Jackpot</span>
+            <span className="text-xs font-bold text-accentGold tracking-[0.3em] uppercase">Current Jackpot</span>
             <div className="text-4xl md:text-5xl font-mono font-bold text-accentGold text-glow-gold tracking-tighter">
               $1,420,069.00
             </div>
@@ -54,6 +54,7 @@ export default function Home() {
                 icon={game.icon}
                 href={game.href}
                 accent={game.accent}
+                comingSoon={game.comingSoon}
               />
             ))}
           </div>
@@ -67,7 +68,7 @@ export default function Home() {
               className={`flex flex-col items-center md:items-start flex-1 ${i < LOBBY_STATS.length - 1 ? "border-b md:border-b-0 md:border-r border-white/10 pb-4 md:pb-0 md:pr-10" : "md:pl-10"
                 } ${i > 0 && i < LOBBY_STATS.length - 1 ? "md:px-10" : ""}`}
             >
-              <span className="text-gray-400 text-[10px] font-bold tracking-[0.2em] mb-2 uppercase flex items-center gap-2">
+              <span className="text-gray-400 text-xs font-bold tracking-[0.2em] mb-2 uppercase flex items-center gap-2">
                 {stat.label}
                 {stat.online && (
                   <span className="flex h-2 w-2 relative">
@@ -91,10 +92,10 @@ export default function Home() {
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
             </Link>
           </div>
-          <div className="text-[10px] font-bold text-gray-500 tracking-[0.1em] uppercase">
+          <div className="text-xs font-bold text-gray-500 tracking-[0.1em] uppercase">
             © 2026 house.fun. All rights reserved. 18+ Only.
           </div>
-          <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+          <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
             Solana Hackathon Build
           </div>

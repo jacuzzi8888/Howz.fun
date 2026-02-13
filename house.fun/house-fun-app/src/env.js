@@ -20,7 +20,7 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_SOLANA_RPC: z.string().url(),
-    NEXT_PUBLIC_SOLANA_NETWORK: z.string().default("mainnet-beta"),
+    NEXT_PUBLIC_SOLANA_NETWORK: z.string().default("devnet"),
   },
 
   /**

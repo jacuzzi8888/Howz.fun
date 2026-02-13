@@ -9,6 +9,7 @@ interface LobbyGame {
     icon: string;
     href: string;
     accent: 'gold' | 'red' | 'white';
+    comingSoon?: boolean;
 }
 
 export const LOBBY_GAMES: LobbyGame[] = [
@@ -34,7 +35,8 @@ export const LOBBY_GAMES: LobbyGame[] = [
         image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDCwCBfEkt8raKegr347LAvDN9ywvLKGf1IHaeiEJYqlnvtKSNmr9snn9-KYnAs74QxQCO4geg5g6xLQEvsEiq5jKix7jXqAqaTj6UiFMwQOEXUA7KMaBHaItNgpDhwh0hczOE-Em3aa8Ohpu-IdorxKFEhz9mW7WoJ4dqYOkSsm_wx6gv2O3gUNcskg4DncsdRF1RvgjWR1DPq1UTNcyRFXBfLeQ0guF9PdrM4rIG8uYt4DUFDYB2dODDBYhm6Dhp5C5mjQXwhsDk",
         icon: "sports_mma",
         href: "/games/fight-club",
-        accent: "red"
+        accent: "red",
+        comingSoon: true
     },
     {
         id: "degen-derby",
@@ -46,7 +48,8 @@ export const LOBBY_GAMES: LobbyGame[] = [
         image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBqqDQ7qGAIx2YYEDhxep5ADuCH4S58PCdU3rrf4PrBNh0Pp2yV5SVnbnQm-ew3Czz1urJoFnTDFHhG6s1ayOWTa_sq5KpB1_x0Z5Hjttl1g-gWVmOD4QGkEJAF-x2SdCWkqAJz8LUNe3vcEF2EDomiGble2dtQvfkQvJgirb41_P3_HJhiCaZFsz2quJPx-t3pF3HDDFexonQD10iivNak30WNekrk__MzpFdULfzTmlhv7V5Gq1X8XK8XDUKuCFDHgzB3yjiE19E",
         icon: "bedroom_baby",
         href: "/games/degen-derby",
-        accent: "white"
+        accent: "white",
+        comingSoon: true
     },
     {
         id: "shadow-poker",
@@ -58,7 +61,8 @@ export const LOBBY_GAMES: LobbyGame[] = [
         image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDc47a7myehvEeVzPwOgy-MAY3wU9nmcZ-ckqvSnwus2joVMpigxfxTCTNTwYjmEiT5-TCXEySokau_uC7aY07PnHoIJv9vbflM2YPP9aeZG2cWAwhQmrYfDIYh0A5XRoDCWQqzPQPR5-iesWU8cAJPBuCYr3aXsECWEHQXBguHroATLZRvsZZ8R9nmtrnFcEcfYKWiwzCBEVSIKdhl3UDHUWM8yggaKoXILRpvScyKURv2znike7tHETU48IIDiI2GRHjFxc-QfaU",
         icon: "playing_cards",
         href: "/games/shadow-poker",
-        accent: "white"
+        accent: "white",
+        comingSoon: true
     }
 ];
 
