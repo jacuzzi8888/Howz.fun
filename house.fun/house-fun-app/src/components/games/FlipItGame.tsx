@@ -327,9 +327,9 @@ const FlipItGameContent: React.FC = () => {
     }, [disabledReason, connected]);
 
     return (
-        <div className="flex flex-1 relative overflow-hidden">
+        <div className="flex flex-1 relative overflow-y-auto overflow-x-hidden">
             {/* Game Area (Center) */}
-            <div className="flex-1 flex flex-col items-center justify-center p-2 lg:p-4 relative z-10 overflow-hidden">
+            <div className="flex-1 flex flex-col items-center justify-start py-4 px-3 sm:px-4 lg:px-6 lg:justify-center relative z-10 min-w-0">
                 <div className="w-full max-w-lg flex flex-col items-center gap-4">
 
                     {/* Wallet Not Connected Warning */}
@@ -421,10 +421,10 @@ const FlipItGameContent: React.FC = () => {
 
                     {/* Error Display */}
                     {error && (
-                        <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                            <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-red-500 text-sm">error</span>
-                                <p className="text-red-400 text-sm">{error}</p>
+                        <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-lg overflow-hidden">
+                            <div className="flex items-start gap-2">
+                                <span className="material-symbols-outlined text-red-500 text-sm shrink-0 mt-0.5">error</span>
+                                <p className="text-red-400 text-sm break-all">{error}</p>
                             </div>
                             <div className="mt-2 flex gap-4">
                                 <button

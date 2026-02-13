@@ -19,32 +19,23 @@ interface WalletAdapter {
 
 /**
  * Create Anchor Provider from wallet connection
+ * 
+ * IMPORTANT: Always uses the real wallet adapter for signing.
+ * The session key is NOT used as the provider wallet because the
+ * on-chain program requires the connected wallet's public key as
+ * a signer on transactions like placeBet. Session keys would only
+ * be valid if on-chain delegation were set up (future feature).
  */
 export function createProvider(
   connection: web3.Connection,
   wallet: WalletAdapter,
-  sessionKey?: web3.Keypair | null
+  _sessionKey?: web3.Keypair | null
 ): AnchorProvider {
-  const finalWallet = sessionKey
-    ? {
-      publicKey: sessionKey.publicKey,
-      signTransaction: async (tx: web3.Transaction) => {
-        tx.partialSign(sessionKey);
-        return tx;
-      },
-      signAllTransactions: async (txs: web3.Transaction[]) => {
-        return txs.map((tx) => {
-          tx.partialSign(sessionKey);
-          return tx;
-        });
-      },
-    }
-    : wallet;
-
+  // Always use the real wallet adapter so Phantom/Solflare signs the tx
   return new AnchorProvider(
     connection,
-    finalWallet as Wallet,
-    AnchorProvider.defaultOptions()
+    wallet as Wallet,
+    { ...AnchorProvider.defaultOptions(), commitment: 'confirmed' }
   );
 }
 

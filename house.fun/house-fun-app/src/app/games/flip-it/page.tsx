@@ -9,7 +9,7 @@ const FlipItGame = dynamic(
 
 export default function FlipItPage() {
     return (
-        <div className="flex flex-col h-[calc(100vh-80px)]">
+        <div className="flex flex-col min-h-[calc(100vh-80px)]">
             <FlipItGame />
         </div>
     );
