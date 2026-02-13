@@ -38,13 +38,14 @@ const FlipItGameContent: React.FC = () => {
     const {
         isLoading,
         error,
+        setError,
         txStatus,
         setTxStatus,
         reset,
         executeGameAction
     } = useGameState();
 
-    const { isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram(sessionKey);
+    const { program, isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram(sessionKey);
     const { play, isMuted, toggleMute } = useGameSounds();
     const [houseExists, setHouseExists] = useState<boolean | null>(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
