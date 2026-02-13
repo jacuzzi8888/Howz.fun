@@ -97,7 +97,7 @@ export default function Home() {
             </Link>
           </div>
           <div className="text-xs font-bold text-gray-500 tracking-[0.1em] uppercase">
-            © 2026 house.fun. All rights reserved. 18+ Only.
+            © 2026 Howz.fun. All rights reserved. 18+ Only.
           </div>
           <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>

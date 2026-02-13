@@ -346,16 +346,23 @@ const FlipItGameContent: React.FC = () => {
                         </div>
                     )}
 
-                    {/* House Not Initialized Warning or Loading */}
-                    {connected && (houseExists === false || houseExists === null) && (
+                    {/* Loading State Fallback (Full Page) */}
+                    {(connected && (isReady === false || houseExists === null)) && (
+                        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#0A0A0F] gap-6 rounded-3xl">
+                            <div className="size-16 border-4 border-white/5 border-t-primary rounded-full animate-spin shadow-[0_0_15px_rgba(187,255,0,0.2)]"></div>
+                            <div className="flex flex-col items-center gap-2">
+                                <span className="text-white/40 font-black uppercase tracking-[0.3em] text-xs">Initializing Table</span>
+                                <span className="text-[10px] text-primary/40 font-bold uppercase tracking-widest animate-pulse">Connecting to Solana...</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* House Not Initialized Warning */}
+                    {connected && houseExists === false && (
                         <div className="w-full p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                             <div className="flex items-center gap-2 mb-3">
-                                <span className="material-symbols-outlined text-orange-500 text-sm">
-                                    {houseExists === null ? 'hourglass_empty' : 'house'}
-                                </span>
-                                <p className="text-orange-400 text-sm font-bold">
-                                    {houseExists === null ? 'Loading game state...' : 'House Account Not Initialized'}
-                                </p>
+                                <span className="material-symbols-outlined text-orange-500 text-sm">house</span>
+                                <p className="text-orange-400 text-sm font-bold">House Account Not Initialized</p>
                             </div>
                             {houseExists === false && (
                                 <>
