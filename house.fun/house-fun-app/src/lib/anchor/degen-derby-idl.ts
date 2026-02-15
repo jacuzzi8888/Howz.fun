@@ -35,7 +35,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -71,7 +71,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -79,7 +79,7 @@ export const DEGEN_DERBY_IDL = {
           "name": "horses",
           "type": {
             "vec": {
-              "defined": "HorseData"
+              "defined": { "name": "HorseData" }
             }
           }
         }
@@ -124,7 +124,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -156,7 +156,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -182,7 +182,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -210,7 +210,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -233,7 +233,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -261,7 +261,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -281,7 +281,7 @@ export const DEGEN_DERBY_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -340,7 +340,7 @@ export const DEGEN_DERBY_IDL = {
             "name": "horses",
             "type": {
               "vec": {
-                "defined": "Horse"
+                "defined": { "name": "Horse" }
               }
             }
           },
@@ -359,7 +359,7 @@ export const DEGEN_DERBY_IDL = {
           {
             "name": "status",
             "type": {
-              "defined": "RaceStatus"
+              "defined": { "name": "RaceStatus" }
             }
           },
           {

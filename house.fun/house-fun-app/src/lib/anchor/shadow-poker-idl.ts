@@ -183,14 +183,14 @@ export const SHADOW_POKER_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
           "name": "blind_type",
           "type": {
-            "defined": "BlindType"
+            "defined": { "name": "BlindType" }
           }
         }
       ]
@@ -213,14 +213,14 @@ export const SHADOW_POKER_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
           "name": "action",
           "type": {
-            "defined": "PlayerAction"
+            "defined": { "name": "PlayerAction" }
           }
         },
         {
@@ -243,7 +243,7 @@ export const SHADOW_POKER_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -251,7 +251,7 @@ export const SHADOW_POKER_IDL = {
           "name": "cards",
           "type": {
             "vec": {
-              "defined": "Card"
+              "defined": { "name": "Card" }
             }
           }
         }
@@ -275,7 +275,7 @@ export const SHADOW_POKER_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -304,7 +304,7 @@ export const SHADOW_POKER_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -324,7 +324,7 @@ export const SHADOW_POKER_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -418,13 +418,13 @@ export const SHADOW_POKER_IDL = {
           {
             "name": "status",
             "type": {
-              "defined": "TableStatus"
+              "defined": { "name": "TableStatus" }
             }
           },
           {
             "name": "current_round",
             "type": {
-              "defined": "BettingRound"
+              "defined": { "name": "BettingRound" }
             }
           },
           {
@@ -439,7 +439,7 @@ export const SHADOW_POKER_IDL = {
             "name": "community_cards",
             "type": {
               "vec": {
-                "defined": "Card"
+                "defined": { "name": "Card" }
               }
             }
           },
@@ -496,7 +496,7 @@ export const SHADOW_POKER_IDL = {
             "name": "hole_cards",
             "type": {
               "vec": {
-                "defined": "Card"
+                "defined": { "name": "Card" }
               }
             }
           },

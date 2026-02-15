@@ -35,7 +35,7 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -71,15 +71,15 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "price_update_a",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "price_update_b",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -144,7 +144,7 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -172,11 +172,11 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "price_update_a",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "price_update_b",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "authority",
@@ -208,7 +208,7 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -231,7 +231,7 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -259,7 +259,7 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -279,7 +279,7 @@ export const FIGHT_CLUB_IDL = {
         },
         {
           "name": "system_program",
-          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -389,7 +389,7 @@ export const FIGHT_CLUB_IDL = {
           {
             "name": "status",
             "type": {
-              "defined": "MatchStatus"
+              "defined": { "name": "MatchStatus" }
             }
           },
           {
