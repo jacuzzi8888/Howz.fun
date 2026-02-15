@@ -4,7 +4,7 @@
  */
 
 export type DegenDerby = {
-  "address": "Derby111111111111111111111111111111111111111",
+  "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
   "metadata": {
     "name": "degen_derby",
     "version": "0.1.0",
@@ -585,7 +585,7 @@ export type DegenDerby = {
 };
 
 export const DEGEN_DERBY_IDL: DegenDerby = {
-  "address": "Derby111111111111111111111111111111111111111",
+  "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
   "metadata": {
     "name": "degen_derby",
     "version": "0.1.0",

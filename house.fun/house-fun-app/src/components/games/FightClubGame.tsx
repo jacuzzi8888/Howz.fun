@@ -171,7 +171,7 @@ const FightClubGameContent: React.FC = () => {
 
         setTxStatus('pending');
         try {
-            const matchPDA = new PublicKey("FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"); // Placeholder
+            const matchPDA = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"); // Placeholder
             // In a real app, these are fetched from the registry or known Pyth addresses
             const priceUpdateA = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5");
             const priceUpdateB = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5");
