@@ -15,6 +15,21 @@
                 "any",
                 "any"
             ]
+        },
+        {
+            "name": "Race",
+            "seeds": [
+                "race",
+                "any"
+            ]
+        },
+        {
+            "name": "HorseProgress",
+            "seeds": [
+                "horse_progress",
+                "any",
+                "any"
+            ]
         }
     ],
     "engine": {

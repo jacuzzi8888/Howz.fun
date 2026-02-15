@@ -8,17 +8,14 @@ import { GameErrorBoundary } from '~/components/error-boundaries';
 import { ButtonLoader, TransactionLoader } from '~/components/loading';
 import { useFightClubProgram } from '~/lib/anchor/fight-club-client';
 
-// Temporary interface for mock data until real matches are fetched
-interface MatchData {
-    tokenA: string;
-    tokenB: string;
-    totalBetA: number;
-    totalBetB: number;
-    playerCountA: number;
-    playerCountB: number;
-    status: string;
-}
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { type FightMatchAccount } from '~/lib/anchor/fight-club-client';
+
+// Pyth Feed IDs for mock/hackathon use
+const PYTH_FEEDS = {
+    'BONK': '0x72a59c19d4d9d473a21ca701655099309062325ba0126a10df768e7af558bb94',
+    'WIF': '0xa2e8316dfc6e3b56345d1796120c15904bc04ed8e31780006733c393798cf85d',
+};
 
 const MIN_BET = 0.001;
 const MAX_BET = 100;
@@ -34,10 +31,14 @@ export const FightClubGame: React.FC = () => {
 const FightClubGameContent: React.FC = () => {
     const [selectedSide, setSelectedSide] = useState<'A' | 'B' | null>(null);
     const [wager, setWager] = useState(1.5);
-    const [currentMatch, setCurrentMatch] = useState<MatchData | null>(null);
+    const [currentMatch, setCurrentMatch] = useState<FightMatchAccount | null>(null);
     const [userBet, setUserBet] = useState<{ side: 'A' | 'B'; amount: number } | null>(null);
     const [houseExists, setHouseExists] = useState<boolean | null>(null);
     const [isInitializingHouse, setIsInitializingHouse] = useState(false);
+
+    // Live price tracking (simulated for HUD, in prod comes from Pyth Pull)
+    const [livePerfA, setLivePerfA] = useState(0);
+    const [livePerfB, setLivePerfB] = useState(0);
 
     const { connected } = useWallet();
     const {
@@ -59,17 +60,35 @@ const FightClubGameContent: React.FC = () => {
         calculatePotentialWinnings
     } = useFightClubProgram();
 
-    // Mock current match - in production, fetch from database
+    // Mock current match - in production, fetch from PDA
     useEffect(() => {
         setCurrentMatch({
+            index: 0,
             tokenA: 'BONK',
             tokenB: 'WIF',
-            totalBetA: 2500 * LAMPORTS_PER_SOL,
-            totalBetB: 2000 * LAMPORTS_PER_SOL,
-            playerCountA: 45,
-            playerCountB: 38,
-            status: 'Open',
+            feedIdA: Array.from(Buffer.from(PYTH_FEEDS.BONK.slice(2), 'hex')),
+            feedIdB: Array.from(Buffer.from(PYTH_FEEDS.WIF.slice(2), 'hex')),
+            startPriceA: 0.00000123,
+            startPriceB: 0.35,
+            endPriceA: 0,
+            endPriceB: 0,
+            totalBetA: 2.5,
+            totalBetB: 2.0,
+            totalPlayersA: 45,
+            totalPlayersB: 38,
+            status: 'Open' as any,
+            winner: null,
+            houseFee: 0.045,
+            createdAt: Date.now() / 1000 - 300,
+            resolvedAt: null,
         });
+
+        // Simulate live price updates
+        const interval = setInterval(() => {
+            setLivePerfA(prev => prev + (Math.random() - 0.49) * 0.1);
+            setLivePerfB(prev => prev + (Math.random() - 0.50) * 0.1);
+        }, 1000);
+        return () => clearInterval(interval);
     }, []);
 
     // Check if house exists
@@ -115,25 +134,54 @@ const FightClubGameContent: React.FC = () => {
         setTxStatus('pending');
 
         try {
-            // In production, get actual match PDA from database
-            // For now, we'll simulate the flow
+            // Retrieve PDAs (utility functions usually handle this, but explicit for hackathon)
+            const matchPDA = new PublicKey("FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"); // Placeholder
+
             await executeGameAction(async () => {
-                // Simulate blockchain call
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                const result = await placeBet(
+                    matchPDA,
+                    currentMatch.index,
+                    wager,
+                    selectedSide
+                );
 
                 setUserBet({
                     side: selectedSide,
                     amount: wager
                 });
 
-                return { success: true };
+                return result;
             }, {
                 onSuccess: () => {
                     setTxStatus('confirmed');
+                    console.log('Bet placed successfully!');
                 },
                 onError: (err) => {
                     setTxStatus('failed');
                     console.error('Bet failed:', err);
+                }
+            });
+        } catch (err) {
+            setTxStatus('failed');
+        }
+    };
+
+    const handleResolve = async () => {
+        if (!connected || !isReady || !currentMatch) return;
+
+        setTxStatus('pending');
+        try {
+            const matchPDA = new PublicKey("FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"); // Placeholder
+            // In a real app, these are fetched from the registry or known Pyth addresses
+            const priceUpdateA = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5");
+            const priceUpdateB = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5");
+
+            await executeGameAction(async () => {
+                return await resolveWithPyth(matchPDA, priceUpdateA, priceUpdateB);
+            }, {
+                onSuccess: (result) => {
+                    setTxStatus('confirmed');
+                    console.log('Match resolved via Pyth:', result);
                 }
             });
         } catch (err) {
@@ -258,11 +306,22 @@ const FightClubGameContent: React.FC = () => {
                         )}
                     </h1>
                 </div>
-                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
-                    <span className="material-symbols-outlined text-gray-400 text-sm">info</span>
-                    <span className="text-gray-300 text-[10px] font-bold uppercase tracking-wider">
-                        Status: {currentMatch?.status || 'Loading'}
-                    </span>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+                        <span className="material-symbols-outlined text-gray-400 text-sm">info</span>
+                        <span className="text-gray-300 text-[10px] font-bold uppercase tracking-wider">
+                            Status: {currentMatch?.status || 'Loading'}
+                        </span>
+                    </div>
+                    {currentMatch?.status === 'Open' && houseExists && (
+                        <button
+                            onClick={handleResolve}
+                            disabled={isBetting}
+                            className="bg-accentGold/10 hover:bg-accentGold/20 border border-accentGold/30 text-accentGold text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full transition-all"
+                        >
+                            {isBetting ? 'Processing...' : 'Resolve (Admin/Debug)'}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -296,10 +355,21 @@ const FightClubGameContent: React.FC = () => {
                                 <span>{currentMatch?.playerCountA || 0} bettors</span>
                             </div>
                         </div>
+                        {/* Price Performance */}
+                        <div className="w-full mt-4 p-3 bg-black/40 rounded-xl border border-danger/20 flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Growth</span>
+                            <span className={cn(
+                                "text-lg font-mono font-black",
+                                livePerfA >= 0 ? "text-primary" : "text-danger"
+                            )}>
+                                {livePerfA >= 0 ? '+' : ''}{livePerfA.toFixed(2)}%
+                            </span>
+                        </div>
+
                         {/* Odds */}
-                        <div className="w-full space-y-2">
+                        <div className="w-full mt-6 space-y-2">
                             <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-                                <span>Odds</span>
+                                <span>Crowd Odds</span>
                                 <span className="text-white">{getOdds('A').toFixed(2)}x</span>
                             </div>
                             <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
@@ -359,10 +429,21 @@ const FightClubGameContent: React.FC = () => {
                                 <span>{currentMatch?.playerCountB || 0} bettors</span>
                             </div>
                         </div>
+                        {/* Price Performance */}
+                        <div className="w-full mt-4 p-3 bg-black/40 rounded-xl border border-primary/20 flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Growth</span>
+                            <span className={cn(
+                                "text-lg font-mono font-black",
+                                livePerfB >= 0 ? "text-primary" : "text-danger"
+                            )}>
+                                {livePerfB >= 0 ? '+' : ''}{livePerfB.toFixed(2)}%
+                            </span>
+                        </div>
+
                         {/* Odds */}
-                        <div className="w-full space-y-2">
+                        <div className="w-full mt-6 space-y-2">
                             <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
-                                <span>Odds</span>
+                                <span>Crowd Odds</span>
                                 <span className="text-white">{getOdds('B').toFixed(2)}x</span>
                             </div>
                             <div className="h-4 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative">

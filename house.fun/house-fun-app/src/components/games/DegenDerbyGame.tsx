@@ -145,6 +145,32 @@ const DegenDerbyGameContent: React.FC = () => {
     }
   };
 
+  const handleRaceResolve = async () => {
+    if (!connected || !isReady || !currentRace) return;
+
+    setTxStatus('pending');
+    try {
+      await executeGameAction(async () => {
+        // Arcium Resolution Flow:
+        // 1. Get nonce and public key (mock for now or from Arcium SDK)
+        const pubKey = new Uint8Array(32); // Actual Arcium pubkey
+        const nonce = 12345n; // Random nonce
+        const computationOffset = 0; // First index
+
+        const result = await resolveRace(currentRace.pda, computationOffset, Array.from(pubKey), nonce);
+        return { success: true, winnerIndex: result.winnerHorseIndex };
+      }, {
+        onSuccess: (data: any) => {
+          handleRaceEnd(data.winnerIndex);
+          setTxStatus('confirmed');
+        },
+        onError: () => setTxStatus('failed'),
+      });
+    } catch (err) {
+      setTxStatus('failed');
+    }
+  };
+
   const handleRaceEnd = async (winningHorseId: number) => {
     setWinnerId(winningHorseId);
     setIsUsingRollup(false);
@@ -155,7 +181,7 @@ const DegenDerbyGameContent: React.FC = () => {
       const won = userBet.horseIndex === winningHorseId;
       try {
         await resolveBet.mutateAsync({
-          betPda: 'mock-race-pda-' + Date.now(),
+          betPda: currentRace?.pda.toBase58() || 'mock-pda',
           outcome: 'PLAYER_WIN',
           playerWon: won,
           payoutAmount: won ? userBet.amount * 2 * LAMPORTS_PER_SOL : 0,

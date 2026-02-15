@@ -1,0 +1,13 @@
+[package]
+name = "race_update"
+version = "0.1.0"
+description = "Degen Derby Race Update System"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "race_update"
+
+[dependencies]
+bolt-lang.workspace = true
+horse_progress = { path = "../../components/horse_progress" }

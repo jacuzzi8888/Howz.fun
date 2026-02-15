@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use arcium_anchor::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
 // Program ID - Replace with actual after deployment
@@ -12,7 +13,9 @@ pub const MIN_PLAYERS: u8 = 2;
 pub const MAX_PLAYERS: u8 = 6;
 pub const TIMEOUT_SLOTS: u64 = 600; // 4 minutes timeout
 
-#[program]
+const COMP_DEF_OFFSET_POKER: u32 = comp_def_offset("poker");
+
+#[arcium_program]
 pub mod shadow_poker {
     use super::*;
 
@@ -303,65 +306,124 @@ pub mod shadow_poker {
         Ok(())
     }
 
-    /// Initialize the encrypted table with a deck commitment from Arcium
-    pub fn initialize_encrypted_table(
-        ctx: Context<InitializeEncryptedTable>,
-        deck_commitment: [u8; 32],
-    ) -> Result<()> {
-        let table = &mut ctx.accounts.table;
-        
-        require!(
-            table.status == TableStatus::Waiting || table.status == TableStatus::Finished,
-            ShadowPokerError::HandInProgress
-        );
-
-        table.deck_commitment = deck_commitment;
-        table.status = TableStatus::Dealing;
-        
-        msg!("Table {} initialized with Arcium deck commitment", table.key());
+    /// Initialize the poker computation definition
+    pub fn init_poker_comp_def(ctx: Context<InitPokerCompDef>) -> Result<()> {
+        init_comp_def(ctx.accounts, None, None)?;
+        msg!("Poker computation definition initialized");
         Ok(())
     }
 
-    /// Set the encrypted card states and verify Arcium proof
-    pub fn set_encrypted_cards(
-        ctx: Context<SetEncryptedCards>,
-        proof_outcome: u8,
-        proof_data: Vec<u8>,
+    /// Deal encrypted cards using Arcium MPC
+    pub fn deal_encrypted_cards(
+        ctx: Context<DealEncryptedCards>,
+        computation_offset: u64,
+        pub_key: [u8; 32],
+        nonce: u128,
     ) -> Result<()> {
         let table = &mut ctx.accounts.table;
-        
+
         require!(
             table.status == TableStatus::Dealing,
             ShadowPokerError::InvalidGameState
         );
 
-        // In a production environment, this would call the Arcium Verifier Program
-        // For the hackathon/MVP, we've implemented a secure state transition
-        require!(proof_outcome == 0, ShadowPokerError::InvalidArciumProof);
+        // Prep Arcium arguments for dealing
+        let args = ArgBuilder::new()
+            .x25519_pubkey(pub_key)
+            .plaintext_u128(nonce)
+            .build();
+
+        ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
+
+        // Queue the computation
+        queue_computation(
+            ctx.accounts,
+            computation_offset,
+            args,
+            vec![DealCallback::callback_ix(
+                computation_offset,
+                &ctx.accounts.mxe_account,
+                &[],
+            )?],
+            1,
+            0,
+        )?;
+
+        msg!("Encrypted dealing requested for table: {}", table.key());
+        Ok(())
+    }
+
+    /// Callback for encrypted dealing
+    #[arcium_callback(encrypted_ix = "deal_encrypted_cards")]
+    pub fn deal_callback(
+        ctx: Context<DealCallback>,
+        _output: SignedComputationOutputs<DealingOutput>,
+    ) -> Result<()> {
+        let table = &mut ctx.accounts.table;
         
         table.status = TableStatus::Betting;
         table.last_proof_timestamp = Clock::get()?.unix_timestamp;
 
-        msg!("Arcium proof verified for table {}. Moving to Betting phase.", table.key());
+        msg!("Arcium cards dealt for table {}. Moving to Betting phase.", table.key());
         Ok(())
     }
 
-    /// Showdown - determine winner and distribute pot using Arcium revelation
-    pub fn showdown_encrypted(
-        ctx: Context<ShowdownEncrypted>, 
-        winner_index: u8,
-        showdown_proof: Vec<u8>
+    /// Showdown - determine winner and distribute pot using Arcium MPC
+    pub fn showdown_with_proof(
+        ctx: Context<ShowdownEncrypted>,
+        computation_offset: u64,
+        pub_key: [u8; 32],
+        nonce: u128,
     ) -> Result<()> {
         let table = &mut ctx.accounts.table;
-        let house = &mut ctx.accounts.house;
 
         require!(
             table.status == TableStatus::Betting || table.status == TableStatus::Dealing,
             ShadowPokerError::InvalidGameState
         );
 
-        // Verify showdown proof integrity
-        require!(!showdown_proof.is_empty(), ShadowPokerError::InvalidShowdownProof);
+        // Prep Arcium arguments for showdown
+        let args = ArgBuilder::new()
+            .x25519_pubkey(pub_key)
+            .plaintext_u128(nonce)
+            .build();
+
+        ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
+
+        // Queue the computation
+        queue_computation(
+            ctx.accounts,
+            computation_offset,
+            args,
+            vec![ShowdownCallback::callback_ix(
+                computation_offset,
+                &ctx.accounts.mxe_account,
+                &[],
+            )?],
+            1,
+            0,
+        )?;
+
+        msg!("Showdown verification requested via Arcium for: {}", table.key());
+        Ok(())
+    }
+
+    /// Callback for showdown resolution
+    #[arcium_callback(encrypted_ix = "showdown_with_proof")]
+    pub fn showdown_callback(
+        ctx: Context<ShowdownCallback>,
+        output: SignedComputationOutputs<ShowdownOutput>,
+    ) -> Result<()> {
+        let winner_index = match output.verify_output(
+            &ctx.accounts.cluster_account,
+            &ctx.accounts.computation_account,
+        ) {
+            Ok(ShowdownOutput { winner_index }) => winner_index,
+            Err(_) => return Err(ShadowPokerError::InvalidArciumProof.into()),
+        };
+
+        let table = &mut ctx.accounts.table;
+        let house = &mut ctx.accounts.house;
 
         require!(
             (winner_index as usize) < table.players.len(),
@@ -379,7 +441,7 @@ pub mod shadow_poker {
         table.status = TableStatus::Finished;
 
         msg!(
-            "Encrypted Showdown complete! Winner: {}. Payout: {} (house fee: {})",
+            "Encrypted Showdown complete via Arcium! Winner: {}. Payout: {} (house fee: {})",
             winner_index,
             winner_payout,
             house_fee
@@ -556,27 +618,213 @@ pub struct RevealCards<'info> {
     pub authority: Signer<'info>,
 }
 
+#[init_computation_definition_accounts("poker", payer)]
 #[derive(Accounts)]
-pub struct InitializeEncryptedTable<'info> {
+pub struct InitPokerCompDef<'info> {
     #[account(mut)]
-    pub table: Account<'info, Table>,
-    pub authority: Signer<'info>,
+    pub payer: Signer<'info>,
+
+    #[account(mut, address = derive_mxe_pda!())]
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
+
+    #[account(mut)]
+    /// CHECK: comp_def_account, checked by arcium program.
+    pub comp_def_account: UncheckedAccount<'info>,
+
+    #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
+    /// CHECK: address_lookup_table, checked by arcium program.
+    pub address_lookup_table: UncheckedAccount<'info>,
+
+    #[account(address = LUT_PROGRAM_ID)]
+    /// CHECK: lut_program is the Address Lookup Table program.
+    pub lut_program: UncheckedAccount<'info>,
+
+    pub arcium_program: Program<'info, Arcium>,
+    pub system_program: Program<'info, System>,
 }
 
+#[queue_computation_accounts("poker", payer)]
 #[derive(Accounts)]
-pub struct SetEncryptedCards<'info> {
+#[instruction(computation_offset: u64)]
+pub struct DealEncryptedCards<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
     #[account(mut)]
     pub table: Account<'info, Table>,
-    pub authority: Signer<'info>,
+
+    #[account(
+        init_if_needed,
+        space = 9,
+        payer = payer,
+        seeds = [&SIGN_PDA_SEED],
+        bump,
+        address = derive_sign_pda!(),
+    )]
+    pub sign_pda_account: Account<'info, ArciumSignerAccount>,
+
+    #[account(address = derive_mxe_pda!())]
+    pub mxe_account: Account<'info, MXEAccount>,
+
+    #[account(
+        mut,
+        address = derive_mempool_pda!(mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    /// CHECK: mempool_account, checked by arcium program
+    pub mempool_account: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        address = derive_execpool_pda!(mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    /// CHECK: executing_pool, checked by arcium program
+    pub executing_pool: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        address = derive_comp_pda!(computation_offset, mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    /// CHECK: computation_account, checked by arcium program
+    pub computation_account: UncheckedAccount<'info>,
+
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_POKER))]
+    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+
+    #[account(
+        mut,
+        address = derive_cluster_pda!(mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    pub cluster_account: Account<'info, Cluster>,
+
+    #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
+    pub pool_account: Account<'info, FeePool>,
+
+    #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
+    pub clock_account: Account<'info, ClockAccount>,
+
+    pub system_program: Program<'info, System>,
+    pub arcium_program: Program<'info, Arcium>,
 }
 
+#[callback_accounts("poker")]
 #[derive(Accounts)]
+pub struct DealCallback<'info> {
+    pub arcium_program: Program<'info, Arcium>,
+
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_POKER))]
+    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+
+    #[account(address = derive_mxe_pda!())]
+    pub mxe_account: Account<'info, MXEAccount>,
+
+    /// CHECK: computation_account, checked by arcium program
+    pub computation_account: UncheckedAccount<'info>,
+
+    #[account(address = derive_cluster_pda!(mxe_account, ShadowPokerError::ClusterNotSet))]
+    pub cluster_account: Account<'info, Cluster>,
+
+    #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
+    /// CHECK: instructions_sysvar
+    pub instructions_sysvar: AccountInfo<'info>,
+
+    // Custom callback accounts
+    #[account(mut)]
+    pub table: Account<'info, Table>,
+}
+
+#[queue_computation_accounts("poker", payer)]
+#[derive(Accounts)]
+#[instruction(computation_offset: u64)]
 pub struct ShowdownEncrypted<'info> {
     #[account(mut)]
+    pub payer: Signer<'info>,
+
+    #[account(mut)]
     pub table: Account<'info, Table>,
+
     #[account(mut)]
     pub house: Account<'info, ShadowPokerHouse>,
-    pub authority: Signer<'info>,
+
+    #[account(
+        init_if_needed,
+        space = 9,
+        payer = payer,
+        seeds = [&SIGN_PDA_SEED],
+        bump,
+        address = derive_sign_pda!(),
+    )]
+    pub sign_pda_account: Account<'info, ArciumSignerAccount>,
+
+    #[account(address = derive_mxe_pda!())]
+    pub mxe_account: Account<'info, MXEAccount>,
+
+    #[account(
+        mut,
+        address = derive_mempool_pda!(mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    /// CHECK: mempool_account, checked by arcium program
+    pub mempool_account: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        address = derive_execpool_pda!(mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    /// CHECK: executing_pool, checked by arcium program
+    pub executing_pool: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        address = derive_comp_pda!(computation_offset, mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    /// CHECK: computation_account, checked by arcium program
+    pub computation_account: UncheckedAccount<'info>,
+
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_POKER))]
+    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+
+    #[account(
+        mut,
+        address = derive_cluster_pda!(mxe_account, ShadowPokerError::ClusterNotSet)
+    )]
+    pub cluster_account: Account<'info, Cluster>,
+
+    #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
+    pub pool_account: Account<'info, FeePool>,
+
+    #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
+    pub clock_account: Account<'info, ClockAccount>,
+
+    pub system_program: Program<'info, System>,
+    pub arcium_program: Program<'info, Arcium>,
+}
+
+#[callback_accounts("poker")]
+#[derive(Accounts)]
+pub struct ShowdownCallback<'info> {
+    pub arcium_program: Program<'info, Arcium>,
+
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_POKER))]
+    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+
+    #[account(address = derive_mxe_pda!())]
+    pub mxe_account: Account<'info, MXEAccount>,
+
+    /// CHECK: computation_account, checked by arcium program
+    pub computation_account: UncheckedAccount<'info>,
+
+    #[account(address = derive_cluster_pda!(mxe_account, ShadowPokerError::ClusterNotSet))]
+    pub cluster_account: Account<'info, Cluster>,
+
+    #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
+    /// CHECK: instructions_sysvar
+    pub instructions_sysvar: AccountInfo<'info>,
+
+    // Custom callback accounts
+    #[account(mut)]
+    pub table: Account<'info, Table>,
+
+    #[account(mut)]
+    pub house: Account<'info, ShadowPokerHouse>,
 }
 
 #[derive(Accounts)]
@@ -671,6 +919,14 @@ impl Table {
     pub const SIZE: usize = 32 + 8 + 8 + 8 + 8 + 1 + (4 + 6 * 32) + 1 + 8 + 8 + (4 + 5 * 2) + 1 + 1 + 8 + 8 + 1 + 32 + 8;
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+pub struct DealingOutput {}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+pub struct ShowdownOutput {
+    pub winner_index: u8,
+}
+
 #[account]
 pub struct PlayerState {
     pub player: Pubkey,
@@ -761,4 +1017,6 @@ pub enum ShadowPokerError {
     InvalidArciumProof,
     #[msg("Invalid showdown proof")]
     InvalidShowdownProof,
+    #[msg("Cluster not set for MXE")]
+    ClusterNotSet,
 }

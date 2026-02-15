@@ -8,8 +8,8 @@
  * Pattern: Follows Flip It implementation from useFlipItArcium.ts
  */
 
-import { useCallback, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
 import { useArcium } from '~/lib/arcium/ArciumContext';
 import { createCommitment } from '~/lib/arcium/privacy';
 import { useShadowPokerProgram } from '~/lib/anchor/shadow-poker-client';
@@ -94,7 +94,7 @@ export interface UseShadowPokerArciumReturn extends ShadowPokerArciumState {
 export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
   const { sessionKey } = useMagicBlock();
   const { generatePokerDeck, decryptPlayerCards, generateShowdownReveal, isComputing } = useArcium();
-  const { initializeEncryptedTable, setEncryptedCards, showdownEncrypted } = useShadowPokerProgram(sessionKey);
+  const { initPokerCompDef, dealEncryptedCards, showdownWithProof } = useShadowPokerProgram(sessionKey);
 
   const [encryptedDeck, setEncryptedDeck] = useState<EncryptedDeck | null>(null);
   const [decryptedHoleCards, setDecryptedHoleCards] = useState<CardDisplay[] | null>(null);
@@ -154,16 +154,13 @@ export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
       setArciumProof(result.proof);
 
       // Step 4: Update On-Chain State (Anchor Program)
-      // This bridges the Arcium MXE result to the Solana/MagicBlock contract
-      const commitmentBuffer = Buffer.from(result.encryptedDeck.commitment, 'hex');
-      const commitmentArray = Array.from(commitmentBuffer).slice(0, 32);
+      // We now call deal_encrypted_cards which triggers the MXE workflow
+      console.log('[Arcium] Dealing encrypted cards on-chain...');
+      const offset = new BN(Date.now()); // Using timestamp as offset for hackathon
+      const pubKeyNum = Array.from(Buffer.from(result.encryptedDeck.commitment.slice(0, 64), 'hex'));
+      const nonceVal = new BN(commitment.salt);
 
-      console.log('[Arcium] Initializing encrypted table on-chain...');
-      await initializeEncryptedTable(tablePDA, commitmentArray);
-
-      console.log('[Arcium] Setting encrypted card states on-chain...');
-      const proofData = Buffer.from(result.proof.proof);
-      await setEncryptedCards(tablePDA, result.proof.outcome, proofData);
+      await dealEncryptedCards(tablePDA, offset, pubKeyNum, nonceVal);
 
       return {
         success: true,
@@ -276,11 +273,12 @@ export function useShadowPokerArcium(): UseShadowPokerArciumReturn {
       const displayCards = result.allCards.map(arciumCardToDisplay);
 
       // Step 2: Update On-Chain State
-      const showdownProofData = Buffer.from(result.proof.proof);
-      // Determine winner index (in a real app, this is determined by the MPC worker)
-      const winnerIndex = result.proof.outcome;
+      console.log('[Arcium] Revealing showdown on-chain...');
+      const offset = new BN(Date.now() + 1); // Offset for showdown
+      const pubKey = Array.from(Buffer.from(result.proof.publicInputs).slice(0, 32));
+      const nonce = new BN(result.proof.outcome);
 
-      await showdownEncrypted(tablePDA, winnerIndex, showdownProofData);
+      await showdownWithProof(tablePDA, offset, pubKey, nonce);
 
       return {
         success: true,

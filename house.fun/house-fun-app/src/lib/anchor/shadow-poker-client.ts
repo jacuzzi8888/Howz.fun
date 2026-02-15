@@ -315,23 +315,20 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
   }, [program, wallet.publicKey]);
 
   /**
-   * Initialize the encrypted table with a deck commitment from Arcium
+   * Initialize the poker computation definition
    */
-  const initializeEncryptedTable = useCallback(async (
-    tablePDA: web3.PublicKey,
-    deckCommitment: number[]
-  ): Promise<string> => {
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+  const initPokerCompDef = useCallback(async (): Promise<string> => {
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
 
     try {
       const tx = await (program as any).methods
-        .initialize_encrypted_table(deckCommitment)
+        .init_poker_comp_def()
         .accounts({
-          table: tablePDA,
-          authority: wallet.publicKey,
+          payer: wallet.publicKey,
+          system_program: web3.SystemProgram.programId,
+          // Other Arcium accounts handled by derive_mxe_pda etc. or provided via helper
         } as any)
         .rpc();
 
@@ -339,28 +336,28 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
-   * Set the encrypted card states and verify Arcium proof
+   * Deal encrypted cards using Arcium MPC
    */
-  const setEncryptedCards = useCallback(async (
+  const dealEncryptedCards = useCallback(async (
     tablePDA: web3.PublicKey,
-    proofOutcome: number,
-    proofData: Buffer
+    computationOffset: BN,
+    pubKey: number[],
+    nonce: BN
   ): Promise<string> => {
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
 
     try {
       const tx = await (program as any).methods
-        .set_encrypted_cards(proofOutcome, proofData)
+        .deal_encrypted_cards(computationOffset, pubKey, nonce)
         .accounts({
+          payer: wallet.publicKey,
           table: tablePDA,
-          authority: wallet.publicKey,
+          system_program: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -368,18 +365,18 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
+
   /**
-   * Showdown - determine winner and distribute pot using Arcium revelation
+   * Showdown - determine winner and distribute pot using Arcium MPC
    */
-  const showdownEncrypted = useCallback(async (
+  const showdownWithProof = useCallback(async (
     tablePDA: web3.PublicKey,
-    winnerIndex: number,
-    showdownProof: Buffer
+    computationOffset: BN,
+    pubKey: number[],
+    nonce: BN
   ): Promise<string> => {
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
@@ -388,11 +385,12 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const [housePDA] = getShadowPokerHousePDA();
 
       const tx = await (program as any).methods
-        .showdown_encrypted(winnerIndex, showdownProof)
+        .showdown_with_proof(computationOffset, pubKey, nonce)
         .accounts({
+          payer: wallet.publicKey,
           table: tablePDA,
           house: housePDA,
-          authority: wallet.publicKey,
+          system_program: web3.SystemProgram.programId,
         } as any)
         .rpc();
 
@@ -400,7 +398,6 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
     } catch (error) {
       throw new Error(parseShadowPokerError(error));
     }
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
   }, [program, wallet.publicKey]);
 
   /**
@@ -861,9 +858,8 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
     getAvailableActions,
     delegateAccount,
     undelegateAccount,
-    getPlayerPosition,
-    initializeEncryptedTable,
-    setEncryptedCards,
-    showdownEncrypted,
+    initPokerCompDef,
+    dealEncryptedCards,
+    showdownWithProof,
   };
 }

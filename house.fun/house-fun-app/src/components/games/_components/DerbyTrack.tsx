@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { cn } from '~/lib/utils';
+import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 
 interface Horse {
     id: number;
@@ -21,6 +22,7 @@ interface HorseProgress {
 }
 
 export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => {
+    const { isUsingRollup } = useMagicBlock();
     const [horseProgress, setHorseProgress] = useState<HorseProgress[]>(
         horses.map(h => ({ id: h.id, progress: 0, speed: 0.1 + Math.random() * 0.2 }))
     );
@@ -28,14 +30,41 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
     const requestRef = useRef<number>(null);
     const lastTimeRef = useRef<number>(null);
 
+    // MagicBlock Sub-second Subscription Simulation
+    useEffect(() => {
+        if (!isUsingRollup) return;
+
+        console.log('[MagicBlock] Subscribing to sub-second horse progress updates...');
+
+        const interval = setInterval(() => {
+            setHorseProgress(prev => {
+                const next = prev.map(hp => {
+                    if (hp.progress >= 100) return hp;
+                    const serverProgress = hp.progress + (hp.speed * 0.5);
+                    return { ...hp, progress: Math.min(100, serverProgress) };
+                });
+
+                if (next.every(hp => hp.progress >= 100)) {
+                    clearInterval(interval);
+                    const winner = [...next].sort((a, b) => b.progress - a.progress)[0];
+                    if (winner) onRaceEnd(winner.id);
+                }
+                return next;
+            });
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [isUsingRollup, onRaceEnd]);
+
     const animate = (time: number) => {
+        if (isUsingRollup) return;
+
         if (lastTimeRef.current !== null) {
             const deltaTime = time - lastTimeRef.current;
 
             setHorseProgress(prev => {
                 const next = prev.map(hp => {
                     if (hp.progress >= 100) return hp;
-                    // Add some variance to speed
                     const variance = (Math.random() - 0.5) * 0.05;
                     const newSpeed = Math.max(0.05, hp.speed + variance);
                     return {
@@ -45,10 +74,8 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
                     };
                 });
 
-                // Check if all finished
                 if (next.every(hp => hp.progress >= 100)) {
-                    // Find winner
-                    const winner = next.sort((a, b) => b.progress - a.progress)[0];
+                    const winner = [...next].sort((a, b) => b.progress - a.progress)[0];
                     if (winner) onRaceEnd(winner.id);
                     return next;
                 }
@@ -59,6 +86,15 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
         lastTimeRef.current = time;
         requestRef.current = requestAnimationFrame(animate);
     };
+
+    useEffect(() => {
+        if (!isUsingRollup) {
+            requestRef.current = requestAnimationFrame(animate);
+        }
+        return () => {
+            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        };
+    }, [isUsingRollup, animate]);
 
     useEffect(() => {
         requestRef.current = requestAnimationFrame(animate);

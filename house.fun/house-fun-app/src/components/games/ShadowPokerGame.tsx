@@ -188,16 +188,18 @@ const ShadowPokerGameContent: React.FC = () => {
   const handleInitializeHouse = async () => {
     if (!initializeHouse) return;
 
-    setIsInitializingHouse(true);
-    setTxStatus('pending');
-
     try {
       const tx = await initializeHouse();
       console.log('House initialized:', tx);
+
+      // Also initialize Poker Computation Definition for Arcium
+      console.log('Initializing Poker Arcium Definition...');
+      await initPokerCompDef();
+
       setHouseExists(true);
       setTxStatus('confirmed');
     } catch (err) {
-      console.error('Failed to initialize house:', err);
+      console.error('Failed to initialize house or Arcium:', err);
       setTxStatus('failed');
     } finally {
       setIsInitializingHouse(false);
@@ -448,6 +450,14 @@ const ShadowPokerGameContent: React.FC = () => {
     <div className="flex flex-1 relative overflow-hidden">
       {/* Game Area (Center) */}
       <div className="flex-1 flex items-center justify-center relative p-4 mt-6 perspective-[1000px] overflow-y-auto">
+
+        {/* Rollup Status Indicator */}
+        {isUsingRollup && (
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-primary/20 border border-primary/30 rounded-full backdrop-blur-md">
+            <div className="size-2 bg-primary rounded-full animate-pulse" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-widest">MagicBlock Rollup Active</span>
+          </div>
+        )}
 
         {/* Wallet Not Connected */}
         {!connected && (

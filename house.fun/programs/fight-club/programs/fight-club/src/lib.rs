@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
+use pyth_solana_receiver_sdk::price_update::{PriceUpdateV2, FeedId};
 
 // Program ID - Replace with actual after deployment
 declare_id!("FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -27,11 +28,13 @@ pub mod fight_club {
         Ok(())
     }
 
-    /// Create a new fight match
-    pub fn create_match(
-        ctx: Context<CreateMatch>,
-        token_a: String,  // e.g., "BONK"
-        token_b: String,  // e.g., "WIF"
+    /// Create a new fight match with Pyth Price Feeds
+    pub fn create_match_v2(
+        ctx: Context<CreateMatchV2>,
+        token_a: String,
+        token_b: String,
+        feed_id_a: [u8; 32],
+        feed_id_b: [u8; 32],
     ) -> Result<()> {
         let fight_match = &mut ctx.accounts.fight_match;
         let house = &mut ctx.accounts.house;
@@ -40,6 +43,18 @@ pub mod fight_club {
         fight_match.creator = ctx.accounts.creator.key();
         fight_match.token_a = token_a;
         fight_match.token_b = token_b;
+        fight_match.feed_id_a = feed_id_a;
+        fight_match.feed_id_b = feed_id_b;
+        
+        // Fetch initial prices from Pyth
+        let price_update_a = &ctx.accounts.price_update_a;
+        let price_data_a = price_update_a.get_price_no_older_than(&clock, 60, &feed_id_a)?;
+        fight_match.start_price_a = price_data_a.price;
+
+        let price_update_b = &ctx.accounts.price_update_b;
+        let price_data_b = price_update_b.get_price_no_older_than(&clock, 60, &feed_id_b)?;
+        fight_match.start_price_b = price_data_b.price;
+
         fight_match.total_bet_a = 0;
         fight_match.total_bet_b = 0;
         fight_match.player_count_a = 0;
@@ -51,7 +66,13 @@ pub mod fight_club {
 
         house.total_matches += 1;
 
-        msg!("Fight created: {} vs {}", fight_match.token_a, fight_match.token_b);
+        msg!(
+            "Fight created V2: {} ({}) vs {} ({})", 
+            fight_match.token_a, 
+            price_data_a.price,
+            fight_match.token_b,
+            price_data_b.price
+        );
         Ok(())
     }
 
@@ -123,28 +144,35 @@ pub mod fight_club {
         Ok(())
     }
 
-    /// Resolve match and determine winner (admin only)
-    pub fn resolve_match(
-        ctx: Context<ResolveMatch>,
-        winner_side: u8, // 0 = Token A wins, 1 = Token B wins
+    /// Resolve match and determine winner using Pyth Price feeds
+    pub fn resolve_with_pyth(
+        ctx: Context<ResolveWithPyth>
     ) -> Result<()> {
-        require!(winner_side == 0 || winner_side == 1, FightClubError::InvalidSide);
-
         let fight_match = &mut ctx.accounts.fight_match;
         let house = &mut ctx.accounts.house;
         let clock = Clock::get()?;
-
-        // Verify authority
-        require!(
-            house.authority == ctx.accounts.authority.key(),
-            FightClubError::UnauthorizedHouse
-        );
 
         // Ensure match is open
         require!(
             fight_match.status == MatchStatus::Open,
             FightClubError::MatchNotOpen
         );
+
+        // Fetch final prices from Pyth
+        let price_update_a = &ctx.accounts.price_update_a;
+        let price_data_a = price_update_a.get_price_no_older_than(&clock, 60, &fight_match.feed_id_a)?;
+        fight_match.end_price_a = price_data_a.price;
+
+        let price_update_b = &ctx.accounts.price_update_b;
+        let price_data_b = price_update_b.get_price_no_older_than(&clock, 60, &fight_match.feed_id_b)?;
+        fight_match.end_price_b = price_data_b.price;
+
+        // Calculate performance (%)
+        // Perf = (End - Start) * 10000 / Start (using BPS for precision)
+        let perf_a = (fight_match.end_price_a - fight_match.start_price_a) * 10000 / fight_match.start_price_a;
+        let perf_b = (fight_match.end_price_b - fight_match.start_price_b) * 10000 / fight_match.start_price_b;
+
+        let winner_side = if perf_a >= perf_b { 0 } else { 1 };
 
         // Calculate house fee from total pool
         let total_pool = fight_match.total_bet_a + fight_match.total_bet_b;
@@ -159,10 +187,9 @@ pub mod fight_club {
         fight_match.house_fee = house_fee;
 
         msg!(
-            "Match resolved: {} wins! Total pool: {} lamports, House fee: {}",
+            "Match resolved via Pyth! Winner: {}. Pool: {} lamports",
             if winner_side == 0 { &fight_match.token_a } else { &fight_match.token_b },
-            total_pool,
-            house_fee
+            total_pool
         );
         Ok(())
     }
@@ -358,7 +385,30 @@ pub struct InitializeHouse<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(token_a: String, token_b: String)]
+#[instruction(token_a: String, token_b: String, feed_id_a: [u8; 32], feed_id_b: [u8; 32])]
+pub struct CreateMatchV2<'info> {
+    #[account(
+        init,
+        payer = creator,
+        space = 8 + FightMatch::SIZE,
+        seeds = [b"match", &house.total_matches.to_le_bytes()],
+        bump
+    )]
+    pub fight_match: Account<'info, FightMatch>,
+    
+    #[account(mut)]
+    pub house: Account<'info, FightClubHouse>,
+    
+    #[account(mut)]
+    pub creator: Signer<'info>,
+
+    pub price_update_a: Account<'info, PriceUpdateV2>,
+    pub price_update_b: Account<'info, PriceUpdateV2>,
+    
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct CreateMatch<'info> {
     #[account(
         init,
@@ -397,6 +447,20 @@ pub struct PlaceBet<'info> {
     pub player: Signer<'info>,
     
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ResolveWithPyth<'info> {
+    #[account(mut)]
+    pub fight_match: Account<'info, FightMatch>,
+    
+    #[account(mut)]
+    pub house: Account<'info, FightClubHouse>,
+
+    pub price_update_a: Account<'info, PriceUpdateV2>,
+    pub price_update_b: Account<'info, PriceUpdateV2>,
+    
+    pub authority: Signer<'info>,
 }
 
 #[derive(Accounts)]
@@ -499,6 +563,12 @@ pub struct FightMatch {
     pub creator: Pubkey,
     pub token_a: String,      // 4 bytes length + 10 chars max
     pub token_b: String,      // 4 bytes length + 10 chars max
+    pub feed_id_a: [u8; 32],
+    pub feed_id_b: [u8; 32],
+    pub start_price_a: i64,
+    pub start_price_b: i64,
+    pub end_price_a: i64,
+    pub end_price_b: i64,
     pub total_bet_a: u64,
     pub total_bet_b: u64,
     pub player_count_a: u32,
@@ -512,7 +582,7 @@ pub struct FightMatch {
 }
 
 impl FightMatch {
-    pub const SIZE: usize = 32 + (4 + 10) + (4 + 10) + 8 + 8 + 4 + 4 + 1 + 8 + 8 + 1 + 8 + 1;
+    pub const SIZE: usize = 32 + (4 + 10) + (4 + 10) + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 4 + 4 + 1 + 8 + 8 + 1 + 8 + 1;
 }
 
 #[account]

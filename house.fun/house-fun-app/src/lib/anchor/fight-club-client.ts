@@ -52,8 +52,14 @@ export interface PlayerBetAccount {
 
 export interface FightMatchAccount {
   index: number;
-  tokenA: web3.PublicKey;
-  tokenB: web3.PublicKey;
+  tokenA: string;
+  tokenB: string;
+  feedIdA: number[];
+  feedIdB: number[];
+  startPriceA: number;
+  startPriceB: number;
+  endPriceA: number;
+  endPriceB: number;
   totalBetA: number;
   totalBetB: number;
   totalPlayersA: number;
@@ -113,11 +119,15 @@ export function useFightClubProgram() {
   }, [program, wallet.publicKey]);
 
   /**
-   * Create a new match between two tokens (admin only)
+   * Create a new match between two tokens using Pyth feeds
    */
-  const createMatch = useCallback(async (
-    tokenA: web3.PublicKey,
-    tokenB: web3.PublicKey
+  const createMatchV2 = useCallback(async (
+    tokenA: string,
+    tokenB: string,
+    feedIdA: number[],
+    feedIdB: number[],
+    priceUpdateA: web3.PublicKey,
+    priceUpdateB: web3.PublicKey
   ): Promise<CreateMatchResult> => {
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
@@ -130,11 +140,13 @@ export function useFightClubProgram() {
       const [matchPDA] = getMatchPDA(matchIndex);
 
       const tx = await program.methods
-        .create_match(tokenA, tokenB)
+        .create_match_v2(tokenA, tokenB, feedIdA, feedIdB)
         .accounts({
-          match: matchPDA,
+          fightMatch: matchPDA,
           house: housePDA,
-          authority: wallet.publicKey,
+          creator: wallet.publicKey,
+          priceUpdateA,
+          priceUpdateB,
           systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
@@ -193,11 +205,12 @@ export function useFightClubProgram() {
   }, [program, wallet.publicKey]);
 
   /**
-   * Resolve a match and determine winner (admin only)
+   * Resolve a match using Pyth Price Feeds
    */
-  const resolveMatch = useCallback(async (
+  const resolveWithPyth = useCallback(async (
     matchPDA: web3.PublicKey,
-    winnerSide: MatchSide
+    priceUpdateA: web3.PublicKey,
+    priceUpdateB: web3.PublicKey
   ): Promise<MatchResult> => {
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
@@ -205,27 +218,29 @@ export function useFightClubProgram() {
 
     try {
       const [housePDA] = getFightClubHousePDA();
-      const winnerNum = winnerSide === 'A' ? 0 : 1;
 
       const tx = await program.methods
-        .resolve_match(winnerNum)
+        .resolve_with_pyth()
         .accounts({
-          match: matchPDA,
+          fightMatch: matchPDA,
           house: housePDA,
+          priceUpdateA,
+          priceUpdateB,
           authority: wallet.publicKey,
-          systemProgram: web3.SystemProgram.programId,
         } as any)
         .rpc();
+
+      const matchAccount = await fetchMatch(matchPDA);
 
       return {
         signature: tx,
         matchPDA,
-        winner: winnerSide,
+        winner: matchAccount?.winner || 'A',
       };
     } catch (error) {
       throw new Error(parseFightClubError(error));
     }
-  }, [program, wallet.publicKey]);
+  }, [program, wallet.publicKey, fetchMatch]);
 
   /**
    * Claim winnings from a resolved match
@@ -364,15 +379,21 @@ export function useFightClubProgram() {
         index: match.index.toNumber(),
         tokenA: match.tokenA,
         tokenB: match.tokenB,
+        feedIdA: match.feedIdA,
+        feedIdB: match.feedIdB,
+        startPriceA: match.startPriceA.toNumber(),
+        startPriceB: match.startPriceB.toNumber(),
+        endPriceA: match.endPriceA.toNumber(),
+        endPriceB: match.endPriceB.toNumber(),
         totalBetA: lamportsToSol(match.totalBetA.toNumber()),
         totalBetB: lamportsToSol(match.totalBetB.toNumber()),
-        totalPlayersA: match.totalPlayersA,
-        totalPlayersB: match.totalPlayersB,
+        totalPlayersA: match.playerCountA,
+        totalPlayersB: match.playerCountB,
         status: Object.keys(match.status)[0] as MatchStatus,
         winner: match.winner !== null ? (match.winner === 0 ? 'A' : 'B') : null,
         houseFee: lamportsToSol(match.houseFee.toNumber()),
-        createdAt: match.createdAt.toNumber(),
-        resolvedAt: match.resolvedAt !== null ? match.resolvedAt.toNumber() : null,
+        createdAt: match.createdAtSlot.toNumber(),
+        resolvedAt: match.resolvedAtSlot !== null ? match.resolvedAtSlot.toNumber() : null,
       };
     } catch {
       return null;
@@ -440,9 +461,9 @@ export function useFightClubProgram() {
     program,
     isReady: !!program,
     initializeHouse,
-    createMatch,
+    createMatchV2,
     placeBet,
-    resolveMatch,
+    resolveWithPyth,
     claimWinnings,
     cancelMatch,
     refundBet,

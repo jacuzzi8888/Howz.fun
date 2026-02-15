@@ -1,0 +1,12 @@
+[package]
+name = "horse_progress"
+version = "0.1.0"
+description = "Degen Derby Horse Progress Component"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "horse_progress"
+
+[dependencies]
+bolt-lang.workspace = true
