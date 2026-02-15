@@ -389,9 +389,7 @@ export const FIGHT_CLUB_IDL = {
           {
             "name": "status",
             "type": {
-              "defined": {
-                "name": "MatchStatus"
-              }
+              "defined": "MatchStatus"
             }
           },
           {
@@ -550,6 +548,6 @@ export const FIGHT_CLUB_IDL = {
       "msg": "Match not cancelled"
     }
   ]
-} as const;
+};
 
 export type FightClub = typeof FIGHT_CLUB_IDL;

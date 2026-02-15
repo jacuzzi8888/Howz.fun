@@ -190,7 +190,7 @@ export const SHADOW_POKER_IDL = {
         {
           "name": "blind_type",
           "type": {
-            "defined": { "name": "BlindType" }
+            "defined": "BlindType"
           }
         }
       ]
@@ -220,7 +220,7 @@ export const SHADOW_POKER_IDL = {
         {
           "name": "action",
           "type": {
-            "defined": { "name": "PlayerAction" }
+            "defined": "PlayerAction"
           }
         },
         {
@@ -251,7 +251,7 @@ export const SHADOW_POKER_IDL = {
           "name": "cards",
           "type": {
             "vec": {
-              "defined": { "name": "Card" }
+              "defined": "Card"
             }
           }
         }
@@ -418,13 +418,13 @@ export const SHADOW_POKER_IDL = {
           {
             "name": "status",
             "type": {
-              "defined": { "name": "TableStatus" }
+              "defined": "TableStatus"
             }
           },
           {
             "name": "current_round",
             "type": {
-              "defined": { "name": "BettingRound" }
+              "defined": "BettingRound"
             }
           },
           {
@@ -439,7 +439,7 @@ export const SHADOW_POKER_IDL = {
             "name": "community_cards",
             "type": {
               "vec": {
-                "defined": { "name": "Card" }
+                "defined": "Card"
               }
             }
           },
@@ -496,7 +496,7 @@ export const SHADOW_POKER_IDL = {
             "name": "hole_cards",
             "type": {
               "vec": {
-                "defined": { "name": "Card" }
+                "defined": "Card"
               }
             }
           },
@@ -713,6 +713,6 @@ export const SHADOW_POKER_IDL = {
       "msg": "Invalid blind amounts"
     }
   ]
-} as const;
+};
 
 export type ShadowPoker = typeof SHADOW_POKER_IDL;

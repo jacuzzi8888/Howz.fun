@@ -79,7 +79,7 @@ export const DEGEN_DERBY_IDL = {
           "name": "horses",
           "type": {
             "vec": {
-              "defined": { "name": "HorseData" }
+              "defined": "HorseData"
             }
           }
         }
@@ -340,7 +340,7 @@ export const DEGEN_DERBY_IDL = {
             "name": "horses",
             "type": {
               "vec": {
-                "defined": { "name": "Horse" }
+                "defined": "Horse"
               }
             }
           },
@@ -359,7 +359,7 @@ export const DEGEN_DERBY_IDL = {
           {
             "name": "status",
             "type": {
-              "defined": { "name": "RaceStatus" }
+              "defined": "RaceStatus"
             }
           },
           {
@@ -582,6 +582,6 @@ export const DEGEN_DERBY_IDL = {
       "msg": "Race has not started yet"
     }
   ]
-} as const;
+};
 
 export type DegenDerby = typeof DEGEN_DERBY_IDL;
