@@ -3,9 +3,7 @@
  * Horse racing betting with weighted random winner selection
  */
 
-export type DegenDerby = typeof DEGEN_DERBY_IDL;
-
-export const DEGEN_DERBY_IDL: DegenDerby = {
+export const DEGEN_DERBY_IDL = {
   "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
   "metadata": {
     "name": "degen_derby",
@@ -81,7 +79,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
           "name": "horses",
           "type": {
             "vec": {
-              "defined": "HorseData"
+              "defined": { "name": "HorseData" }
             }
           }
         }
@@ -342,7 +340,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
             "name": "horses",
             "type": {
               "vec": {
-                "defined": "Horse"
+                "defined": { "name": "Horse" }
               }
             }
           },
@@ -361,7 +359,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
           {
             "name": "status",
             "type": {
-              "defined": "RaceStatus"
+              "defined": { "name": "RaceStatus" }
             }
           },
           {
@@ -584,4 +582,6 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
       "msg": "Race has not started yet"
     }
   ]
-};
+} as const;
+
+export type DegenDerby = typeof DEGEN_DERBY_IDL;

@@ -3,9 +3,7 @@
  * Texas Hold'em Poker on Solana with encrypted card reveals
  */
 
-export type ShadowPoker = typeof SHADOW_POKER_IDL;
-
-export const SHADOW_POKER_IDL: ShadowPoker = {
+export const SHADOW_POKER_IDL = {
   "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
   "metadata": {
     "name": "shadow_poker",
@@ -306,7 +304,7 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -326,7 +324,7 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -715,4 +713,6 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
       "msg": "Invalid blind amounts"
     }
   ]
-};
+} as const;
+
+export type ShadowPoker = typeof SHADOW_POKER_IDL;
