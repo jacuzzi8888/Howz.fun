@@ -4,7 +4,7 @@
  */
 
 export type FightClub = {
-  "address": "FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  "address": "FiGhT5PayGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
   "metadata": {
     "name": "fight_club",
     "version": "0.1.0",
@@ -504,7 +504,7 @@ export type FightClub = {
 };
 
 export const FIGHT_CLUB_IDL: FightClub = {
-  "address": "FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  "address": "FiGhT5PayGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
   "metadata": {
     "name": "fight_club",
     "version": "0.1.0",

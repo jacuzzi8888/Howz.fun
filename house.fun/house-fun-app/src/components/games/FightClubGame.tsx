@@ -135,7 +135,7 @@ const FightClubGameContent: React.FC = () => {
 
         try {
             // Retrieve PDAs (utility functions usually handle this, but explicit for hackathon)
-            const matchPDA = new PublicKey("FiGhT5PaoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"); // Placeholder
+            const matchPDA = new PublicKey("FiGhT5PayGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"); // Placeholder
 
             await executeGameAction(async () => {
                 const result = await placeBet(
