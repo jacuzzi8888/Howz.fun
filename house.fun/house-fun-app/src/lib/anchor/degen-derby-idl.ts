@@ -35,7 +35,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -71,7 +71,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -124,7 +124,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -156,7 +156,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -182,7 +182,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -210,7 +210,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -233,7 +233,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -261,7 +261,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -281,7 +281,7 @@ export type DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -616,7 +616,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -652,7 +652,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -705,7 +705,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -737,7 +737,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -763,7 +763,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -791,7 +791,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -814,7 +814,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -842,7 +842,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -862,7 +862,7 @@ export const DEGEN_DERBY_IDL: DegenDerby = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [

@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import { type DegenDerby, DEGEN_DERBY_IDL } from './degen-derby-idl';
 
 // Program ID from deployment
-export const DEGEN_DERBY_PROGRAM_ID = new web3.PublicKey('11111111111111111111111111111111');
+export const DEGEN_DERBY_PROGRAM_ID = new web3.PublicKey('7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;
@@ -74,7 +74,7 @@ export function getRacePDA(raceIndex: number): [web3.PublicKey, number] {
  * Get Player Bet PDA address
  */
 export function getPlayerBetPDA(
-  racePDA: web3.PublicKey, 
+  racePDA: web3.PublicKey,
   player: web3.PublicKey
 ): [web3.PublicKey, number] {
   return web3.PublicKey.findProgramAddressSync(
@@ -120,17 +120,17 @@ export function calculateWinnings(
 ): number {
   const houseFee = calculateHouseFee(totalPoolLamports);
   const payoutPool = totalPoolLamports - houseFee;
-  
+
   // Calculate weighted odds: inverse of bet proportion
   // Horse with fewer bets has higher odds
   const totalInverseBets = allBets.reduce((sum, bet) => sum + (1 / Math.max(bet, 1)), 0);
   const horseInverseWeight = 1 / Math.max(totalBetsOnHorse, 1);
   const horseOddsMultiplier = totalInverseBets / horseInverseWeight;
-  
+
   // Winnings = bet amount * odds multiplier * (payout pool / total pool)
   const playerShare = playerBetLamports / Math.max(totalBetsOnHorse, 1);
   const winnings = Math.floor(playerShare * horseOddsMultiplier * payoutPool / totalPoolLamports);
-  
+
   return winnings;
 }
 
@@ -145,21 +145,21 @@ export function calculateOdds(
 ): number {
   const totalPool = allBets.reduce((sum, bet) => sum + bet, 0);
   if (totalPool === 0) return 0;
-  
+
   // Calculate inverse weights
   const totalInverseBets = allBets.reduce((sum, bet) => sum + (1 / Math.max(bet, 1)), 0);
   const horseInverseWeight = 1 / Math.max(totalBetsOnHorse, 1);
-  
+
   // Odds multiplier
   const oddsMultiplier = totalInverseBets / horseInverseWeight;
-  
+
   // Apply house fee
   const houseFee = calculateHouseFee(solToLamports(totalPool));
   const payoutPool = solToLamports(totalPool) - houseFee;
-  
+
   // Final odds
   const odds = (payoutPool / solToLamports(totalPool)) * oddsMultiplier;
-  
+
   return odds;
 }
 
@@ -181,9 +181,9 @@ export function calculatePotentialPayout(
 ): number {
   const totalBetsOnHorse = allBets[horseIndex] || 0;
   const totalPool = allBets.reduce((sum, bet) => sum + bet, 0);
-  
+
   if (totalPool === 0) return betAmount;
-  
+
   const odds = calculateOdds(totalBetsOnHorse, allBets);
   return betAmount * odds;
 }
@@ -229,11 +229,11 @@ export function parseDegenDerbyError(error: unknown): string {
   const isProgramError = (err: unknown): err is ProgramError => {
     return typeof err === 'object' && err !== null;
   };
-  
+
   if (!isProgramError(error)) {
     return 'Unknown error occurred';
   }
-  
+
   // Check for program error codes
   if (error.code) {
     const errorMsg = DegenDerbyErrors[error.code];
@@ -241,7 +241,7 @@ export function parseDegenDerbyError(error: unknown): string {
       return errorMsg;
     }
   }
-  
+
   // Check for error message containing code
   const codeMatch = error.message?.match(/custom program error: (0x[0-9a-fA-F]+|\d+)/);
   if (codeMatch?.[1]) {
@@ -252,7 +252,7 @@ export function parseDegenDerbyError(error: unknown): string {
       return errorMsg;
     }
   }
-  
+
   // Check for Anchor error format
   if (error.error?.errorCode?.code) {
     const anchorCode = error.error.errorCode.code;
@@ -269,11 +269,11 @@ export function parseDegenDerbyError(error: unknown): string {
       }
     }
   }
-  
+
   if (error.message) {
     return error.message;
   }
-  
+
   return 'Unknown error occurred';
 }
 
@@ -327,15 +327,15 @@ export function getRaceDisplayName(horses: Horse[]): string {
 export function validateBetAmount(amount: number): { valid: boolean; error?: string } {
   const MIN_BET = 0.001;
   const MAX_BET = 1000;
-  
+
   if (amount < MIN_BET) {
     return { valid: false, error: `Minimum bet is ${MIN_BET} SOL` };
   }
-  
+
   if (amount > MAX_BET) {
     return { valid: false, error: `Maximum bet is ${MAX_BET} SOL` };
   }
-  
+
   return { valid: true };
 }
 

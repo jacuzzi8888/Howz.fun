@@ -35,7 +35,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -71,7 +71,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -124,7 +124,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -156,7 +156,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -189,7 +189,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -212,7 +212,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -240,7 +240,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -260,7 +260,7 @@ export type FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -535,7 +535,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -571,7 +571,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -624,7 +624,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -656,7 +656,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -689,7 +689,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -712,7 +712,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -740,7 +740,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -760,7 +760,7 @@ export const FIGHT_CLUB_IDL: FightClub = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [

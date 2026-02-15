@@ -37,7 +37,7 @@ export const IDL = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -80,7 +80,7 @@ export const IDL = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -199,7 +199,7 @@ export const IDL = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         },
         {
           "name": "arcium_program",
@@ -359,7 +359,7 @@ export const IDL = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -406,7 +406,7 @@ export const IDL = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": []
@@ -477,7 +477,7 @@ export const IDL = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
@@ -532,7 +532,7 @@ export const IDL = {
         },
         {
           "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"
         }
       ],
       "args": [
