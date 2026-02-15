@@ -415,7 +415,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
 
     try {
       const tx = await (program as any).methods
-        .post_blind({ [blindType.toLowerCase()]: {} })
+        .post_blind({ [blindType]: {} })
         .accounts({
           player_state: playerStatePDA,
           table: tablePDA,
@@ -446,7 +446,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
     }
 
     try {
-      const actionArg = { [action.toLowerCase()]: {} };
+      const actionArg = { [action]: {} };
       const lamports = solToLamports(amount);
 
       const tx = await (program as any).methods

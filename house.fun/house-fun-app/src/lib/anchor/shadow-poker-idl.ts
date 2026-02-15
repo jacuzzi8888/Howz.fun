@@ -3,7 +3,8 @@
  * Texas Hold'em Poker on Solana with encrypted card reveals
  */
 
-export type ShadowPoker = {
+export type ShadowPoker = typeof SHADOW_POKER_IDL;
+export const SHADOW_POKER_IDL = {
   "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
   "metadata": {
     "name": "shadow_poker",
@@ -190,7 +191,7 @@ export type ShadowPoker = {
         {
           "name": "blind_type",
           "type": {
-            "defined": "BlindType"
+            "defined": { "name": "BlindType" }
           }
         }
       ]
@@ -220,7 +221,7 @@ export type ShadowPoker = {
         {
           "name": "action",
           "type": {
-            "defined": "PlayerAction"
+            "defined": { "name": "PlayerAction" }
           }
         },
         {
@@ -251,7 +252,7 @@ export type ShadowPoker = {
           "name": "cards",
           "type": {
             "vec": {
-              "defined": "Card"
+              "defined": { "name": "Card" }
             }
           }
         }
@@ -418,13 +419,13 @@ export type ShadowPoker = {
           {
             "name": "status",
             "type": {
-              "defined": "TableStatus"
+              "defined": { "name": "TableStatus" }
             }
           },
           {
             "name": "current_round",
             "type": {
-              "defined": "BettingRound"
+              "defined": { "name": "BettingRound" }
             }
           },
           {
@@ -439,7 +440,7 @@ export type ShadowPoker = {
             "name": "community_cards",
             "type": {
               "vec": {
-                "defined": "Card"
+                "defined": { "name": "Card" }
               }
             }
           },
@@ -496,7 +497,7 @@ export type ShadowPoker = {
             "name": "hole_cards",
             "type": {
               "vec": {
-                "defined": "Card"
+                "defined": { "name": "Card" }
               }
             }
           },
@@ -902,7 +903,7 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
         {
           "name": "blind_type",
           "type": {
-            "defined": "BlindType"
+            "defined": { "name": "BlindType" }
           }
         }
       ]
@@ -932,7 +933,7 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
         {
           "name": "action",
           "type": {
-            "defined": "PlayerAction"
+            "defined": { "name": "PlayerAction" }
           }
         },
         {
@@ -963,7 +964,7 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
           "name": "cards",
           "type": {
             "vec": {
-              "defined": "Card"
+              "defined": { "name": "Card" }
             }
           }
         }
@@ -1130,13 +1131,13 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
           {
             "name": "status",
             "type": {
-              "defined": "TableStatus"
+              "defined": { "name": "TableStatus" }
             }
           },
           {
             "name": "current_round",
             "type": {
-              "defined": "BettingRound"
+              "defined": { "name": "BettingRound" }
             }
           },
           {
@@ -1151,7 +1152,7 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
             "name": "community_cards",
             "type": {
               "vec": {
-                "defined": "Card"
+                "defined": { "name": "Card" }
               }
             }
           },
@@ -1208,7 +1209,7 @@ export const SHADOW_POKER_IDL: ShadowPoker = {
             "name": "hole_cards",
             "type": {
               "vec": {
-                "defined": "Card"
+                "defined": { "name": "Card" }
               }
             }
           },

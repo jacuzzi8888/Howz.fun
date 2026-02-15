@@ -3,7 +3,8 @@
  * Horse racing betting with weighted random winner selection
  */
 
-export type DegenDerby = {
+export type DegenDerby = typeof DEGEN_DERBY_IDL;
+export const DEGEN_DERBY_IDL = {
   "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
   "metadata": {
     "name": "degen_derby",

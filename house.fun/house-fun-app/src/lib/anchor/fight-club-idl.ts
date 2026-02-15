@@ -3,7 +3,8 @@
  * Pool-based betting with two tokens fighting each other
  */
 
-export type FightClub = {
+export type FightClub = typeof FIGHT_CLUB_IDL;
+export const FIGHT_CLUB_IDL = {
   "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
   "metadata": {
     "name": "fight_club",
