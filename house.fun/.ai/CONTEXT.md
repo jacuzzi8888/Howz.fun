@@ -1,23 +1,36 @@
-# Project Context: house.fun
+# Project Context: house.fun (2026 Edition)
 
 ## Overview
-house.fun is a high-performance gaming platform built on Solana, utilizing **MagicBlock Ephemeral Rollups** for 0-latency gameplay and **Arcium** for provably fair randomness.
+house.fun is a high-performance gaming platform on Solana, leveraging **MagicBlock Ephemeral Rollups** (50ms latency) and **Arcium MXE** (MPC-based provable randomness).
 
-## Key Components
-- **Flip It Game**: A coin-flip game.
-- **MagicBlock**: Provides the rollup connection for sub-second transactions.
-- **Arcium**: Handles confidential computing for randomness.
-- **Session Keys**: Allows users to play without signing every transaction.
+## 🚀 2026 Tech Stack
+- **Frontend**: Next.js 15+ (App Router), React 19, Tailwind v4.
+- **On-Chain**: `@solana/kit` (Modular SDK), MagicBlock Bolt CLI.
+- **Privacy**: Arcium MXE (Computation Headers v2.0.0).
+- **Oracle**: Pyth Pull Oracle Receiver (v0.13.0).
 
-## Current State & Active Tasks
-- **UI/UX Upgrade (COMPLETED)**: Refactored Flip It game to fit on one screen; 3D coin scaled, padding reduced, gaps tightened.
-- **Logic & Balance (COMPLETED)**: Implemented robust result polling, manual check backup, and immediate SOL balance refresh.
-- **Automation (IN PROGRESS)**:
-    - Auto-session start implemented.
-    - **Auto-House Initialization**: Implementing auto-detection and setup for the House Account.
+## 📅 Game Development Roadmap
+1.  **Phase 1: Degen Derby**:
+    - Migrate to Arcium MXE for winner selection.
+    - MagicBlock Bolt handlers for real-time horse progress.
+    - Framer Motion + Three.js visualization.
+2.  **Phase 2: Shadow Poker**:
+    - Arcium-encrypted card dealing and showdown proofs.
+    - MagicBlock-powered betting rounds (0-latency).
+3.  **Phase 3: Memecoin Fight Club (MFC)**:
+    - Pyth Pull Oracle integration for performance-based resolution.
+    - Permissionless resolution via Hermes API.
+
+## 🏁 MVP Readiness & Active Tasks
+- **Flip It Game (COMPLETED)**: UI/UX polished, Arcium integrated.
+- **Infrastructure (IN PROGRESS)**:
+    - **MagicBlock Bolt Settings**: Configuring workspace for multi-game handlers.
+    - **Unified House Account**: Reducing deposit friction via Session Keys.
+- **Critical Blockers**:
+    - **Compliance**: Geo-fencing & ZK-Age Gates required for launch.
+    - **Observability**: Background Sentry/LogSnag for Arcium/Rollup tracing.
 
 ## Agent Instructions
-- Consult `.agent/rules.md` before every task.
-- Implementation requires explicit user approval.
-- Logic/Design decisions must be offered as options to the user.
-- Log major tasks in this file after user approval.
+- Consult `.agent/rules.md` and `COMPREHENSIVE_REPORT.md` (in brain) before every task.
+- **Defensive Design**: Use the `disabledReason` pattern for buttons and global Toasts for background failures.
+- **Modular Code**: Use `@solana/kit` sub-packages instead of the monolithic `@solana/web3.js`.
