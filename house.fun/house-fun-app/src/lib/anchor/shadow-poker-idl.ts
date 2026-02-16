@@ -4,7 +4,7 @@
  */
 
 export const SHADOW_POKER_IDL = {
-  "address": "7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5",
+  "address": "6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSaYfCk3tdRKQ",
   "metadata": {
     "name": "shadow_poker",
     "version": "0.1.0",
@@ -190,7 +190,7 @@ export const SHADOW_POKER_IDL = {
         {
           "name": "blind_type",
           "type": {
-            "defined": { "name": "BlindType" }
+            "defined": { "name": "blindType" }
           }
         }
       ]
@@ -530,7 +530,7 @@ export const SHADOW_POKER_IDL = {
       }
     },
     {
-      "name": "BlindType",
+      "name": "blindType",
       "type": {
         "kind": "enum",
         "variants": [
