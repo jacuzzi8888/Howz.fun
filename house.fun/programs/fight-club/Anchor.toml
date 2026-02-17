@@ -4,10 +4,8 @@ skip-lint = false
 
 [programs.localnet]
 fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
-fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
 
 [programs.devnet]
-fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
 fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
 
 [registry]

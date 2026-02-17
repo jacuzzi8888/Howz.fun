@@ -19,7 +19,10 @@ jobs:
 
       - name: Install Solana CLI
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
+          # Use a retry loop for robust installation
+          for i in {1..3}; do
+            sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)" && break || sleep 15
+          done
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Anchor CLI
@@ -31,19 +34,31 @@ jobs:
       - name: Setup Wallet
         run: |
           cd house.fun
-          echo "${{ secrets.DEPLOYER_KEY }}" > deployer-key.json
+          # Use printf to avoid trailing newline issues and handle potential quotes
+          secret_key=$(echo "${{ secrets.DEPLOYER_KEY }}" | sed 's/^"//;s/"$//')
+          echo "$secret_key" > deployer-key.json
+          
+          # Sanity check: Ensure it looks like a JSON array of 64 numbers
+          if ! grep -q "^\[.*\]$" deployer-key.json || [ $(grep -o "," deployer-key.json | wc -l) -lt 63 ]; then
+            echo "Error: DEPLOYER_KEY secret is not a valid 64-byte JSON array."
+            exit 1
+          fi
+          
           # Standardize wallet path in all Anchor.toml files for GH Actions
           find . -name "Anchor.toml" -exec sed -i 's|wallet = ".*"|wallet = "deployer-key.json"|g' {} +
 
       - name: Build Programs
         run: |
           cd house.fun
+          # Ensure Solana tools are available
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           anchor build --provider.cluster devnet
 
       - name: Deploy Programs
         if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: |
           cd house.fun
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           # Use the root wallet for deployment
           anchor deploy --provider.cluster devnet --program-name shadow_poker
           anchor deploy --provider.cluster devnet --program-name degen_derby

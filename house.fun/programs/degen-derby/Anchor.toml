@@ -4,10 +4,8 @@ skip-lint = false
 
 [programs.localnet]
 degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
-degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
 
 [programs.devnet]
-degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
 degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
 
 [registry]
