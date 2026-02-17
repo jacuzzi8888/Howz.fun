@@ -1,0 +1,47 @@
+name: Build and Deploy Solana Programs
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install 0.32.1
+          avm use 0.32.1
+
+      - name: Setup Wallet
+        run: |
+          echo "${{ secrets.DEPLOYER_KEY }}" > deployer-key.json
+          # Standardize wallet path in all Anchor.toml files for GH Actions
+          find . -name "Anchor.toml" -exec sed -i 's|wallet = ".*"|wallet = "deployer-key.json"|g' {} +
+
+      - name: Build Programs
+        run: |
+          anchor build --provider.cluster devnet
+
+      - name: Deploy Programs
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: |
+          # Use the root wallet for deployment
+          anchor deploy --provider.cluster devnet --program-name shadow_poker
+          anchor deploy --provider.cluster devnet --program-name degen_derby
+          anchor deploy --provider.cluster devnet --program-name fight_club

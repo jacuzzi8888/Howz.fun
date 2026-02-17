@@ -1,0 +1,30 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+shadow_poker = "3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
+degen_derby = "Dky8DpKsA4LgCMs1YFUPhrrvYE1C1FbwZeFjHSHzXzpzv"
+fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
+
+[programs.devnet]
+shadow_poker = "3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
+degen_derby = "Dky8DpKsA4LgCMs1YFUPhrrvYE1C1FbwZeFjHSHzXzpzv"
+fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "devnet"
+wallet = "deployer-key.json"
+
+[workspace]
+members = [
+    "programs/shadow-poker",
+    "programs/degen-derby",
+    "programs/fight-club"
+]
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
