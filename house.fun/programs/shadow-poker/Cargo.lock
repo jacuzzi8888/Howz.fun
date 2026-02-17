@@ -282,9 +282,9 @@ checksum = "5f0e0fee31ef5ed1ba1316088939cea399010ed7731dba877ed44aeb407a75ea"
 
 [[package]]
 name = "arcis-interface"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70b9f6dbaf71116970b5da59068daa606cecba3a9f8a0de50d17c98f3541fd32"
+checksum = "50160fc91382713111b452b64299357de6d4c58f0906f563573d2c91ef6da551"
 dependencies = [
  "serde",
  "serde_json",
@@ -292,9 +292,9 @@ dependencies = [
 
 [[package]]
 name = "arcium-anchor"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0dc928c647c4a8b9b0869578ff7020e442b9d98ec8d7ed99cd7743b4e4399cb"
+checksum = "6c464b4513c560f326463441c3867226427929c2b19b5499f4572b55e4d50529"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -307,9 +307,9 @@ dependencies = [
 
 [[package]]
 name = "arcium-client"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b949c647e5590013f3407dba2196dc4cb7cc5f08722ebee387e4332408e614c"
+checksum = "c109b046c21d31e613e4ec6063405b2968bd3f55a39b55d877dc883e533ab535"
 dependencies = [
  "anchor-lang",
  "bytemuck",
@@ -322,9 +322,9 @@ dependencies = [
 
 [[package]]
 name = "arcium-macros"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "069af4a1bb50ce6a1ac7b3c53502ec1a13560e3ddff20f850cb6ab970b1ccaa9"
+checksum = "f562f6fc1f569bb5db1d4d9bc32e5adc881c64bc387c2f73261e9eed3f04e6c4"
 dependencies = [
  "arcis-interface",
  "convert_case",
@@ -629,15 +629,16 @@ checksum = "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
 
 [[package]]
 name = "blake3"
-version = "1.5.5"
+version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8ee0c1824c4dea5b5f81736aff91bae041d2c07ee1192bec91054e10e3e601e"
+checksum = "2468ef7d57b3fb7e16b576e8377cdbde2320c60e1491e961d11da40fc4f02a2d"
 dependencies = [
  "arrayref",
  "arrayvec",
  "cc",
  "cfg-if",
  "constant_time_eq",
+ "cpufeatures",
  "digest 0.10.7",
 ]
 
@@ -852,9 +853,9 @@ dependencies = [
 
 [[package]]
 name = "constant_time_eq"
-version = "0.3.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
+checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 
 [[package]]
 name = "convert_case"
@@ -3396,9 +3397,9 @@ dependencies = [
 
 [[package]]
 name = "toml_parser"
-version = "1.0.8+spec-1.1.0"
+version = "1.0.9+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0742ff5ff03ea7e67c8ae6c93cac239e0d9784833362da3f9a9c1da8dfefcbdc"
+checksum = "702d4415e08923e7e1ef96cd5727c0dfed80b4d2fa25db9647fe5eb6f7c5a4c4"
 dependencies = [
  "winnow",
 ]

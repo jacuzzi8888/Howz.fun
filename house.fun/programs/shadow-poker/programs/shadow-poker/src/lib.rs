@@ -291,6 +291,7 @@ pub mod shadow_poker {
             _ => return Err(ShadowPokerError::InvalidGameState.into()),
         }
 
+        let cards_len = cards.len();
         table.community_cards.extend(cards);
         table.status = TableStatus::Betting;
         table.current_bet = 0;
@@ -300,7 +301,7 @@ pub mod shadow_poker {
 
         msg!(
             "Revealed {} cards. Community cards: {}",
-            cards.len(),
+            cards_len,
             table.community_cards.len()
         );
         Ok(())
@@ -545,7 +546,7 @@ pub struct CreateTable<'info> {
         init,
         payer = creator,
         space = 8 + Table::SIZE,
-        seeds = [b"table", &house.total_tables.to_le_bytes()],
+        seeds = [b"table", house.total_tables.to_le_bytes().as_ref()],
         bump
     )]
     pub table: Account<'info, Table>,
@@ -922,9 +923,17 @@ impl Table {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub struct DealingOutput {}
 
+impl HasSize for DealingOutput {
+    const SIZE: usize = 0;
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub struct ShowdownOutput {
     pub winner_index: u8,
+}
+
+impl HasSize for ShowdownOutput {
+    const SIZE: usize = 1;
 }
 
 #[account]
@@ -952,13 +961,13 @@ pub enum TableStatus {
     Finished,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum BlindType {
     Small,
     Big,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum PlayerActionType {
     Check,
     Call,
