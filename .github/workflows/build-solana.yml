@@ -20,7 +20,7 @@ jobs:
       - name: Install Solana CLI
         run: |
       - name: Install Solana CLI
-        uses: solana-labs/actions/setup-solana@v1
+        uses: solana-labs/setup-solana@v1
         with:
           solana-version: 'v1.18.23'
 
