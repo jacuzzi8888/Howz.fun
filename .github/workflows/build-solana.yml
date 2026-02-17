@@ -25,10 +25,11 @@ jobs:
 
       - name: Install Anchor CLI
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          # Clear any existing Anchor binaries to prevent collisions
           rm -f $(which anchor) || true
-          avm install 0.30.1
-          avm use 0.30.1
+          rm -rf ~/.avm || true
+          # Install specifically via cargo to ensure forced overwrite and version pinning
+          cargo install anchor-cli --version 0.30.1 --locked --force
 
       - name: Setup Wallet
         run: |
