@@ -20,28 +20,9 @@ jobs:
       - name: Install Solana CLI
         run: |
       - name: Install Solana CLI
-        run: |
-          export SOLANA_VERSION="v1.18.23"
-          for i in {1..5}; do
-            echo "Attempt $i: Downloading and installing Solana $SOLANA_VERSION..."
-            # Download the installer first to ensure we don't execute an empty string
-            if curl -sSfL https://release.solana.com/$SOLANA_VERSION/install -o install_solana.sh; then
-              if sh install_solana.sh; then
-                echo "Solana installer executed successfully."
-                export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-                if solana --version; then
-                  echo "Solana CLI is functional."
-                  # Add to GITHUB_PATH for subsequent steps
-                  echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-                  exit 0
-                fi
-              fi
-            fi
-            echo "Attempt $i failed, retrying in 20 seconds..."
-            sleep 20
-          done
-          echo "Error: Failed to install Solana CLI after 5 attempts."
-          exit 1
+        uses: solana-labs/actions/setup-solana@v1
+        with:
+          solana-version: 'v1.18.23'
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Anchor CLI
