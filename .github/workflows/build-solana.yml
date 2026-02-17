@@ -23,7 +23,9 @@ jobs:
         uses: solana-labs/actions/setup-solana@v1
         with:
           solana-version: 'v1.18.23'
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Add Solana to Path
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Anchor CLI
         run: |
