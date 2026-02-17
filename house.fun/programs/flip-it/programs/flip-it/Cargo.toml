@@ -28,3 +28,4 @@ arcium-anchor = "0.8.0"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
+blake3 = "=1.5.5"
