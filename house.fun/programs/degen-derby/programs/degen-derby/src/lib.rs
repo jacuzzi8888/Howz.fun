@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
 // Program ID - Replace with actual after deployment
-declare_id!("Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv");
+declare_id!("Dky8DpKsA4LgCMs1YFUPhrrvYE1C1FbwZeFjHSHzXzpzv");
 
 // Constants
 pub const HOUSE_FEE_BPS: u16 = 100; // 1% house fee
