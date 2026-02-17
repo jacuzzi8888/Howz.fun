@@ -34,21 +34,22 @@ jobs:
       - name: Setup Wallet
         run: |
           cd house.fun
-          secret_key=$(echo "${{ secrets.DEPLOYER_KEY }}" | sed 's/^"//;s/"$//' | tr -d '\n\r ')
-          echo "$secret_key" > deployer-key.json
-          
-          # Detailed Sanity Check
-          echo "Validating DEPLOYER_KEY..."
-          if ! grep -q "^\[.*\]$" deployer-key.json; then
-            echo "Error: DEPLOYER_KEY must start with [ and end with ]."
-            exit 1
-          fi
-          char_count=$(wc -c < deployer-key.json)
-          echo "Key file size: $char_count bytes"
-          if [ $char_count -lt 100 ]; then
-            echo "Error: Key file is too small to be a valid 64-byte array."
-            exit 1
-          fi
+          # Use Node.js for robust parsing and writing of the JSON array secret
+          node -e "
+            try {
+              let key = process.env.SECRET.trim();
+              if (key.startsWith('\"') && key.endsWith('\"')) key = key.slice(1, -1);
+              const array = JSON.parse(key);
+              if (!Array.isArray(array) || array.length !== 64) throw new Error('Not a 64-byte array');
+              require('fs').writeFileSync('deployer-key.json', JSON.stringify(array));
+              console.log('Successfully wrote 64-byte keypair to deployer-key.json');
+            } catch (e) {
+              console.error('Error parsing DEPLOYER_KEY secret: ' + e.message);
+              process.exit(1);
+            }
+          "
+        env:
+          SECRET: ${{ secrets.DEPLOYER_KEY }}
           
       - name: Build Programs
         run: |
