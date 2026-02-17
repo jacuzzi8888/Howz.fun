@@ -30,18 +30,21 @@ jobs:
 
       - name: Setup Wallet
         run: |
+          cd house.fun
           echo "${{ secrets.DEPLOYER_KEY }}" > deployer-key.json
-          # Ensure Anchor.toml points to this key
-          sed -i 's|wallet = ".*"|wallet = "deployer-key.json"|g' programs/*/Anchor.toml
+          # Standardize wallet path in all Anchor.toml files for GH Actions
+          find . -name "Anchor.toml" -exec sed -i 's|wallet = ".*"|wallet = "deployer-key.json"|g' {} +
 
       - name: Build Programs
         run: |
+          cd house.fun
           anchor build --provider.cluster devnet
 
       - name: Deploy Programs
         if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: |
-          # Individual deploys to ensure ID capture if needed
+          cd house.fun
+          # Use the root wallet for deployment
           anchor deploy --provider.cluster devnet --program-name shadow_poker
           anchor deploy --provider.cluster devnet --program-name degen_derby
           anchor deploy --provider.cluster devnet --program-name fight_club

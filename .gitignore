@@ -1,2 +1,21 @@
-.vercel
-.env*.local
+# Binaries
+*.exe
+*.tar.bz2
+*.tar.gz
+*.bz2
+*.zip
+
+# Solana/Anchor
+target/
+.anchor/
+deploy-key.json
+authority.json
+
+# Node
+node_modules/
+.env*
+dist/
+build/
+
+# Logs
+*.log
