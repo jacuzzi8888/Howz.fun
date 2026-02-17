@@ -18,9 +18,7 @@ jobs:
           toolchain: stable
 
       - name: Install Solana CLI
-        uses: solana-developers/github-actions/setup-solana@v1
-        with:
-          solana-version: 'v1.18.23'
+        run: sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
 
       - name: Add Solana to Path
         run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
