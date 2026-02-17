@@ -4,12 +4,12 @@ skip-lint = false
 
 [programs.localnet]
 shadow_poker = "3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
-degen_derby = "Dky8DpKsA4LgCMs1YFUPhrrvYE1C1FbwZeFjHSHzXzpzv"
+degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
 fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
 
 [programs.devnet]
 shadow_poker = "3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
-degen_derby = "Dky8DpKsA4LgCMs1YFUPhrrvYE1C1FbwZeFjHSHzXzpzv"
+degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
 fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
 
 [registry]
