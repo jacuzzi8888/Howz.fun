@@ -88,9 +88,9 @@ jobs:
           # Install AVM (Anchor Version Manager)
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           
-          # Install and use latest Anchor
-          $HOME/.cargo/bin/avm install latest
-          $HOME/.cargo/bin/avm use latest
+          # Install and use pinned Anchor version for stability
+          $HOME/.cargo/bin/avm install 0.30.1
+          $HOME/.cargo/bin/avm use 0.30.1
           
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           $HOME/.cargo/bin/anchor --version
