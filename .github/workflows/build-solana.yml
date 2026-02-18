@@ -125,7 +125,7 @@ jobs:
           echo "Deployer: $(solana address)"
           echo "Balance:  $(solana balance)"
         env:
-          SECRET: ${{ secrets.DEVNET_DEPLOYER_KEYPAIR }}
+          SECRET: ${{ secrets.DEPLOYER_KEY }}
 
       # ─── Build ────────────────────────────────────────────────────────
       - name: Build All Programs
@@ -220,17 +220,17 @@ jobs:
               process.exit(1);
             }
           "
-          RPC_URL="${{ secrets.DEVNET_SOLANA_DEPLOY_URL }}"
+          RPC_URL="${{ secrets.HELIUS_RPC_URL }}"
           if [ -z "$RPC_URL" ]; then
             RPC_URL="https://api.devnet.solana.com"
-            echo "Using public devnet RPC (add DEVNET_SOLANA_DEPLOY_URL for a paid RPC)"
+            echo "Using public devnet RPC"
           fi
           solana config set --url "$RPC_URL"
           solana config set --keypair deployer-key.json
           echo "Deployer: $(solana address)"
           echo "Balance:  $(solana balance)"
         env:
-          SECRET: ${{ secrets.DEVNET_DEPLOYER_KEYPAIR }}
+          SECRET: ${{ secrets.DEPLOYER_KEY }}
 
       - name: Deploy Shadow Poker
         run: |
