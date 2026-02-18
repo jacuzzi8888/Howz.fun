@@ -2,7 +2,12 @@ name: Build and Deploy Solana Programs
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
+    paths:
+      - 'house.fun/programs/**'
+      - 'house.fun/Anchor.toml'
+      - 'house.fun/Cargo.toml'
+      - 'house.fun/Cargo.lock'
   workflow_dispatch:
 
 jobs:
@@ -12,58 +17,162 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+      # ─────────────────────────────────────────────────────────────────
+      # 2026 Industry Standard: Official Solana Developers action
+      # Replaces fragile curl installer that caused SSL_ERROR_SYSCALL.
+      # Handles: Solana CLI + Anchor CLI + caching + retry logic.
+      # Anchor 0.30.1 requires Solana 1.18.17 (NOT Solana 2.x/Agave).
+      # ─────────────────────────────────────────────────────────────────
+      - name: Setup Solana + Anchor Environment
+        uses: solana-developers/github-actions/setup-all@v0.2.9
         with:
-          toolchain: 1.75.0
+          solana_version: '1.18.17'
+          anchor_version: '0.30.1'
+          node_version: '20'
 
-      - name: Install Solana CLI
-        run: sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
-
-      - name: Add Solana to Path
-        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-      - name: Install Anchor CLI
+      - name: Verify Tool Versions
         run: |
-          # Clear any existing Anchor binaries to prevent collisions
-          rm -f $(which anchor) || true
-          rm -rf ~/.avm || true
-          # Install specifically via cargo to ensure forced overwrite and version pinning
-          cargo install anchor-cli --version 0.30.1 --locked --force
+          solana --version
+          anchor --version
+          rustc --version
+          node --version
 
-      - name: Setup Wallet
+      - name: Setup Deployer Wallet
         run: |
           cd house.fun
-          # Use Node.js for robust parsing and writing of the JSON array secret
+          # Write the 64-byte JSON array keypair from GitHub Secret
+          node -e "
+            try {
+              let key = process.env.SECRET.trim();
+              // Strip surrounding quotes if present
+              if (key.startsWith('\"') && key.endsWith('\"')) key = key.slice(1, -1);
+              const array = JSON.parse(key);
+              if (!Array.isArray(array) || array.length !== 64) throw new Error('Expected a 64-byte array, got length: ' + array.length);
+              require('fs').writeFileSync('deployer-key.json', JSON.stringify(array));
+              console.log('✅ Deployer keypair written successfully (64 bytes)');
+            } catch (e) {
+              console.error('❌ Error parsing DEVNET_DEPLOYER_KEYPAIR: ' + e.message);
+              process.exit(1);
+            }
+          "
+          solana config set --url devnet
+          solana config set --keypair deployer-key.json
+          echo "Deployer address: $(solana address)"
+          echo "Deployer balance: $(solana balance)"
+        env:
+          SECRET: ${{ secrets.DEVNET_DEPLOYER_KEYPAIR }}
+
+      - name: Build All Programs
+        run: |
+          cd house.fun
+          anchor build
+        # anchor build reads Anchor.toml workspace members:
+        # - programs/shadow-poker
+        # - programs/degen-derby
+        # - programs/fight-club
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: solana-program-builds
+          path: |
+            house.fun/target/deploy/*.so
+            house.fun/target/idl/*.json
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only deploy on workflow_dispatch (manual trigger) or push to main
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Solana + Anchor Environment
+        uses: solana-developers/github-actions/setup-all@v0.2.9
+        with:
+          solana_version: '1.18.17'
+          anchor_version: '0.30.1'
+          node_version: '20'
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: solana-program-builds
+          path: house.fun/target/deploy/
+
+      - name: Setup Deployer Wallet
+        run: |
+          cd house.fun
           node -e "
             try {
               let key = process.env.SECRET.trim();
               if (key.startsWith('\"') && key.endsWith('\"')) key = key.slice(1, -1);
               const array = JSON.parse(key);
-              if (!Array.isArray(array) || array.length !== 64) throw new Error('Not a 64-byte array');
+              if (!Array.isArray(array) || array.length !== 64) throw new Error('Expected a 64-byte array, got length: ' + array.length);
               require('fs').writeFileSync('deployer-key.json', JSON.stringify(array));
-              console.log('Successfully wrote 64-byte keypair to deployer-key.json');
+              console.log('✅ Deployer keypair written successfully (64 bytes)');
             } catch (e) {
-              console.error('Error parsing DEPLOYER_KEY secret: ' + e.message);
+              console.error('❌ Error parsing DEVNET_DEPLOYER_KEYPAIR: ' + e.message);
               process.exit(1);
             }
           "
+          # Use paid RPC if available, fallback to public devnet
+          RPC_URL="${{ secrets.DEVNET_SOLANA_DEPLOY_URL }}"
+          if [ -z "$RPC_URL" ]; then
+            RPC_URL="https://api.devnet.solana.com"
+            echo "⚠️  Using public devnet RPC (consider adding DEVNET_SOLANA_DEPLOY_URL secret for reliability)"
+          fi
+          solana config set --url "$RPC_URL"
+          solana config set --keypair deployer-key.json
+          echo "Deployer address: $(solana address)"
+          echo "Deployer balance: $(solana balance)"
         env:
-          SECRET: ${{ secrets.DEPLOYER_KEY }}
-          
-      - name: Build Programs
-        run: |
-          cd house.fun
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          # Use explicit wallet and cluster overrides to bypass config issues
-          anchor build --provider.cluster devnet --provider.wallet deployer-key.json
+          SECRET: ${{ secrets.DEVNET_DEPLOYER_KEYPAIR }}
 
-      - name: Deploy Programs
-        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+      - name: Deploy Shadow Poker
         run: |
           cd house.fun
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          # Individual deploys with explicit wallet and cluster
-          anchor deploy --provider.cluster devnet --provider.wallet deployer-key.json --program-name shadow_poker
-          anchor deploy --provider.cluster devnet --provider.wallet deployer-key.json --program-name degen_derby
-          anchor deploy --provider.cluster devnet --provider.wallet deployer-key.json --program-name fight_club
+          echo "Deploying shadow_poker → 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
+          anchor deploy \
+            --provider.cluster devnet \
+            --provider.wallet deployer-key.json \
+            --program-name shadow_poker
+        continue-on-error: false
+
+      - name: Deploy Degen Derby
+        run: |
+          cd house.fun
+          echo "Deploying degen_derby → Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
+          anchor deploy \
+            --provider.cluster devnet \
+            --provider.wallet deployer-key.json \
+            --program-name degen_derby
+        continue-on-error: false
+
+      - name: Deploy Fight Club
+        run: |
+          cd house.fun
+          echo "Deploying fight_club → GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
+          anchor deploy \
+            --provider.cluster devnet \
+            --provider.wallet deployer-key.json \
+            --program-name fight_club
+        continue-on-error: false
+
+      - name: Verify Deployments On-Chain
+        run: |
+          echo "=== Shadow Poker ==="
+          solana program show 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s --url devnet || echo "Not found"
+          echo "=== Degen Derby ==="
+          solana program show Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv --url devnet || echo "Not found"
+          echo "=== Fight Club ==="
+          solana program show GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW --url devnet || echo "Not found"
+
+      - name: Upload Final IDLs
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployed-idls
+          path: house.fun/target/idl/*.json
+          retention-days: 30

@@ -1,51 +1,30 @@
-# Agent Session Save State: house.fun
+# Session Save State: Solana Build Debugging
 
-**Last Updated**: 2026-02-16
+## Current Objective
+Successfully build and deploy Solana programs (`shadow-poker`, `degen-derby`, `fight-club`) to Devnet via GitHub Actions.
 
-## 🎯 Current Objective
-**Goal**: Build and deploy Shadow Poker, Degen Derby, and Fight Club programs to Solana Devnet and initialize House accounts.
+## Milestone 1: Program ID & Key Parsing (Completed)
+- **ID Standardization**: Identified a 45-character mismatch in the `degen_derby` ID. Standardized all instances across `Anchor.toml` and `lib.rs` to the valid 44-character version: `Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv`.
+- **Secret Reliability**: Switched from shell-based secret injection to a **Node.js parsing block** in CI. This ensures the `DEPLOYER_KEY` is written as a raw 64-byte JSON array, fixing the "String is the wrong size" parsing error.
 
-## 🛠 Environmental State
-- **Solana CLI**: ✅ **Installed in WSL Ubuntu** (v1.18.23). Path: `/home/user/solana-release/bin`.
-- **Anchor CLI**: ✅ **Installed in WSL Ubuntu** (v0.32.1). Path: `/home/user/.avm/bin`.
-- **Rust/Cargo**: ✅ **Installed in WSL Ubuntu** (stable-x86_64-unknown-linux-gnu).
-- **WSL Native Filesystem**: Source code mirrored in `/home/user/house.fun` to avoid `DrvsFs` issues.
-- **Admin Wallet**: `7EgawZyB5YBDoa5MP2NgJ7FmPUKj7GVvL5ociDqVLgrX`.
-  - **Path (Local)**: `house-fun-app/authority.json`.
-  - **Balance**: **~5.0 SOL** (Devnet).
+## Milestone 2: CI Environment Research (Active)
+I compared our current "manual" route to the 2025 industry standards to identify why the runners are failing.
 
-## 📂 Technical Assets & Findings
+| Feature | 2025 Industry Standard | Our Current Route |
+| :--- | :--- | :--- |
+| **Installation** | **`solana-developers/setup-all`**: Bundles tools + automatic caching. | **Manual Shell Scripts**: Vulnerable to SSL errors (`SSL_ERROR_SYSCALL`). |
+| **Secret Handling** | **Base64 Encoding**: Workflow decodes a Base64 secret string. | **Raw JSON + Node.js**: Safely parses a JSON array string. |
+| **Workflow Logic** | **Reusable Workflows**: Stable, pre-configured boilerplate. | **Explicit CLI Commands**: Manual path/command management. |
 
-### New Devnet Program IDs (Valid Base58)
-Generated via `solana-keygen` in WSL to replace invalid placeholders:
-- **Shadow Poker**: `3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s`
-- **Degen Derby**: `Dky8DpKsA4LgCMs1YFUPhrrvYE1C1FbwZeFjHSHzXzpzv`
-- **Fight Club**: `GpFdMHcrcFusgR6JMnQVakkfQvrXioEw3RJGrMFkBu7nW`
+## Current Blocker
+- **Runner Stability**: GitHub Actions are failing during the environment setup phase. Manual `curl` installers are hitting SSL resets. 
+- **Action Incompatibility**: Official `solana-developers` action references have changed (some now require `@solana-developers/github-actions`).
 
-### Build Configuration
-- **Anchor.toml**: Updated for all three programs to use the new IDs, `cluster = "devnet"`, and `wallet = "deployer-key.json"` (for GitHub Actions compatibility).
-- **lib.rs**: `declare_id!` updated in all programs to match the new IDs.
-- **Cargo.toml**: `overflow-checks = true` added to release profiles.
-- **GitHub Action**: Created `.github/workflows/build-solana.yml` for remote building.
+## Next Steps
+- [ ] Update `.github/workflows/build-solana.yml` to use `metadaoproject/setup-solana@v1` for stable CLI installation.
+- [ ] Verify that "Build Programs" proceeds past the Base58 parsing phase.
 
-## 🚧 Blockers & Current Strategy
-- **Blocker**: WSL 2 local builds stall silently due to severe memory limits (~3GB RAM detected).
-- **Strategy**: Switched to **GitHub Actions Remote Build**. 
-  - The repository is prepared to build in the cloud where resources (7GB+ RAM) are sufficient.
-
-## ⏭️ Immediate Next Steps for Next Session
-1. **GitHub Setup**:
-   - Push the updated code (including `.github/workflows/build-solana.yml`) to the GitHub repository.
-   - Go to **Settings > Secrets and variables > Actions** in GitHub.
-   - Create a new Secret named `DEPLOYER_KEY`.
-   - Paste the contents of `house-fun-app/authority.json` (the byte array) into the secret.
-2. **Trigger Build**:
-   - Manually trigger the "Build and Deploy Solana Programs" workflow or push to `main`.
-3. **Capture & Update**:
-   - Verify deployment success on Devnet.
-   - Update client-side `utils.ts` if IDs change (unlikely if keypairs are reused).
-4. **House Initialization**:
-   - Run `node src/lib/anchor/init_v2.cjs` in `house-fun-app` to initialize the PDA House accounts.
-
----
-*End of Save State*
+## Key Files
+- [Workflow](file:///C:/Users/USER/hackathon%20planning/.github/workflows/build-solana.yml)
+- [Root Anchor.toml](file:///C:/Users/USER/hackathon%20planning/house.fun/Anchor.toml)
+- [Degen Derby lib.rs](file:///C:/Users/USER/hackathon%20planning/house.fun/programs/degen-derby/programs/degen-derby/src/lib.rs)
