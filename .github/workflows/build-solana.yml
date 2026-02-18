@@ -143,11 +143,12 @@ jobs:
             if [ -f "$dir/Cargo.lock" ]; then
               echo "=== Patching $dir ==="
               cd "$dir"
+              # Use versioned specs to avoid "multiple packages" ambiguity
               # borsh-derive 1.6.0 requires rustc 1.77.0 → downgrade to 1.5.6
-              cargo update borsh-derive --precise 1.5.6 2>&1 || echo "borsh-derive update skipped"
+              cargo update "borsh-derive@1.6.0" --precise 1.5.6 2>&1 || echo "borsh-derive update skipped"
               # proc-macro-crate 3.4.0 → toml_edit 0.23.x → toml_parser (needs 1.76+)
               # proc-macro-crate 3.2.0 uses toml_edit 0.22.x (no toml_parser)
-              cargo update proc-macro-crate --precise 3.2.0 2>&1 || echo "proc-macro-crate update skipped"
+              cargo update "proc-macro-crate@3.4.0" --precise 3.2.0 2>&1 || echo "proc-macro-crate update skipped"
               cd - > /dev/null
             fi
           done
