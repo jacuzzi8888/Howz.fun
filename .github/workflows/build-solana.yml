@@ -10,6 +10,11 @@ on:
       - 'house.fun/Cargo.lock'
   workflow_dispatch:
 
+env:
+  SOLANA_VERSION: "1.18.17"
+  ANCHOR_VERSION: "0.30.1"
+  RUST_TOOLCHAIN: "1.77.0"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,20 +22,78 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # ─────────────────────────────────────────────────────────────────
-      # 2026 Industry Standard: Official Solana Developers action
-      # Replaces fragile curl installer that caused SSL_ERROR_SYSCALL.
-      # Handles: Solana CLI + Anchor CLI + caching + retry logic.
-      # Anchor 0.30.1 requires Solana 1.18.17 (NOT Solana 2.x/Agave).
-      # v0.2.4 is the latest verified release of github-actions.
-      # ─────────────────────────────────────────────────────────────────
-      - name: Setup Solana + Anchor Environment
-        uses: solana-developers/github-actions/setup-all@v0.2.4
+      # ─── Rust Toolchain ───────────────────────────────────────────────
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          solana_version: '1.18.17'
-          anchor_version: '0.30.1'
-          node_version: '20'
+          toolchain: "1.77.0"
+          components: rustfmt, clippy
 
+      - name: Cache Cargo Registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+          key: cargo-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('house.fun/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-
+
+      # ─── Solana CLI ───────────────────────────────────────────────────
+      # Uses release.anza.xyz (new official URL after Anza/Agave rebrand).
+      # Retries 3 times to handle transient SSL/network errors.
+      - name: Cache Solana CLI
+        id: cache-solana
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/solana
+          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}
+
+      - name: Install Solana CLI
+        if: steps.cache-solana.outputs.cache-hit != 'true'
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i: Installing Solana CLI v${{ env.SOLANA_VERSION }}..."
+            if sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"; then
+              echo "Solana CLI installed successfully"
+              break
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+            if [ $i -eq 3 ]; then
+              echo "All 3 attempts failed"
+              exit 1
+            fi
+          done
+
+      - name: Add Solana to PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      # ─── Anchor CLI ───────────────────────────────────────────────────
+      - name: Cache Anchor CLI
+        id: cache-anchor
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/anchor
+          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}
+
+      - name: Install Anchor CLI
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor \
+            --tag v${{ env.ANCHOR_VERSION }} \
+            anchor-cli \
+            --locked \
+            --force
+
+      # ─── Node.js ──────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ─── Verify Tools ─────────────────────────────────────────────────
       - name: Verify Tool Versions
         run: |
           solana --version
@@ -38,6 +101,7 @@ jobs:
           rustc --version
           node --version
 
+      # ─── Wallet Setup ─────────────────────────────────────────────────
       - name: Setup Deployer Wallet
         run: |
           cd house.fun
@@ -46,9 +110,11 @@ jobs:
               let key = process.env.SECRET.trim();
               if (key.startsWith('\"') && key.endsWith('\"')) key = key.slice(1, -1);
               const array = JSON.parse(key);
-              if (!Array.isArray(array) || array.length !== 64) throw new Error('Expected a 64-byte array, got length: ' + array.length);
+              if (!Array.isArray(array) || array.length !== 64) {
+                throw new Error('Expected 64-byte array, got length: ' + array.length);
+              }
               require('fs').writeFileSync('deployer-key.json', JSON.stringify(array));
-              console.log('Deployer keypair written successfully (64 bytes)');
+              console.log('Deployer keypair written (64 bytes)');
             } catch (e) {
               console.error('Error parsing DEVNET_DEPLOYER_KEYPAIR: ' + e.message);
               process.exit(1);
@@ -56,16 +122,18 @@ jobs:
           "
           solana config set --url devnet
           solana config set --keypair deployer-key.json
-          echo "Deployer address: $(solana address)"
-          echo "Deployer balance: $(solana balance)"
+          echo "Deployer: $(solana address)"
+          echo "Balance:  $(solana balance)"
         env:
           SECRET: ${{ secrets.DEVNET_DEPLOYER_KEYPAIR }}
 
+      # ─── Build ────────────────────────────────────────────────────────
       - name: Build All Programs
         run: |
           cd house.fun
           anchor build
 
+      # ─── Upload Artifacts ─────────────────────────────────────────────
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -78,17 +146,55 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Deploy on manual trigger or push to main
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Solana + Anchor Environment
-        uses: solana-developers/github-actions/setup-all@v0.2.4
+      - name: Cache Solana CLI
+        id: cache-solana
+        uses: actions/cache@v4
         with:
-          solana_version: '1.18.17'
-          anchor_version: '0.30.1'
-          node_version: '20'
+          path: ~/.local/share/solana
+          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}
+
+      - name: Install Solana CLI (if not cached)
+        if: steps.cache-solana.outputs.cache-hit != 'true'
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i: Installing Solana CLI v${{ env.SOLANA_VERSION }}..."
+            if sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"; then
+              break
+            fi
+            sleep 10
+            [ $i -eq 3 ] && exit 1
+          done
+
+      - name: Add Solana to PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Cache Anchor CLI
+        id: cache-anchor
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/anchor
+          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}
+
+      - name: Install Anchor CLI (if not cached)
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.77.0"
+
+      - name: Install Anchor (cargo)
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor \
+            --tag v${{ env.ANCHOR_VERSION }} \
+            anchor-cli \
+            --locked \
+            --force
 
       - name: Download Build Artifacts
         uses: actions/download-artifact@v4
@@ -104,30 +210,31 @@ jobs:
               let key = process.env.SECRET.trim();
               if (key.startsWith('\"') && key.endsWith('\"')) key = key.slice(1, -1);
               const array = JSON.parse(key);
-              if (!Array.isArray(array) || array.length !== 64) throw new Error('Expected a 64-byte array, got length: ' + array.length);
+              if (!Array.isArray(array) || array.length !== 64) {
+                throw new Error('Expected 64-byte array, got length: ' + array.length);
+              }
               require('fs').writeFileSync('deployer-key.json', JSON.stringify(array));
-              console.log('Deployer keypair written successfully (64 bytes)');
+              console.log('Deployer keypair written (64 bytes)');
             } catch (e) {
-              console.error('Error parsing DEVNET_DEPLOYER_KEYPAIR: ' + e.message);
+              console.error('Error: ' + e.message);
               process.exit(1);
             }
           "
           RPC_URL="${{ secrets.DEVNET_SOLANA_DEPLOY_URL }}"
           if [ -z "$RPC_URL" ]; then
             RPC_URL="https://api.devnet.solana.com"
-            echo "Using public devnet RPC (add DEVNET_SOLANA_DEPLOY_URL secret for a paid RPC)"
+            echo "Using public devnet RPC (add DEVNET_SOLANA_DEPLOY_URL for a paid RPC)"
           fi
           solana config set --url "$RPC_URL"
           solana config set --keypair deployer-key.json
-          echo "Deployer address: $(solana address)"
-          echo "Deployer balance: $(solana balance)"
+          echo "Deployer: $(solana address)"
+          echo "Balance:  $(solana balance)"
         env:
           SECRET: ${{ secrets.DEVNET_DEPLOYER_KEYPAIR }}
 
       - name: Deploy Shadow Poker
         run: |
           cd house.fun
-          echo "Deploying shadow_poker -> 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
           anchor deploy \
             --provider.cluster devnet \
             --provider.wallet deployer-key.json \
@@ -136,7 +243,6 @@ jobs:
       - name: Deploy Degen Derby
         run: |
           cd house.fun
-          echo "Deploying degen_derby -> Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
           anchor deploy \
             --provider.cluster devnet \
             --provider.wallet deployer-key.json \
@@ -145,7 +251,6 @@ jobs:
       - name: Deploy Fight Club
         run: |
           cd house.fun
-          echo "Deploying fight_club -> GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
           anchor deploy \
             --provider.cluster devnet \
             --provider.wallet deployer-key.json \
@@ -154,11 +259,11 @@ jobs:
       - name: Verify Deployments On-Chain
         run: |
           echo "=== Shadow Poker ==="
-          solana program show 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s --url devnet || echo "Not found"
+          solana program show 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s --url devnet || true
           echo "=== Degen Derby ==="
-          solana program show Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv --url devnet || echo "Not found"
+          solana program show Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv --url devnet || true
           echo "=== Fight Club ==="
-          solana program show GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW --url devnet || echo "Not found"
+          solana program show GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW --url devnet || true
 
       - name: Upload Final IDLs
         uses: actions/upload-artifact@v4
