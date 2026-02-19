@@ -13,7 +13,7 @@ on:
 env:
   SOLANA_VERSION: "2.1.2"
   ANCHOR_VERSION: "0.32.1"
-  RUST_TOOLCHAIN: "1.80.1"
+  RUST_TOOLCHAIN: "stable"
 
 jobs:
   build:
@@ -26,7 +26,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "1.80.1"
+          toolchain: "stable"
           components: rustfmt, clippy
 
       - name: Cache Cargo Registry
@@ -36,7 +36,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-          key: cargo-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('house.fun/Cargo.lock') }}-v2
+          key: cargo-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('house.fun/Cargo.lock') }}-v3
           restore-keys: |
             cargo-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-
 
@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/solana
-          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v2
+          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v3
 
       - name: Install Solana CLI
         if: steps.cache-solana.outputs.cache-hit != 'true'
@@ -152,7 +152,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/solana
-          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v2
+          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v3
 
       - name: Install Solana CLI (if not cached)
         if: steps.cache-solana.outputs.cache-hit != 'true'
@@ -174,13 +174,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/anchor
-          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}-v2
+          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}-v3
 
       - name: Install Anchor CLI (if not cached)
         if: steps.cache-anchor.outputs.cache-hit != 'true'
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "1.80.1"
+          toolchain: "stable"
 
       - name: Install Anchor (cargo)
         if: steps.cache-anchor.outputs.cache-hit != 'true'
