@@ -8,6 +8,7 @@ on:
       - 'house.fun/Anchor.toml'
       - 'house.fun/Cargo.toml'
       - 'house.fun/Cargo.lock'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 env:
