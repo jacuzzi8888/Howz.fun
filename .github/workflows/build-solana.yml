@@ -128,6 +128,15 @@ jobs:
           SECRET: ${{ secrets.DEPLOYER_KEY }}
 
       # ─── Build ────────────────────────────────────────────────────────
+      - name: Pin indexmap for bundled rustc compatibility
+        run: |
+          # cargo build-sbf uses Solana-bundled rustc 1.79.0-dev
+          # indexmap >=2.7.0 requires rustc 1.82 — pin it to 2.6.0
+          for prog in house.fun/programs/shadow-poker house.fun/programs/degen-derby house.fun/programs/fight-club; do
+            echo "Pinning indexmap in $prog..."
+            (cd "$prog" && cargo update -p indexmap --precise 2.6.0)
+          done
+
       - name: Build All Programs
         run: |
           cd house.fun
