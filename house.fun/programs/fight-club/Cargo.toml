@@ -7,7 +7,7 @@ resolver = "2"
 [profile.release]
 overflow-checks = true
 
-[patch.crates-io]
-# indexmap >=2.7.0 requires rustc 1.82, but cargo build-sbf uses the
-# Solana-bundled rustc 1.79.0-dev. Pin to last compatible version.
+# Pin indexmap to a version compatible with the Solana-bundled rustc 1.79.0-dev.
+# indexmap >=2.7.0 requires rustc 1.82 which the bundled compiler does not satisfy.
+[workspace.dependencies]
 indexmap = "=2.6.0"
