@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  SOLANA_VERSION: "2.1.2"
+  SOLANA_VERSION: "2.1.15"
   ANCHOR_VERSION: "0.32.1"
   RUST_TOOLCHAIN: "stable"
 
@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/solana
-          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v3
+          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v5
 
       - name: Install Solana CLI
         if: steps.cache-solana.outputs.cache-hit != 'true'
@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/anchor
-          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}-v2
+          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}-v5
 
       - name: Install Anchor CLI
         if: steps.cache-anchor.outputs.cache-hit != 'true'
@@ -162,7 +162,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/solana
-          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v3
+          key: solana-${{ runner.os }}-v${{ env.SOLANA_VERSION }}-v5
 
       - name: Install Solana CLI (if not cached)
         if: steps.cache-solana.outputs.cache-hit != 'true'
@@ -184,7 +184,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/anchor
-          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}-v3
+          key: anchor-${{ runner.os }}-v${{ env.ANCHOR_VERSION }}-v5
 
       - name: Install Anchor CLI (if not cached)
         if: steps.cache-anchor.outputs.cache-hit != 'true'
