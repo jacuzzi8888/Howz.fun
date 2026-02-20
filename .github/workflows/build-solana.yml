@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, master, develop]
     paths:
+      - '.github/workflows/build-solana.yml'
       - 'house.fun/programs/**'
       - 'house.fun/Anchor.toml'
       - 'house.fun/Cargo.toml'
