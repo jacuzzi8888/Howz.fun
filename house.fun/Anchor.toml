@@ -21,9 +21,9 @@ wallet = "deployer-key.json"
 
 [workspace]
 members = [
-    "programs/shadow-poker",
-    "programs/degen-derby",
-    "programs/fight-club"
+    "programs/shadow-poker/programs/shadow-poker",
+    "programs/degen-derby/programs/degen-derby",
+    "programs/fight-club/programs/fight-club"
 ]
 
 [scripts]
