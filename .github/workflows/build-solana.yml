@@ -212,6 +212,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: solana-program-builds
+          path: house.fun/target/
 
       - name: Setup Deployer Wallet
         run: |
