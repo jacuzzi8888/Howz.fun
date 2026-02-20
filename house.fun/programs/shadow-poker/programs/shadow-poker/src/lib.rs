@@ -13,9 +13,9 @@ pub const MIN_PLAYERS: u8 = 2;
 pub const MAX_PLAYERS: u8 = 6;
 pub const TIMEOUT_SLOTS: u64 = 600; // 4 minutes timeout
 
-const COMP_DEF_OFFSET_POKER: u32 = comp_def_offset("poker");
+// const COMP_DEF_OFFSET_POKER: u32 = comp_def_offset("poker");
 
-#[arcium_program]
+#[program]
 pub mod shadow_poker {
     use super::*;
 
