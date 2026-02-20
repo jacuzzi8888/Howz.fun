@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use arcium_anchor::prelude::*;
+// use arcium_anchor::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
 // Program ID - Replace with actual after deployment
@@ -13,9 +13,9 @@ pub const RACE_DURATION_SLOTS: u64 = 300; // ~2 minutes betting window
 pub const MIN_HORSES: u8 = 2;
 pub const MAX_HORSES: u8 = 8;
 
-const COMP_DEF_OFFSET_DERBY: u32 = comp_def_offset("derby");
+// const COMP_DEF_OFFSET_DERBY: u32 = comp_def_offset("derby");
 
-#[arcium_program]
+#[program]
 pub mod degen_derby {
     use super::*;
 
@@ -32,223 +32,12 @@ pub mod degen_derby {
         Ok(())
     }
 
+/*
     /// Initialize the race computation definition
     pub fn init_derby_comp_def(ctx: Context<InitDerbyCompDef>) -> Result<()> {
-        init_comp_def(ctx.accounts, None, None)?;
-        msg!("Derby computation definition initialized");
-        Ok(())
+// ...
     }
-
-    /// Create a new race with horses
-    pub fn create_race(
-        ctx: Context<CreateRace>,
-        horses: Vec<HorseData>, // Horse names and initial odds
-    ) -> Result<()> {
-        require!(
-            horses.len() >= MIN_HORSES as usize && horses.len() <= MAX_HORSES as usize,
-            DegenDerbyError::InvalidHorseCount
-        );
-
-        let race = &mut ctx.accounts.race;
-        let house = &mut ctx.accounts.house;
-        let clock = Clock::get()?;
-
-        race.creator = ctx.accounts.creator.key();
-        race.horses = horses;
-        race.total_bets = vec![0; race.horses.len()]; // Initialize bet totals for each horse
-        race.player_counts = vec![0; race.horses.len()];
-        race.status = RaceStatus::Open;
-        race.created_at_slot = clock.slot;
-        race.winner = None;
-        race.house_fee = 0;
-        race.bump = ctx.bumps.race;
-
-        house.total_races += 1;
-
-        msg!("Race created with {} horses", race.horses.len());
-        Ok(())
-    }
-
-    /// Place bet on a horse
-    pub fn place_bet(
-        ctx: Context<PlaceBet>,
-        amount: u64,
-        horse_index: u8, // Index of horse in the race.horses vec
-    ) -> Result<()> {
-        require!(amount >= MIN_BET_LAMPORTS, DegenDerbyError::BetTooSmall);
-        require!(amount <= MAX_BET_LAMPORTS, DegenDerbyError::BetTooLarge);
-
-        let race = &mut ctx.accounts.race;
-        let player_bet = &mut ctx.accounts.player_bet;
-        let player = &ctx.accounts.player;
-
-        // Validate race is open
-        require!(
-            race.status == RaceStatus::Open,
-            DegenDerbyError::RaceNotOpen
-        );
-
-        // Validate horse index
-        require!(
-            (horse_index as usize) < race.horses.len(),
-            DegenDerbyError::InvalidHorseIndex
-        );
-
-        // Check if player already bet on this race
-        require!(
-            player_bet.amount == 0,
-            DegenDerbyError::AlreadyBet
-        );
-
-        // Record the bet
-        player_bet.player = player.key();
-        player_bet.race_pda = race.key();
-        player_bet.amount = amount;
-        player_bet.horse_index = horse_index;
-        player_bet.claimed = false;
-        player_bet.bump = ctx.bumps.player_bet;
-
-        // Update race totals
-        race.total_bets[horse_index as usize] += amount;
-        race.player_counts[horse_index as usize] += 1;
-
-        // Transfer SOL to race escrow
-        let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
-            &player.key(),
-            &race.key(),
-            amount,
-        );
-        
-        anchor_lang::solana_program::program::invoke(
-            &transfer_ix,
-            &[
-                player.to_account_info(),
-                race.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            ],
-        )?;
-
-        msg!(
-            "Bet placed: {} lamports on horse {} in race {}",
-            amount,
-            horse_index,
-            race.key()
-        );
-        Ok(())
-    }
-
-    /// Start the race (closes betting)
-    pub fn start_race(ctx: Context<StartRace>) -> Result<()> {
-        let race = &mut ctx.accounts.race;
-        let clock = Clock::get()?;
-
-        // Verify race is open
-        require!(
-            race.status == RaceStatus::Open,
-            DegenDerbyError::RaceNotOpen
-        );
-
-        // Verify betting window has passed or minimum bets reached
-        require!(
-            clock.slot >= race.created_at_slot + RACE_DURATION_SLOTS,
-            DegenDerbyError::RaceNotReady
-        );
-
-        race.status = RaceStatus::Running;
-        race.started_at_slot = clock.slot;
-
-        msg!("Race started: {}", race.key());
-        Ok(())
-    }
-
-    /// Resolve race with Arcium randomized winner
-    pub fn resolve_race(
-        ctx: Context<ResolveRace>,
-        computation_offset: u64,
-        pub_key: [u8; 32],
-        nonce: u128,
-    ) -> Result<()> {
-        let race = &mut ctx.accounts.race;
-
-        // Verify race is running
-        require!(
-            race.status == RaceStatus::Running,
-            DegenDerbyError::RaceNotRunning
-        );
-
-        // Prep Arcium arguments (sending bet weights to circuit)
-        // For Derby, we send the total bets per horse to the circuit
-        // so it can perform weighted random selection.
-        let mut arg_builder = ArgBuilder::new()
-            .x25519_pubkey(pub_key)
-            .plaintext_u128(nonce);
-            
-        for &bet in race.total_bets.iter() {
-            arg_builder = arg_builder.plaintext_u64(bet);
-        }
-
-        let args = arg_builder.build();
-
-        ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
-
-        // Queue the computation
-        queue_computation(
-            ctx.accounts,
-            computation_offset,
-            args,
-            vec![ResolveRaceCallback::callback_ix(
-                computation_offset,
-                &ctx.accounts.mxe_account,
-                &[],
-            )?],
-            1,
-            0,
-        )?;
-
-        msg!("Race resolution requested via Arcium for: {}", race.key());
-        Ok(())
-    }
-
-    /// Callback from Arcium with the winner index
-    #[arcium_callback(encrypted_ix = "resolve_race")]
-    pub fn resolve_race_callback(
-        ctx: Context<ResolveRaceCallback>,
-        output: SignedComputationOutputs<DerbyOutput>,
-    ) -> Result<()> {
-        // Verify and extract the computation output
-        let winner_index = match output.verify_output(
-            &ctx.accounts.cluster_account,
-            &ctx.accounts.computation_account,
-        ) {
-            Ok(DerbyOutput { winner_index }) => winner_index,
-            Err(_) => return Err(DegenDerbyError::ArciumVerificationFailed.into()),
-        };
-
-        let race = &mut ctx.accounts.race;
-        let house = &mut ctx.accounts.house;
-        let clock = Clock::get()?;
-
-        // Calculate total pool and fees
-        let total_pool: u64 = race.total_bets.iter().sum();
-        let house_fee = total_pool * HOUSE_FEE_BPS as u64 / 10000;
-
-        house.treasury += house_fee;
-        house.total_volume += total_pool;
-
-        // Update race
-        race.status = RaceStatus::Finished;
-        race.winner = Some(winner_index);
-        race.finished_at_slot = clock.slot;
-        race.house_fee = house_fee;
-
-        msg!(
-            "Race resolved via Arcium! Winner: horse {}. Total pool: {} lamports",
-            winner_index,
-            total_pool
-        );
-
-        Ok(())
-    }
+*/
 
     /// Claim winnings for a finished race
     pub fn claim_winnings(ctx: Context<ClaimWinnings>) -> Result<()> {
@@ -409,30 +198,13 @@ pub struct InitializeHouse<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/*
 #[init_computation_definition_accounts("derby", payer)]
 #[derive(Accounts)]
 pub struct InitDerbyCompDef<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    #[account(mut, address = derive_mxe_pda!())]
-    pub mxe_account: Box<Account<'info, MXEAccount>>,
-
-    #[account(mut)]
-    /// CHECK: comp_def_account, checked by arcium program.
-    pub comp_def_account: UncheckedAccount<'info>,
-
-    #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
-    /// CHECK: address_lookup_table, checked by arcium program.
-    pub address_lookup_table: UncheckedAccount<'info>,
-
-    #[account(address = LUT_PROGRAM_ID)]
-    /// CHECK: lut_program is the Address Lookup Table program.
-    pub lut_program: UncheckedAccount<'info>,
-
-    pub arcium_program: Program<'info, Arcium>,
-    pub system_program: Program<'info, System>,
+...
 }
+*/
 
 #[derive(Accounts)]
 #[instruction(horses: Vec<HorseData>)]
@@ -484,100 +256,14 @@ pub struct StartRace<'info> {
     pub authority: Signer<'info>,
 }
 
+/*
 #[queue_computation_accounts("derby", payer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
 pub struct ResolveRace<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    #[account(mut)]
-    pub race: Account<'info, Race>,
-    
-    #[account(mut)]
-    pub house: Account<'info, DegenDerbyHouse>,
-
-    #[account(
-        init_if_needed,
-        space = 9,
-        payer = payer,
-        seeds = [&SIGN_PDA_SEED],
-        bump,
-        address = derive_sign_pda!(),
-    )]
-    pub sign_pda_account: Account<'info, ArciumSignerAccount>,
-
-    #[account(address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
-
-    #[account(
-        mut,
-        address = derive_mempool_pda!(mxe_account, DegenDerbyError::ClusterNotSet)
-    )]
-    /// CHECK: mempool_account, checked by arcium program
-    pub mempool_account: UncheckedAccount<'info>,
-
-    #[account(
-        mut,
-        address = derive_execpool_pda!(mxe_account, DegenDerbyError::ClusterNotSet)
-    )]
-    /// CHECK: executing_pool, checked by arcium program
-    pub executing_pool: UncheckedAccount<'info>,
-
-    #[account(
-        mut,
-        address = derive_comp_pda!(computation_offset, mxe_account, DegenDerbyError::ClusterNotSet)
-    )]
-    /// CHECK: computation_account, checked by arcium program
-    pub computation_account: UncheckedAccount<'info>,
-
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_DERBY))]
-    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
-
-    #[account(
-        mut,
-        address = derive_cluster_pda!(mxe_account, DegenDerbyError::ClusterNotSet)
-    )]
-    pub cluster_account: Account<'info, Cluster>,
-
-    #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
-    pub pool_account: Account<'info, FeePool>,
-
-    #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
-    pub clock_account: Account<'info, ClockAccount>,
-
-    pub system_program: Program<'info, System>,
-    pub arcium_program: Program<'info, Arcium>,
+...
 }
-
-#[callback_accounts("derby")]
-#[derive(Accounts)]
-pub struct ResolveRaceCallback<'info> {
-    pub arcium_program: Program<'info, Arcium>,
-
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_DERBY))]
-    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
-
-    #[account(address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
-
-    /// CHECK: computation_account, checked by arcium program
-    pub computation_account: UncheckedAccount<'info>,
-
-    #[account(address = derive_cluster_pda!(mxe_account, DegenDerbyError::ClusterNotSet))]
-    pub cluster_account: Account<'info, Cluster>,
-
-    #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
-    /// CHECK: instructions_sysvar
-    pub instructions_sysvar: AccountInfo<'info>,
-
-    // Custom callback accounts
-    #[account(mut)]
-    pub race: Account<'info, Race>,
-
-    #[account(mut)]
-    pub house: Account<'info, DegenDerbyHouse>,
-}
+*/
 
 #[derive(Accounts)]
 pub struct ClaimWinnings<'info> {
@@ -657,10 +343,12 @@ impl Race {
     pub const SIZE: usize = 32 + (4 + 8 * (4 + 20 + 2)) + (4 + 8 * 8) + (4 + 8 * 4) + 1 + 8 + 8 + 8 + 1 + 8 + 1;
 }
 
+/*
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub struct DerbyOutput {
     pub winner_index: u8,
 }
+*/
 
 #[account]
 pub struct PlayerBet {
