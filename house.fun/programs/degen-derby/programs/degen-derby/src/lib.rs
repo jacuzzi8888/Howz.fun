@@ -213,7 +213,7 @@ pub struct CreateRace<'info> {
         init,
         payer = creator,
         space = 8 + Race::SIZE,
-        seeds = [b"race", &house.total_races.to_le_bytes()],
+        seeds = [b"race", house.total_races.to_le_bytes().as_ref()],
         bump
     )]
     pub race: Account<'info, Race>,
@@ -269,7 +269,7 @@ pub struct ResolveRace<'info> {
 pub struct ClaimWinnings<'info> {
     #[account(
         mut,
-        seeds = [b"race", &race.key().to_bytes()],
+        seeds = [b"race", race.key().as_ref()],
         bump = race.bump,
     )]
     pub race: Account<'info, Race>,
