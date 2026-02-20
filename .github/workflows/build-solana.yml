@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  SOLANA_VERSION: "2.1.15"
+  SOLANA_VERSION: "3.1.8"
   ANCHOR_VERSION: "0.32.1"
   RUST_TOOLCHAIN: "stable"
 
@@ -128,12 +128,7 @@ jobs:
           SECRET: ${{ secrets.DEPLOYER_KEY }}
 
       # ─── Build ────────────────────────────────────────────────────────
-      - name: Pin indexmap for bundled rustc compatibility
-        run: |
-          # cargo build-sbf uses Solana-bundled rustc 1.79.0-dev
-          # indexmap >=2.7.0 requires rustc 1.82 — pin it to 2.6.0
-          cd house.fun
-          cargo update -p indexmap --precise 2.6.0 --workspace
+
 
       - name: Build All Programs
         run: |
