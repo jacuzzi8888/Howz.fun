@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "programs/shadow-poker/programs/shadow-poker",
+    "programs/degen-derby/programs/degen-derby",
+    "programs/fight-club/programs/fight-club",
+]
+resolver = "2"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+opt-level = 3
+
+# ─── Shared dependency versions ───────────────────────────────────────────────
+# Keeping all dep versions here ensures the whole workspace resolves consistently
+# and lets individual program Cargo.toml files use `dep.workspace = true` syntax.
+[workspace.dependencies]
+anchor-lang   = { version = "0.32.1", features = ["init-if-needed"] }
+arcium-anchor = "0.8.0"
+arcium-macros = "0.8.0"
+arcium-client = { version = "0.8.0", default-features = false }
+pyth-solana-receiver-sdk = "1.1.0"
+blake3        = "=1.5.5"
