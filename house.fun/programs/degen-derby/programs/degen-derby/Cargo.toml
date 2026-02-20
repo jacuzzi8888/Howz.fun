@@ -22,7 +22,3 @@ arcium-macros = "0.8.0"
 arcium-anchor = "0.8.0"
 blake3 = "=1.5.5"
 
-[patch.crates-io]
-# indexmap >=2.7.0 requires rustc 1.82, but cargo build-sbf uses the
-# Solana-bundled rustc 1.79.0-dev. Pin to 2.6.0 (supports rustc 1.75+).
-indexmap = "=2.6.0"

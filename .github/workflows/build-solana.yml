@@ -8,7 +8,6 @@ on:
       - 'house.fun/Anchor.toml'
       - 'house.fun/Cargo.toml'
       - 'house.fun/Cargo.lock'
-      - '.github/workflows/**'
   workflow_dispatch:
 
 env:
@@ -133,10 +132,8 @@ jobs:
         run: |
           # cargo build-sbf uses Solana-bundled rustc 1.79.0-dev
           # indexmap >=2.7.0 requires rustc 1.82 — pin it to 2.6.0
-          for prog in house.fun/programs/shadow-poker house.fun/programs/degen-derby house.fun/programs/fight-club; do
-            echo "Pinning indexmap in $prog..."
-            (cd "$prog" && cargo update -p indexmap --precise 2.6.0)
-          done
+          cd house.fun
+          cargo update -p indexmap --precise 2.6.0 --workspace
 
       - name: Build All Programs
         run: |
