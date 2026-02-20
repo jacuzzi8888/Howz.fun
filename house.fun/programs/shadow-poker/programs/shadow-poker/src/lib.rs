@@ -410,7 +410,7 @@ pub struct CreateTable<'info> {
         init,
         payer = creator,
         space = 8 + Table::SIZE,
-        seeds = [b"table", house.total_tables.to_le_bytes().as_ref()],
+        seeds = [b"table".as_ref(), house.total_tables.to_le_bytes().as_ref()],
         bump
     )]
     pub table: Account<'info, Table>,
@@ -434,7 +434,7 @@ pub struct JoinTable<'info> {
         init,
         payer = player,
         space = 8 + PlayerState::SIZE,
-        seeds = [b"player_state", table.key().as_ref(), player.key().as_ref()],
+        seeds = [b"player_state".as_ref(), table.key().as_ref(), player.key().as_ref()],
         bump
     )]
     pub player_state: Account<'info, PlayerState>,

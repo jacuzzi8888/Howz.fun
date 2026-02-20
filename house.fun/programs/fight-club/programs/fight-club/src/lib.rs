@@ -391,7 +391,7 @@ pub struct CreateMatchV2<'info> {
         init,
         payer = creator,
         space = 8 + FightMatch::SIZE,
-        seeds = [b"match", &house.total_matches.to_le_bytes()],
+        seeds = [b"match".as_ref(), house.total_matches.to_le_bytes().as_ref()],
         bump
     )]
     pub fight_match: Account<'info, FightMatch>,
@@ -414,7 +414,7 @@ pub struct CreateMatch<'info> {
         init,
         payer = creator,
         space = 8 + FightMatch::SIZE,
-        seeds = [b"match", &house.total_matches.to_le_bytes()],
+        seeds = [b"match".as_ref(), house.total_matches.to_le_bytes().as_ref()],
         bump
     )]
     pub fight_match: Account<'info, FightMatch>,
@@ -438,7 +438,7 @@ pub struct PlaceBet<'info> {
         init,
         payer = player,
         space = 8 + PlayerBet::SIZE,
-        seeds = [b"player_bet", fight_match.key().as_ref(), player.key().as_ref()],
+        seeds = [b"player_bet".as_ref(), fight_match.key().as_ref(), player.key().as_ref()],
         bump
     )]
     pub player_bet: Account<'info, PlayerBet>,
@@ -478,14 +478,14 @@ pub struct ResolveMatch<'info> {
 pub struct ClaimWinnings<'info> {
     #[account(
         mut,
-        seeds = [b"match", &fight_match.key().to_bytes()],
+        seeds = [b"match".as_ref(), fight_match.key().as_ref()],
         bump = fight_match.bump,
     )]
     pub fight_match: Account<'info, FightMatch>,
     
     #[account(
         mut,
-        seeds = [b"player_bet", fight_match.key().as_ref(), player.key().as_ref()],
+        seeds = [b"player_bet".as_ref(), fight_match.key().as_ref(), player.key().as_ref()],
         bump = player_bet.bump,
     )]
     pub player_bet: Account<'info, PlayerBet>,
@@ -510,14 +510,14 @@ pub struct CancelMatch<'info> {
 pub struct RefundBet<'info> {
     #[account(
         mut,
-        seeds = [b"match", &fight_match.key().to_bytes()],
+        seeds = [b"match".as_ref(), fight_match.key().as_ref()],
         bump = fight_match.bump,
     )]
     pub fight_match: Account<'info, FightMatch>,
     
     #[account(
         mut,
-        seeds = [b"player_bet", fight_match.key().as_ref(), player.key().as_ref()],
+        seeds = [b"player_bet".as_ref(), fight_match.key().as_ref(), player.key().as_ref()],
         bump = player_bet.bump,
     )]
     pub player_bet: Account<'info, PlayerBet>,
