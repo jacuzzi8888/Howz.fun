@@ -135,6 +135,10 @@ jobs:
         run: |
           cd house.fun
           anchor build
+          mkdir -p target/deploy
+          mkdir -p target/idl
+          find programs -name "*.so" -exec cp {} target/deploy/ \;
+          find programs -name "*.json" -exec cp {} target/idl/ \;
 
       # ─── Upload Artifacts ─────────────────────────────────────────────
       - name: Upload Build Artifacts
