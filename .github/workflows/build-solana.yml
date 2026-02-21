@@ -253,7 +253,7 @@ jobs:
             --provider.cluster "$RPC_URL" \
             --provider.wallet deployer-key.json \
             --program-name shadow_poker \
-            --skip-idl
+            --no-idl
 
       - name: Deploy Degen Derby
         run: |
@@ -262,7 +262,7 @@ jobs:
             --provider.cluster "$RPC_URL" \
             --provider.wallet deployer-key.json \
             --program-name degen_derby \
-            --skip-idl
+            --no-idl
 
       - name: Deploy Fight Club
         run: |
@@ -271,7 +271,7 @@ jobs:
             --provider.cluster "$RPC_URL" \
             --provider.wallet deployer-key.json \
             --program-name fight_club \
-            --skip-idl
+            --no-idl
 
       - name: Verify Deployments On-Chain
         run: |
