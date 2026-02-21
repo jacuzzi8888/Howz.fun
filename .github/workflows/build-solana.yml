@@ -237,6 +237,8 @@ jobs:
             RPC_URL="https://api.devnet.solana.com"
             echo "Using public devnet RPC"
           fi
+          echo "RPC_URL=$RPC_URL" >> $GITHUB_ENV
+          
           solana config set --url "$RPC_URL"
           solana config set --keypair deployer-key.json
           echo "Deployer: $(solana address)"
@@ -248,7 +250,7 @@ jobs:
         run: |
           cd house.fun
           anchor deploy \
-            --provider.cluster devnet \
+            --provider.cluster "$RPC_URL" \
             --provider.wallet deployer-key.json \
             --program-name shadow_poker
 
@@ -256,7 +258,7 @@ jobs:
         run: |
           cd house.fun
           anchor deploy \
-            --provider.cluster devnet \
+            --provider.cluster "$RPC_URL" \
             --provider.wallet deployer-key.json \
             --program-name degen_derby
 
@@ -264,18 +266,18 @@ jobs:
         run: |
           cd house.fun
           anchor deploy \
-            --provider.cluster devnet \
+            --provider.cluster "$RPC_URL" \
             --provider.wallet deployer-key.json \
             --program-name fight_club
 
       - name: Verify Deployments On-Chain
         run: |
           echo "=== Shadow Poker ==="
-          solana program show 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s --url devnet || true
+          solana program show 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s --url "$RPC_URL" || true
           echo "=== Degen Derby ==="
-          solana program show Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv --url devnet || true
+          solana program show Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv --url "$RPC_URL" || true
           echo "=== Fight Club ==="
-          solana program show GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW --url devnet || true
+          solana program show GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW --url "$RPC_URL" || true
 
       - name: Upload Final IDLs
         uses: actions/upload-artifact@v4
