@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
 // Program ID - Replace with actual after deployment
-declare_id!("3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s");
+declare_id!("5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD");
 
 // Constants
 pub const HOUSE_FEE_BPS: u16 = 50; // 0.5% house fee (lower for poker)
@@ -307,12 +307,34 @@ pub mod shadow_poker {
         Ok(())
     }
 
-    /*
-    /// Initialize the poker computation definition
-    pub fn init_poker_comp_def(ctx: Context<InitPokerCompDef>) -> Result<()> {
-// ...
+    /// Resolve Hand (Temporary until Arcium MPC)
+    pub fn resolve_hand(ctx: Context<Showdown>) -> Result<()> {
+        let table = &mut ctx.accounts.table;
+        let house = &mut ctx.accounts.house;
+        let winner_state = &mut ctx.accounts.winner_state;
+        
+        require!(table.status == TableStatus::Betting || table.status == TableStatus::Dealing || table.status == TableStatus::Finished, ShadowPokerError::InvalidGameState);
+
+        let house_fee = (table.pot * HOUSE_FEE_BPS as u64) / 10000;
+        let winner_payout = table.pot.checked_sub(house_fee).unwrap_or(0);
+
+        table.house_fee += house_fee;
+        house.treasury += house_fee;
+        house.total_volume += table.pot;
+
+        // Route house fee to treasury
+        **table.to_account_info().try_borrow_mut_lamports()? -= house_fee;
+        **house.to_account_info().try_borrow_mut_lamports()? += house_fee;
+
+        // Credit winner
+        winner_state.stack += winner_payout;
+        
+        table.pot = 0;
+        table.status = TableStatus::Finished;
+
+        msg!("Hand resolved. Winner payout: {}", winner_payout);
+        Ok(())
     }
-    */
 
     /// Leave table and withdraw remaining stack
     pub fn leave_table(ctx: Context<LeaveTable>) -> Result<()> {
@@ -498,6 +520,13 @@ pub struct Showdown<'info> {
     
     #[account(mut)]
     pub house: Account<'info, ShadowPokerHouse>,
+
+    #[account(
+        mut,
+        seeds = [b"player_state", table.key().as_ref(), winner_state.player.as_ref()],
+        bump = winner_state.bump
+    )]
+    pub winner_state: Account<'info, PlayerState>,
     
     pub authority: Signer<'info>,
 }

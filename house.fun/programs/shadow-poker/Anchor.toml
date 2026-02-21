@@ -4,10 +4,10 @@ skip-lint = false
 skip-idl = true
 
 [programs.localnet]
-shadow_poker = "3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
+shadow_poker = "5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD"
 
 [programs.devnet]
-shadow_poker = "3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
+shadow_poker = "5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD"
 
 [registry]
 url = "https://api.apr.dev"

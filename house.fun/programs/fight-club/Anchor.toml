@@ -4,10 +4,10 @@ skip-lint = false
 skip-idl = true
 
 [programs.localnet]
-fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
+fight_club = "9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z"
 
 [programs.devnet]
-fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"
+fight_club = "9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z"
 
 [registry]
 url = "https://api.apr.dev"

@@ -1,7 +1,7 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import { Suspense } from "react";
 
 import { TRPCReactProvider } from "~/trpc/react";
@@ -10,8 +10,9 @@ import { SolanaWalletProvider } from "~/providers/SolanaWalletProvider";
 import { MagicBlockProvider } from "~/lib/magicblock/MagicBlockContext";
 import { ArciumProvider } from "~/lib/arcium/ArciumContext";
 import { WalletSync } from "~/components/wallet/WalletSync";
+import { FullPageLoader } from "~/components/loading";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
 export const metadata: Metadata = {
   title: "Howz.fun | The House Always Wins. So Can You.",
@@ -32,22 +33,11 @@ export const metadata: Metadata = {
   },
 };
 
-function PageLoadingFallback() {
-  return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="size-8 border-2 border-white/10 border-t-[#07CC00] rounded-full animate-spin" />
-        <span className="text-sm font-bold text-white/40 uppercase tracking-widest">Loading...</span>
-      </div>
-    </div>
-  );
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={spaceGrotesk.variable}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -62,7 +52,7 @@ export default function RootLayout({
               <ArciumProvider>
                 <div className="flex flex-col min-h-screen">
                   <Header />
-                  <Suspense fallback={<PageLoadingFallback />}>
+                  <Suspense fallback={<FullPageLoader />}>
                     <div className="flex-1 overflow-y-auto">
                       {children}
                     </div>

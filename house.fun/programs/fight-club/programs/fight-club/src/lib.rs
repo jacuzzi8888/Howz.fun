@@ -3,7 +3,7 @@ use anchor_lang::solana_program::clock::Clock;
 use pyth_solana_receiver_sdk::price_update::{PriceUpdateV2, FeedId};
 
 // Program ID - Replace with actual after deployment
-declare_id!("GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW");
+declare_id!("9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z");
 
 // Constants
 pub const HOUSE_FEE_BPS: u16 = 100; // 1% house fee
@@ -180,6 +180,11 @@ pub mod fight_club {
         house.treasury += house_fee;
         house.total_volume += total_pool;
 
+        // Securely transfer house fee lamports from the Match escrow to the House treasury
+        // Since both PDAs are owned by this program, we can do direct lamport manipulation
+        **fight_match.to_account_info().try_borrow_mut_lamports()? -= house_fee;
+        **house.to_account_info().try_borrow_mut_lamports()? += house_fee;
+
         // Update match
         fight_match.status = MatchStatus::Resolved;
         fight_match.winner = Some(winner_side);
@@ -220,6 +225,7 @@ pub mod fight_club {
         );
 
         // Calculate winnings
+        // Calculate net winnings after house fee
         let total_losing_pool = if winner_side == 0 {
             fight_match.total_bet_b
         } else {
@@ -232,9 +238,17 @@ pub mod fight_club {
             fight_match.total_bet_b
         };
 
-        // Proportional winnings: (player_bet / total_winning_pool) * total_losing_pool
+        // The house already took its fee from the total pool during resolve_with_pyth
+        // To be perfectly accurate with pari-mutuel payout, we reduce the losing pool proportionally
+        let house_fee_from_losing = (total_losing_pool * HOUSE_FEE_BPS as u64) / 10000;
+        let house_fee_from_winning = (total_winning_pool * HOUSE_FEE_BPS as u64) / 10000;
+        
+        // The net losing pool available to distribute to winners (minus the fee already taken)
+        let net_losing_pool = total_losing_pool.checked_sub(house_fee_from_losing + house_fee_from_winning).unwrap_or(0);
+
+        // Proportional winnings: (player_bet / total_winning_pool) * net_losing_pool
         let winnings_from_pool = if total_winning_pool > 0 {
-            (player_bet.amount * total_losing_pool) / total_winning_pool
+            (player_bet.amount * net_losing_pool) / total_winning_pool
         } else {
             0
         };

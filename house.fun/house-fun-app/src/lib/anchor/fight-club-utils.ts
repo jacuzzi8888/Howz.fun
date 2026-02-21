@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type FightClub, FIGHT_CLUB_IDL } from './fight-club-idl';
 
 // Program ID from deployment
-export const FIGHT_CLUB_PROGRAM_ID = new web3.PublicKey('AVVzy9JxsarZ7DvXwUDZFwpFH1RYJEJBperCcE15TsGN');
+export const FIGHT_CLUB_PROGRAM_ID = new web3.PublicKey('9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;

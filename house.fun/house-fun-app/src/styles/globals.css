@@ -1,28 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+
   /* Primary */
-  --color-primary: #07cc00;
-  --color-primaryHover: #06ad00;
-  --color-accentGold: #F59E0B;
+  --color-primary: #00FF41;
+  --color-primaryHover: #33FF66;
+  --color-accentGold: #FFB800;
   --color-background-dark: #0A0A0F;
-  
+
   /* Semantic */
   --color-danger: #EF4444;
   --color-dangerHover: #DC2626;
   --color-warning: #F59E0B;
   --color-success: #07cc00;
-  
+
   /* Surfaces */
   --color-surface: rgba(255, 255, 255, 0.03);
   --color-surfaceHover: rgba(255, 255, 255, 0.06);
   --color-border: rgba(255, 255, 255, 0.08);
-  
+
   /* Text */
   --color-textMuted: #6B7280;
   --color-textDim: #9CA3AF;
+
+  /* Animations */
+  @keyframes shimmer {
+    100% {
+      transform: translateX(150%) skewX(-20deg);
+    }
+  }
 }
 
 /* ============================================================
@@ -194,13 +201,11 @@ button:focus-visible {
   }
 
   .bg-scanlines {
-    background: linear-gradient(
-      to bottom,
-      rgba(255,255,255,0),
-      rgba(255,255,255,0) 50%,
-      rgba(0,0,0,0.2) 50%,
-      rgba(0,0,0,0.2)
-    );
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0) 50%,
+        rgba(0, 0, 0, 0.2) 50%,
+        rgba(0, 0, 0, 0.2));
     background-size: 100% 4px;
   }
 
@@ -244,4 +249,3 @@ button:focus-visible {
 body {
   background-color: #0A0A0F;
 }
-

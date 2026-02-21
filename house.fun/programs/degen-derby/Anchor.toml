@@ -6,10 +6,10 @@ skip-lint = false
 skip-idl = true
 
 [programs.devnet]
-degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
+degen_derby = "Bi47R2F3rkyDfvMHEUzyDXuv9TCFPJ3uzHpNCYPBMQeE"
 
 [programs.localnet]
-degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"
+degen_derby = "Bi47R2F3rkyDfvMHEUzyDXuv9TCFPJ3uzHpNCYPBMQeE"
 
 [registry]
 url = "https://api.apr.dev"
