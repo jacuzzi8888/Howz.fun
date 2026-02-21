@@ -1,6 +1,7 @@
 [features]
 seeds = false
 skip-lint = false
+skip-idl = true
 
 [programs.localnet]
 fight_club = "GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW"

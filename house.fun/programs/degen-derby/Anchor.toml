@@ -3,6 +3,7 @@
 [features]
 resolution = true
 skip-lint = false
+skip-idl = true
 
 [programs.devnet]
 degen_derby = "Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv"

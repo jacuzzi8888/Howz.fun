@@ -1,6 +1,7 @@
 [features]
 seeds = false
 skip-lint = false
+skip-idl = true
 
 [programs.localnet]
 shadow_poker = "3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s"
