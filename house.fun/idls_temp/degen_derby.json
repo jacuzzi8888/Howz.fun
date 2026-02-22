@@ -1,0 +1,683 @@
+{
+  "address": "ChxbiHQ7VQjeRcyrqhtr93wiVqCLZvwXMYzn9MAtYHvg",
+  "metadata": {
+    "name": "degen_derby",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "claim_winnings",
+      "docs": [
+        "Claim winnings for a finished race"
+      ],
+      "discriminator": [
+        161,
+        215,
+        24,
+        59,
+        14,
+        236,
+        242,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "race",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "race"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player_bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "race"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_race",
+      "docs": [
+        "Create a new race"
+      ],
+      "discriminator": [
+        233,
+        107,
+        148,
+        159,
+        241,
+        155,
+        226,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "race",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "house.total_races",
+                "account": "DegenDerbyHouse"
+              }
+            ]
+          }
+        },
+        {
+          "name": "house",
+          "writable": true
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "horses",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "HorseData"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_house",
+      "docs": [
+        "Initialize the Degen Derby house"
+      ],
+      "discriminator": [
+        180,
+        46,
+        86,
+        125,
+        135,
+        107,
+        214,
+        28
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  103,
+                  101,
+                  110,
+                  95,
+                  100,
+                  101,
+                  114,
+                  98,
+                  121,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "place_bet",
+      "docs": [
+        "Place a bet on a horse"
+      ],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        63,
+        166,
+        126,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "race",
+          "writable": true
+        },
+        {
+          "name": "player_bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "race"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "horse_index",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "resolve_race",
+      "docs": [
+        "Resolve Race (Temporary Pseudo-Randomness until Arcium MPC is integrated)"
+      ],
+      "discriminator": [
+        181,
+        252,
+        7,
+        209,
+        242,
+        100,
+        95,
+        172
+      ],
+      "accounts": [
+        {
+          "name": "race",
+          "writable": true
+        },
+        {
+          "name": "house",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "start_race",
+      "docs": [
+        "Start the race"
+      ],
+      "discriminator": [
+        167,
+        209,
+        181,
+        53,
+        90,
+        108,
+        220,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "race",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw_treasury",
+      "docs": [
+        "Withdraw treasury (admin only)"
+      ],
+      "discriminator": [
+        40,
+        63,
+        122,
+        158,
+        144,
+        216,
+        83,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  103,
+                  101,
+                  110,
+                  95,
+                  100,
+                  101,
+                  114,
+                  98,
+                  121,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "DegenDerbyHouse",
+      "discriminator": [
+        169,
+        83,
+        28,
+        40,
+        47,
+        32,
+        95,
+        227
+      ]
+    },
+    {
+      "name": "PlayerBet",
+      "discriminator": [
+        244,
+        5,
+        205,
+        245,
+        189,
+        41,
+        154,
+        0
+      ]
+    },
+    {
+      "name": "Race",
+      "discriminator": [
+        114,
+        93,
+        186,
+        119,
+        99,
+        123,
+        162,
+        192
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "BetTooSmall",
+      "msg": "Bet amount too small"
+    },
+    {
+      "code": 6001,
+      "name": "BetTooLarge",
+      "msg": "Bet amount too large"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidHorseCount",
+      "msg": "Invalid horse count (2-8 allowed)"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidHorseIndex",
+      "msg": "Invalid horse index"
+    },
+    {
+      "code": 6004,
+      "name": "RaceNotOpen",
+      "msg": "Race is not open for betting"
+    },
+    {
+      "code": 6005,
+      "name": "RaceNotRunning",
+      "msg": "Race is not running"
+    },
+    {
+      "code": 6006,
+      "name": "RaceNotFinished",
+      "msg": "Race is not finished"
+    },
+    {
+      "code": 6007,
+      "name": "RaceNotReady",
+      "msg": "Race betting window not complete"
+    },
+    {
+      "code": 6008,
+      "name": "AlreadyBet",
+      "msg": "Player already bet on this race"
+    },
+    {
+      "code": 6009,
+      "name": "NotWinner",
+      "msg": "Player did not win"
+    },
+    {
+      "code": 6010,
+      "name": "AlreadyClaimed",
+      "msg": "Winnings already claimed"
+    },
+    {
+      "code": 6011,
+      "name": "UnauthorizedHouse",
+      "msg": "Unauthorized house authority"
+    },
+    {
+      "code": 6012,
+      "name": "InsufficientTreasury",
+      "msg": "Insufficient treasury balance"
+    },
+    {
+      "code": 6013,
+      "name": "ArciumVerificationFailed",
+      "msg": "Arcium computation verification failed"
+    },
+    {
+      "code": 6014,
+      "name": "ClusterNotSet",
+      "msg": "Cluster not set for MXE"
+    }
+  ],
+  "types": [
+    {
+      "name": "DegenDerbyHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "u64"
+          },
+          {
+            "name": "total_races",
+            "type": "u64"
+          },
+          {
+            "name": "total_volume",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HorseData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "odds",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerBet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "race_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "horse_index",
+            "type": "u8"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Race",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "horses",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "HorseData"
+                }
+              }
+            }
+          },
+          {
+            "name": "total_bets",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "player_counts",
+            "type": {
+              "vec": "u32"
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "RaceStatus"
+              }
+            }
+          },
+          {
+            "name": "created_at_slot",
+            "type": "u64"
+          },
+          {
+            "name": "started_at_slot",
+            "type": "u64"
+          },
+          {
+            "name": "finished_at_slot",
+            "type": "u64"
+          },
+          {
+            "name": "winner",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "house_fee",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RaceStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Running"
+          },
+          {
+            "name": "Finished"
+          }
+        ]
+      }
+    }
+  ]
+}

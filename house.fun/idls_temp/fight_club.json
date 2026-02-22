@@ -1,0 +1,949 @@
+{
+  "address": "12xf33mJLJjRsJk2oDMbucratJwxDms6H3i5XvipvaTe",
+  "metadata": {
+    "name": "fight_club",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "cancel_match",
+      "docs": [
+        "Cancel match and refund bets (admin only, before resolution)"
+      ],
+      "discriminator": [
+        142,
+        136,
+        247,
+        45,
+        92,
+        112,
+        180,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "fight_match",
+          "writable": true
+        },
+        {
+          "name": "house"
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_winnings",
+      "docs": [
+        "Claim winnings for a resolved match"
+      ],
+      "discriminator": [
+        161,
+        215,
+        24,
+        59,
+        14,
+        236,
+        242,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "fight_match",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  116,
+                  99,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fight_match"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player_bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fight_match"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_match_v2",
+      "docs": [
+        "Create a new fight match with Pyth Price Feeds"
+      ],
+      "discriminator": [
+        196,
+        86,
+        246,
+        180,
+        171,
+        160,
+        22,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "fight_match",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  116,
+                  99,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "house.total_matches",
+                "account": "FightClubHouse"
+              }
+            ]
+          }
+        },
+        {
+          "name": "house",
+          "writable": true
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "price_update_a"
+        },
+        {
+          "name": "price_update_b"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token_a",
+          "type": "string"
+        },
+        {
+          "name": "token_b",
+          "type": "string"
+        },
+        {
+          "name": "feed_id_a",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "feed_id_b",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_house",
+      "docs": [
+        "Initialize the Fight Club house"
+      ],
+      "discriminator": [
+        180,
+        46,
+        86,
+        125,
+        135,
+        107,
+        214,
+        28
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  105,
+                  103,
+                  104,
+                  116,
+                  95,
+                  99,
+                  108,
+                  117,
+                  98,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "place_bet",
+      "docs": [
+        "Place bet on a fighter (token A or B)"
+      ],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        63,
+        166,
+        126,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "fight_match",
+          "writable": true
+        },
+        {
+          "name": "player_bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fight_match"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "side",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "refund_bet",
+      "docs": [
+        "Refund bet for cancelled match"
+      ],
+      "discriminator": [
+        209,
+        182,
+        226,
+        96,
+        55,
+        121,
+        83,
+        183
+      ],
+      "accounts": [
+        {
+          "name": "fight_match",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  116,
+                  99,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fight_match"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player_bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fight_match"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "resolve_with_pyth",
+      "docs": [
+        "Resolve match and determine winner using Pyth Price feeds"
+      ],
+      "discriminator": [
+        19,
+        196,
+        14,
+        12,
+        198,
+        43,
+        90,
+        118
+      ],
+      "accounts": [
+        {
+          "name": "fight_match",
+          "writable": true
+        },
+        {
+          "name": "house",
+          "writable": true
+        },
+        {
+          "name": "price_update_a"
+        },
+        {
+          "name": "price_update_b"
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw_treasury",
+      "docs": [
+        "Withdraw treasury (admin only)"
+      ],
+      "discriminator": [
+        40,
+        63,
+        122,
+        158,
+        144,
+        216,
+        83,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  105,
+                  103,
+                  104,
+                  116,
+                  95,
+                  99,
+                  108,
+                  117,
+                  98,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "FightClubHouse",
+      "discriminator": [
+        236,
+        1,
+        148,
+        111,
+        206,
+        191,
+        106,
+        254
+      ]
+    },
+    {
+      "name": "FightMatch",
+      "discriminator": [
+        155,
+        45,
+        54,
+        167,
+        146,
+        7,
+        84,
+        26
+      ]
+    },
+    {
+      "name": "PlayerBet",
+      "discriminator": [
+        244,
+        5,
+        205,
+        245,
+        189,
+        41,
+        154,
+        0
+      ]
+    },
+    {
+      "name": "PriceUpdateV2",
+      "discriminator": [
+        34,
+        241,
+        35,
+        99,
+        157,
+        126,
+        244,
+        205
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "BetTooSmall",
+      "msg": "Bet amount too small"
+    },
+    {
+      "code": 6001,
+      "name": "BetTooLarge",
+      "msg": "Bet amount too large"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidSide",
+      "msg": "Invalid side selection"
+    },
+    {
+      "code": 6003,
+      "name": "MatchNotOpen",
+      "msg": "Match is not open for betting"
+    },
+    {
+      "code": 6004,
+      "name": "MatchNotResolved",
+      "msg": "Match is not resolved yet"
+    },
+    {
+      "code": 6005,
+      "name": "MatchNotCancelled",
+      "msg": "Match is not cancelled"
+    },
+    {
+      "code": 6006,
+      "name": "AlreadyBet",
+      "msg": "Player already bet on this match"
+    },
+    {
+      "code": 6007,
+      "name": "NotWinner",
+      "msg": "Player did not win"
+    },
+    {
+      "code": 6008,
+      "name": "AlreadyClaimed",
+      "msg": "Winnings already claimed"
+    },
+    {
+      "code": 6009,
+      "name": "UnauthorizedHouse",
+      "msg": "Unauthorized house authority"
+    },
+    {
+      "code": 6010,
+      "name": "InsufficientTreasury",
+      "msg": "Insufficient treasury balance"
+    }
+  ],
+  "types": [
+    {
+      "name": "FightClubHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "u64"
+          },
+          {
+            "name": "total_matches",
+            "type": "u64"
+          },
+          {
+            "name": "total_volume",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FightMatch",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_a",
+            "type": "string"
+          },
+          {
+            "name": "token_b",
+            "type": "string"
+          },
+          {
+            "name": "feed_id_a",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "feed_id_b",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "start_price_a",
+            "type": "i64"
+          },
+          {
+            "name": "start_price_b",
+            "type": "i64"
+          },
+          {
+            "name": "end_price_a",
+            "type": "i64"
+          },
+          {
+            "name": "end_price_b",
+            "type": "i64"
+          },
+          {
+            "name": "total_bet_a",
+            "type": "u64"
+          },
+          {
+            "name": "total_bet_b",
+            "type": "u64"
+          },
+          {
+            "name": "player_count_a",
+            "type": "u32"
+          },
+          {
+            "name": "player_count_b",
+            "type": "u32"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "MatchStatus"
+              }
+            }
+          },
+          {
+            "name": "created_at_slot",
+            "type": "u64"
+          },
+          {
+            "name": "resolved_at_slot",
+            "type": "u64"
+          },
+          {
+            "name": "winner",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "house_fee",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MatchStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Resolved"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerBet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "match_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "side",
+            "type": "u8"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PriceFeedMessage",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feed_id",
+            "docs": [
+              "`FeedId` but avoid the type alias because of compatibility issues with Anchor's `idl-build` feature."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "price",
+            "type": "i64"
+          },
+          {
+            "name": "conf",
+            "type": "u64"
+          },
+          {
+            "name": "exponent",
+            "type": "i32"
+          },
+          {
+            "name": "publish_time",
+            "docs": [
+              "The timestamp of this price update in seconds"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "prev_publish_time",
+            "docs": [
+              "The timestamp of the previous price update. This field is intended to allow users to",
+              "identify the single unique price update for any moment in time:",
+              "for any time t, the unique update is the one such that prev_publish_time < t <= publish_time.",
+              "",
+              "Note that there may not be such an update while we are migrating to the new message-sending logic,",
+              "as some price updates on pythnet may not be sent to other chains (because the message-sending",
+              "logic may not have triggered). We can solve this problem by making the message-sending mandatory",
+              "(which we can do once publishers have migrated over).",
+              "",
+              "Additionally, this field may be equal to publish_time if the message is sent on a slot where",
+              "where the aggregation was unsuccesful. This problem will go away once all publishers have",
+              "migrated over to a recent version of pyth-agent."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "ema_price",
+            "type": "i64"
+          },
+          {
+            "name": "ema_conf",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PriceUpdateV2",
+      "docs": [
+        "A price update account. This account is used by the Pyth Receiver program to store a verified price update from a Pyth price feed.",
+        "It contains:",
+        "- `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different price update.",
+        "- `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this price update.",
+        "- `price_message`: The actual price update.",
+        "- `posted_slot`: The slot at which this price update was posted."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "write_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "verification_level",
+            "type": {
+              "defined": {
+                "name": "VerificationLevel"
+              }
+            }
+          },
+          {
+            "name": "price_message",
+            "type": {
+              "defined": {
+                "name": "PriceFeedMessage"
+              }
+            }
+          },
+          {
+            "name": "posted_slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VerificationLevel",
+      "docs": [
+        "Pyth price updates are bridged to all blockchains via Wormhole.",
+        "Using the price updates on another chain requires verifying the signatures of the Wormhole guardians.",
+        "The usual process is to check the signatures for two thirds of the total number of guardians, but this can be cumbersome on Solana because of the transaction size limits,",
+        "so we also allow for partial verification.",
+        "",
+        "This enum represents how much a price update has been verified:",
+        "- If `Full`, we have verified the signatures for two thirds of the current guardians.",
+        "- If `Partial`, only `num_signatures` guardian signatures have been checked.",
+        "",
+        "# Warning",
+        "Using partially verified price updates is dangerous, as it lowers the threshold of guardians that need to collude to produce a malicious price update."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Partial",
+            "fields": [
+              {
+                "name": "num_signatures",
+                "type": "u8"
+              }
+            ]
+          },
+          {
+            "name": "Full"
+          }
+        ]
+      }
+    }
+  ]
+}

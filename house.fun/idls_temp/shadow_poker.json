@@ -1,0 +1,959 @@
+{
+  "address": "3QWqc6imgV9jBd6XAR6KztEcP7pst6wnxwexjZkJt7ck",
+  "metadata": {
+    "name": "shadow_poker",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "create_table",
+      "docs": [
+        "Create a new poker table"
+      ],
+      "discriminator": [
+        214,
+        142,
+        131,
+        250,
+        242,
+        83,
+        135,
+        185
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  97,
+                  98,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "house.total_tables",
+                "account": "ShadowPokerHouse"
+              }
+            ]
+          }
+        },
+        {
+          "name": "house",
+          "writable": true
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "min_buy_in",
+          "type": "u64"
+        },
+        {
+          "name": "max_buy_in",
+          "type": "u64"
+        },
+        {
+          "name": "small_blind",
+          "type": "u64"
+        },
+        {
+          "name": "big_blind",
+          "type": "u64"
+        },
+        {
+          "name": "max_players",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "initialize_house",
+      "docs": [
+        "Initialize the Shadow Poker house"
+      ],
+      "discriminator": [
+        180,
+        46,
+        86,
+        125,
+        135,
+        107,
+        214,
+        28
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  100,
+                  111,
+                  119,
+                  95,
+                  112,
+                  111,
+                  107,
+                  101,
+                  114,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "join_table",
+      "docs": [
+        "Join a table with buy-in"
+      ],
+      "discriminator": [
+        14,
+        117,
+        84,
+        51,
+        95,
+        146,
+        171,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true
+        },
+        {
+          "name": "player_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "table"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "buy_in",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "leave_table",
+      "docs": [
+        "Leave table and withdraw remaining stack"
+      ],
+      "discriminator": [
+        163,
+        153,
+        94,
+        194,
+        19,
+        106,
+        113,
+        32
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true
+        },
+        {
+          "name": "player_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "table"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "player_action",
+      "docs": [
+        "Player action: Check, Call, Bet, Raise, Fold"
+      ],
+      "discriminator": [
+        37,
+        85,
+        25,
+        135,
+        200,
+        116,
+        96,
+        101
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true
+        },
+        {
+          "name": "player_state",
+          "writable": true
+        },
+        {
+          "name": "player",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "action",
+          "type": {
+            "defined": {
+              "name": "PlayerActionType"
+            }
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "post_blind",
+      "docs": [
+        "Post blind (small or big)"
+      ],
+      "discriminator": [
+        215,
+        28,
+        184,
+        66,
+        212,
+        202,
+        38,
+        156
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true
+        },
+        {
+          "name": "player_state",
+          "writable": true
+        },
+        {
+          "name": "player",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "blind_type",
+          "type": {
+            "defined": {
+              "name": "BlindType"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "resolve_hand",
+      "docs": [
+        "Resolve Hand (Temporary until Arcium MPC)"
+      ],
+      "discriminator": [
+        161,
+        237,
+        38,
+        232,
+        65,
+        210,
+        202,
+        150
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true
+        },
+        {
+          "name": "house",
+          "writable": true
+        },
+        {
+          "name": "winner_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "table"
+              },
+              {
+                "kind": "account",
+                "path": "winner_state.player",
+                "account": "PlayerState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reveal_cards",
+      "docs": [
+        "Reveal community cards (flop, turn, river)"
+      ],
+      "discriminator": [
+        49,
+        29,
+        188,
+        98,
+        30,
+        81,
+        141,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "cards",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "Card"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "start_hand",
+      "docs": [
+        "Start a hand (deal cards)"
+      ],
+      "discriminator": [
+        50,
+        173,
+        164,
+        52,
+        65,
+        42,
+        197,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "table",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw_treasury",
+      "docs": [
+        "Withdraw treasury (admin only)"
+      ],
+      "discriminator": [
+        40,
+        63,
+        122,
+        158,
+        144,
+        216,
+        83,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  100,
+                  111,
+                  119,
+                  95,
+                  112,
+                  111,
+                  107,
+                  101,
+                  114,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PlayerState",
+      "discriminator": [
+        56,
+        3,
+        60,
+        86,
+        174,
+        16,
+        244,
+        195
+      ]
+    },
+    {
+      "name": "ShadowPokerHouse",
+      "discriminator": [
+        124,
+        155,
+        60,
+        109,
+        39,
+        78,
+        204,
+        120
+      ]
+    },
+    {
+      "name": "Table",
+      "discriminator": [
+        34,
+        100,
+        138,
+        97,
+        236,
+        129,
+        230,
+        112
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidPlayerCount",
+      "msg": "Invalid player count (2-6 allowed)"
+    },
+    {
+      "code": 6001,
+      "name": "BuyInTooSmall",
+      "msg": "Buy-in too small"
+    },
+    {
+      "code": 6002,
+      "name": "BuyInTooLarge",
+      "msg": "Buy-in too large"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidBuyInRange",
+      "msg": "Invalid buy-in range"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidBuyIn",
+      "msg": "Invalid buy-in amount"
+    },
+    {
+      "code": 6005,
+      "name": "TableNotJoinable",
+      "msg": "Table is not joinable"
+    },
+    {
+      "code": 6006,
+      "name": "TableFull",
+      "msg": "Table is full"
+    },
+    {
+      "code": 6007,
+      "name": "AlreadyAtTable",
+      "msg": "Player already at table"
+    },
+    {
+      "code": 6008,
+      "name": "NotEnoughPlayers",
+      "msg": "Not enough players to start"
+    },
+    {
+      "code": 6009,
+      "name": "HandInProgress",
+      "msg": "Hand already in progress"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidGameState",
+      "msg": "Invalid game state"
+    },
+    {
+      "code": 6011,
+      "name": "NotYourTurn",
+      "msg": "Not your turn"
+    },
+    {
+      "code": 6012,
+      "name": "CannotCheck",
+      "msg": "Cannot check"
+    },
+    {
+      "code": 6013,
+      "name": "InsufficientStack",
+      "msg": "Insufficient stack"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidBetAmount",
+      "msg": "Invalid bet amount"
+    },
+    {
+      "code": 6015,
+      "name": "BetTooSmall",
+      "msg": "Bet too small"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidCardCount",
+      "msg": "Invalid card count"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidWinner",
+      "msg": "Invalid winner"
+    },
+    {
+      "code": 6018,
+      "name": "NotAtTable",
+      "msg": "Player not at table"
+    },
+    {
+      "code": 6019,
+      "name": "UnauthorizedHouse",
+      "msg": "Unauthorized house authority"
+    },
+    {
+      "code": 6020,
+      "name": "InsufficientTreasury",
+      "msg": "Insufficient treasury balance"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidArciumProof",
+      "msg": "Invalid Arcium proof"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidShowdownProof",
+      "msg": "Invalid showdown proof"
+    },
+    {
+      "code": 6023,
+      "name": "ClusterNotSet",
+      "msg": "Cluster not set for MXE"
+    }
+  ],
+  "types": [
+    {
+      "name": "BlindType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Small"
+          },
+          {
+            "name": "Big"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Card",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "suit",
+            "type": "u8"
+          },
+          {
+            "name": "rank",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerActionType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Check"
+          },
+          {
+            "name": "Call"
+          },
+          {
+            "name": "Bet"
+          },
+          {
+            "name": "Raise"
+          },
+          {
+            "name": "Fold"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "table",
+            "type": "pubkey"
+          },
+          {
+            "name": "stack",
+            "type": "u64"
+          },
+          {
+            "name": "current_bet",
+            "type": "u64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "has_acted",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ShadowPokerHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "u64"
+          },
+          {
+            "name": "total_tables",
+            "type": "u64"
+          },
+          {
+            "name": "total_volume",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Table",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "min_buy_in",
+            "type": "u64"
+          },
+          {
+            "name": "max_buy_in",
+            "type": "u64"
+          },
+          {
+            "name": "small_blind",
+            "type": "u64"
+          },
+          {
+            "name": "big_blind",
+            "type": "u64"
+          },
+          {
+            "name": "max_players",
+            "type": "u8"
+          },
+          {
+            "name": "players",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "TableStatus"
+              }
+            }
+          },
+          {
+            "name": "pot",
+            "type": "u64"
+          },
+          {
+            "name": "current_bet",
+            "type": "u64"
+          },
+          {
+            "name": "community_cards",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Card"
+                }
+              }
+            }
+          },
+          {
+            "name": "dealer_index",
+            "type": "u8"
+          },
+          {
+            "name": "current_player_index",
+            "type": "u8"
+          },
+          {
+            "name": "created_at_slot",
+            "type": "u64"
+          },
+          {
+            "name": "house_fee",
+            "type": "u64"
+          },
+          {
+            "name": "deck_commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "last_proof_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TableStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Waiting"
+          },
+          {
+            "name": "Dealing"
+          },
+          {
+            "name": "Betting"
+          },
+          {
+            "name": "Finished"
+          }
+        ]
+      }
+    }
+  ]
+}
