@@ -243,6 +243,11 @@ jobs:
           solana config set --url "$RPC_URL"
           solana config set --keypair deployer-key.json
           echo "Deployer: $(solana address)"
+          solana airdrop 2 || true
+          solana airdrop 2 || true
+          solana airdrop 2 || true
+          solana airdrop 2 || true
+          solana airdrop 2 || true
           echo "Balance:  $(solana balance)"
         env:
           SECRET: ${{ secrets.DEPLOYER_KEY }}
