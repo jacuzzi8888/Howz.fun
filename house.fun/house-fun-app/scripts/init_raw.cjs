@@ -3,7 +3,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
 
-const authorityKeypairPath = path.resolve(__dirname, "../authority.json");
+const authorityKeypairPath = path.resolve(__dirname, "../../authority.json");
 const authRaw = fs.readFileSync(authorityKeypairPath, "utf8");
 const authority = web3.Keypair.fromSecretKey(Uint8Array.from(JSON.parse(authRaw)));
 const connection = new web3.Connection("https://api.devnet.solana.com", "confirmed");
@@ -13,9 +13,9 @@ function getDiscriminator(name) {
 }
 const initData = getDiscriminator("global:initialize_house");
 
-const SHADOW_POKER_ID = new web3.PublicKey("5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD");
-const DEGEN_DERBY_ID = new web3.PublicKey("Bi47R2F3rkyDfvMHEUzyDXuv9TCFPJ3uzHpNCYPBMQeE");
-const FIGHT_CLUB_ID = new web3.PublicKey("9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z");
+const SHADOW_POKER_ID = new web3.PublicKey("HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx");
+const DEGEN_DERBY_ID = new web3.PublicKey("G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB");
+const FIGHT_CLUB_ID = new web3.PublicKey("5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN");
 
 async function initHouse(programId, seedStr) {
     const [pda] = web3.PublicKey.findProgramAddressSync([Buffer.from(seedStr)], programId);

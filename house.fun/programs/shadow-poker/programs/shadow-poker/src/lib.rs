@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
 // Program ID - Replace with actual after deployment
-declare_id!("5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD");
+declare_id!("HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx");
 
 // Constants
 pub const HOUSE_FEE_BPS: u16 = 50; // 0.5% house fee (lower for poker)

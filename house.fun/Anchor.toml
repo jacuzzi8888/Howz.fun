@@ -3,14 +3,14 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-shadow_poker = "5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD"
-degen_derby = "Bi47R2F3rkyDfvMHEUzyDXuv9TCFPJ3uzHpNCYPBMQeE"
-fight_club = "9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z"
+shadow_poker = "HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx"
+degen_derby = "G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB"
+fight_club = "5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN"
 
 [programs.devnet]
-shadow_poker = "5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD"
-degen_derby = "Bi47R2F3rkyDfvMHEUzyDXuv9TCFPJ3uzHpNCYPBMQeE"
-fight_club = "9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z"
+shadow_poker = "HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx"
+degen_derby = "G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB"
+fight_club = "5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN"
 
 [registry]
 url = "https://api.apr.dev"

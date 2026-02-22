@@ -3,7 +3,7 @@ use anchor_lang::solana_program::clock::Clock;
 use pyth_solana_receiver_sdk::price_update::{PriceUpdateV2, FeedId};
 
 // Program ID - Replace with actual after deployment
-declare_id!("9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z");
+declare_id!("5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN");
 
 // Constants
 pub const HOUSE_FEE_BPS: u16 = 100; // 1% house fee
