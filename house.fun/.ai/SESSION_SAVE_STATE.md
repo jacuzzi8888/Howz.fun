@@ -13,17 +13,17 @@ Transition the Howz.fun platform from a technically deployed prototype into a po
 - Identified critical aesthetic flaws: generic typography, fragmented brand colors, lack of component depth (glassmorphism/shadows), and poor loading states. 
 - Compiled findings into a comprehensive `UI_UX_AUDIT.md` document.
 
-## Milestone 3: Phase 1 - Frontend Upgrade (Active)
+## Milestone 3: Phase 1 - Frontend Upgrade (Completed)
 - **Task**: Overhaul the visual design system of the Next.js frontend to meet premium industry standards.
-- **Goal**: Implement custom typography, cohesive color tokens, tactical UI components, and animated skeleton loaders. 
+- **Outcome**: Implemented custom typography, cohesive color tokens, tactical UI components, and animated skeleton loaders across the application.
 
-## Milestone 4: Phase 2 - Backend Crosschecking (Upcoming)
+## Milestone 4: Phase 2 - Backend Crosschecking (Completed)
 - **Task**: Audit the internal logic, security, and game theory of the deployed Rust smart contracts.
-- **Goal**: Ensure randomness, fee collection, and payout structures are mathematically sound and exploit-proof.
+- **Outcome**: Patched fractional payout math vulnerabilities and successfully restored the missing game loops for Degen Derby and Shadow Poker.
 
-## Milestone 5: Phase 3 - MVP Integration (Upcoming)
+## Milestone 5: Phase 3 - MVP Integration (Completed)
 - **Task**: Synchronize the newly generated Devnet Program IDs across the frontend and backend, and initialize the global House PDAs.
-- **Goal**: Achieve a fully functional end-to-end application where players can interact with the games seamlessly.
+- **Outcome**: Fused persistent, deterministic Keypairs inside `deploy/keys` into all `Anchor.toml` and Next.js utility files. Wired the CI/CD pipeline to natively execute the automated PDA House initialization workflow.
 
 ## Key Files
 - [MVP Build Guide](file:///c:/Users/USER/hackathon%20planning/house.fun/.ai/MVP_BUILD_GUIDE.md)

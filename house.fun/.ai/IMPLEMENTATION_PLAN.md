@@ -2,28 +2,28 @@
 
 ## Where We Stopped
 
-### Session State (Last Active: ~Feb 20, 2026)
-We successfully resolved the CI/CD build issues and **deployed all three Solana programs (`shadow-poker`, `degen-derby`, `fight-club`) to Devnet**. We bypassed the severe RPC rate limiting by using the `--no-idl` flag. We also completed a comprehensive UI/UX aesthetic audit of the Vercel frontend.
+### Session State (Last Active: ~Feb 22, 2026)
+We successfully resolved the CI/CD out-of-funds and key-drift deployment errors. **All three Solana programs (`shadow-poker`, `degen-derby`, `fight-club`) are permanently anchored to deterministic Devnet keys**. The automated pipeline successfully provisioned the `[b"house_account"]` global PDAs across all instances using a fused CJS webhook. The frontend UI/UX aesthetic upgrade is entirely complete and merged.
 
 ### What IS Working ✅
 | Layer | Status | Notes |
 |-------|--------|-------|
-| **Solana program deployment** | ✅ Complete | Programs deployed to Devnet successfully. |
-| **Frontend (Next.js 15)** | ✅ Live on Vercel | `howz-fun.vercel.app` — all pages build, SSR-safe. |
-| **UI/UX Audit** | ✅ Complete | Critical aesthetic flaws documented. |
+| **Solana program deployment** | ✅ Complete | Programs permanently hashed to Devnet successfully. |
+| **Frontend (Next.js 15)** | ✅ Complete | UI/UX visual upgrade complete. Connected to new IDs. |
+| **UI/UX Audit** | ✅ Complete | Aesthetic flaws resolved with custom font & token system. |
 | **Wallet UX** | ✅ Complete | Real-time SOL balance, multi-wallet support. |
 
 ### New Permanent Devnet Program IDs
-- **Shadow Poker**: `5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD`
-- **Degen Derby**: `Bi47R2F3rkyDfvMHEUzyDXuv9TCFPJ3uzHpNCYPBMQeE`
-- **Fight Club**: `9cdERKti1DeD4pmspjfk1ePqtoze5FwrDzERdnDBWB9Z`
+- **Shadow Poker**: `HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx`
+- **Degen Derby**: `G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB`
+- **Fight Club**: `5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN`
 
 ---
 
 ## Implementation Plan
 
-### 🔴 PHASE 1: Frontend UI/UX Upgrade (Priority: CRITICAL)
-**Status**: Active
+### 🟢 PHASE 1: Frontend UI/UX Upgrade (Priority: CRITICAL)
+**Status**: ✔️ Complete
 **Goal**: Transform the current "generic template" aesthetic into a high-end, premium "32-bit Arcade / Casino" experience. *Focus purely on CSS, Tailwind tokens, and React component polish, not Solana integration.*
 
 #### Step 1.1 — Establish Token System & Typography
@@ -39,8 +39,8 @@ We successfully resolved the CI/CD build issues and **deployed all three Solana 
 
 ---
 
-### 🟡 PHASE 2: Backend Smart Contract Crosschecking (Priority: HIGH)
-**Status**: Upcoming
+### 🟢 PHASE 2: Backend Smart Contract Crosschecking (Priority: HIGH)
+**Status**: ✔️ Complete
 **Goal**: Audit the deployed Rust smart contracts to ensure logic is bulletproof before routing real funds.
 
 #### Step 2.1 — Audit Degen Derby
@@ -58,14 +58,14 @@ We successfully resolved the CI/CD build issues and **deployed all three Solana 
 ---
 
 ### 🟢 PHASE 3: MVP Integration & Assembly (Priority: HIGH)
-**Status**: Upcoming
+**Status**: ✔️ Complete
 **Goal**: Connect the polished UI to the authenticated smart contracts.
 
 #### Step 3.1 — Synchronize IDs
 - Ensure the `declare_id!()` macros in the Rust files (in `programs/*/src/lib.rs`), the `Anchor.toml` configurations, and frontend configuration hardcodes all match the new Devnet IDs.
 
 #### Step 3.2 — Initialize House
-- Create/update an initialization script (`scripts/initialize_houses.ts`) to initialize the master global PDAs for the games over Devnet.
+- **Done**: Fused `scripts/init_raw.cjs` directly into the GitHub actions CI/CD pipeline to automatically execute and fund the global master PDAs.
 
 #### Step 3.3 — End-to-End Testing
 - Connect frontend wallet, initiate core loops, and run end-to-end user flows (Login -> Bet -> Calculate -> Transfer/Payout).

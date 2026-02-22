@@ -12,45 +12,42 @@ house.fun is a high-performance gaming platform on Solana, leveraging **MagicBlo
 ## 🎮 Game Development Status (Devnet)
 
 ### 1. Shadow Poker
-- **Program ID**: `6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSaYfCk3tdRKQ`
+- **Program ID**: `HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx`
 - **Logic**: Arcium-encrypted card dealing and showdown proofs.
-- **Status**: Code standardized (schema fixes for `blindType`). House initialization pending fresh deployment.
+- **Status**: Deployed to Devnet. `house_account` PDA successfully provisioned.
 
 ### 2. Degen Derby
-- **Program ID**: `G1qaWMRahGRqNRSPF1NSKRFeokyvPUsTEYF58sVTph38`
+- **Program ID**: `G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB`
 - **Logic**: MagicBlock Bolt handlers for real-time horse progress.
-- **Status**: Correct Program ID recovered and integrated into `utils.ts`.
+- **Status**: Deployed to Devnet. `house_account` PDA successfully provisioned.
 
 ### 3. Memecoin Fight Club (MFC)
-- **Program ID**: `AVVzy9JxsarZ7DvXwUDZFwpFH1RYJEJBperCcE15TsGN`
+- **Program ID**: `5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN`
 - **Logic**: Pyth Pull Oracle integration for performance-based resolution.
-- **Status**: Correct Program ID recovered and integrated into `utils.ts`.
+- **Status**: Deployed to Devnet. `house_account` PDA successfully provisioned.
 
 ## 🔑 Infrastructure & Assets
 
-### Admin Authority
-- **Wallet**: `7EgawZyB5YBDoa5MP2NgJ7FmPUKj7GVvL5ociDqVLgrX`
-- **Balance**: **~5.0 SOL** (Confirmed on Devnet).
+### Admin Authority / Deployer
+- **Wallet**: `DUwMdEHY74DCYMmWDxztMMX8RB9yFGQy5BFRPSEqCCzv`
+- **Balance**: **~10.0 SOL** (Confirmed on Devnet).
 - **Role**: Primary authority for Program Upgrades and House Initialization.
 
-### Critical Blockers
-- **Solana CLI**: Currently missing from the development path. This blocks `anchor deploy`.
-- **On-Chain State**: Current House PDAs for recovered IDs are either uninitialized or in a stale state.
-- **Action Plan**: Fresh redeployment recommended once Solana CLI is restored to ensure clean on-chain account structures.
+### Blockers Removed
+- **Solana CLI**: CI/CD pipeline automation completely bypassed local CLI issues.
+- **On-Chain State**: Clean deterministic Keypairs successfully pushed to Devnet. 
+- **Action Plan**: MVP finalized and ready for E2E user-flow testing.
 
 ## 🏁 MVP Readiness & Active Tasks
-- **Flip It Game (COMPLETED)**: UI/UX polished, Arcium integrated.
-- **Shadow Poker (RECOVERY)**: IDL standardized and Program ID mapped.
-- **Compliance**: Geo-fencing & ZK-Age Gates required for launch.
-- **Observability**: Background Sentry/LogSnag for Arcium/Rollup tracing.
+- **UI/UX Audit**: Aesthetic tokens (Arcade Premium) applied across all major views.
+- **Smart Contracts**: Payout vulnerabilities removed and fractional arithmetic fixed.
+- **MVP Validation**: Deployed to Devnet and PDAs actively provisioned via GitHub Actions.
+- **Compliance**: Geo-fencing & ZK-Age Gates required for production launch.
 
 ## 📜 Audit & Recovery History (Feb 2026)
-- **ID Recovery**: Audited Admin wallet (`7EgawZyB5YBDoa5M...`) transactions on Devnet. Identified executable programs via `BPFLoaderUpgradeab1e` mapping.
-- **Shadow Poker Fixes**: Standardized `blindType` across the Rust implementation and the TypeScript IDL to resolve `IdlError: Type not found`.
-- **Initialization Attempts**:
-  - **Attempt 1**: Used Anchor CLI `initialize_house`. Blocked by IDL version mismatch and missing `solana` CLI.
-  - **Attempt 2**: Used raw TypeScript transactions with the recovered Admin secret key. Simulation failed, likely due to account constraints or existing state from previous iterations.
-- **Current Recommendation**: Perform a fresh deployment (`anchor deploy`) once the local Solana CLI is restored to ensure correct PDA derivation and initialization.
+- **ID Overhaul**: Replaced the volatile Anchor IDs with permanent, pinned Keypairs in `deploy/keys/*`.
+- **Game Loops**: Restored missing `bet` and `resolve` actions in Degen Derby / Shadow Poker.
+- **CI/CD Integration**: Fused `init_raw.cjs` natively into the GitHub Actions pipeline. Automated deployer wallet SOL airdrops to prevent buffer rent exhaustion errors.
 
 ## Agent Instructions
 - Consult `.agent/rules.md` and `COMPREHENSIVE_REPORT.md` (in brain) before every task.
