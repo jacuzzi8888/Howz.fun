@@ -3,7 +3,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
 
-const authorityKeypairPath = path.resolve(__dirname, "../../authority.json");
+const authorityKeypairPath = process.env.AUTHORITY_KEY_PATH || path.resolve(__dirname, "../../authority.json");
 const authRaw = fs.readFileSync(authorityKeypairPath, "utf8");
 const authority = web3.Keypair.fromSecretKey(Uint8Array.from(JSON.parse(authRaw)));
 const connection = new web3.Connection("https://api.devnet.solana.com", "confirmed");

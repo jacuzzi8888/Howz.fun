@@ -277,11 +277,18 @@ jobs:
       - name: Verify Deployments On-Chain
         run: |
           echo "=== Shadow Poker ==="
-          solana program show 3mQcoeWan1JqBJRp6717NR7U8U87fujG2AjB4Pu8vu2s --url "$RPC_URL" || true
+          solana program show HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx --url "$RPC_URL" || true
           echo "=== Degen Derby ==="
-          solana program show Dky8DpKsA4LgCMs1YFUPhrvYE1C1FbwZeFjHSHzXzpzv --url "$RPC_URL" || true
+          solana program show G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB --url "$RPC_URL" || true
           echo "=== Fight Club ==="
-          solana program show GpFdMHcrcFusgR6JMnQVakfQvrXioEw3RJGrMFkBu7nW --url "$RPC_URL" || true
+          solana program show 5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN --url "$RPC_URL" || true
+
+      - name: Initialize Master PDAs
+        run: |
+          cd house.fun
+          cd house-fun-app
+          npm install @solana/web3.js
+          AUTHORITY_KEY_PATH=../deployer-key.json node scripts/init_raw.cjs
 
       - name: Upload Final IDLs
         uses: actions/upload-artifact@v4
