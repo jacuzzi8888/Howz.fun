@@ -1,0 +1,11 @@
+Error: Account not found: shadowPokerHouse
+    at <anonymous> (C:\Users\USER\hackathon planning\house.fun\house-fun-app\node_modules\@coral-xyz\anchor\src\coder\borsh\accounts.ts:36:15)
+    at Array.map (<anonymous>)
+    at new BorshAccountsCoder (C:\Users\USER\hackathon planning\house.fun\house-fun-app\node_modules\@coral-xyz\anchor\src\coder\borsh\accounts.ts:33:34)
+    at new BorshCoder (C:\Users\USER\hackathon planning\house.fun\house-fun-app\node_modules\@coral-xyz\anchor\src\coder\borsh\index.ts:41:21)
+    at new Program (C:\Users\USER\hackathon planning\house.fun\house-fun-app\node_modules\@coral-xyz\anchor\src\program\index.ts:294:28)
+    at [eval]:30:3
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:446:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:444:60)

@@ -1,10 +1,10 @@
 /**
- * Anchor IDL for Fight Club Program
- * Pool-based betting with two tokens fighting each other
+ * Anchor IDL for FightClub Program
+ * Auto-patched for Anchor 0.30+
  */
 
 export const FIGHT_CLUB_IDL = {
-  "address": "AVVzy9JxsarZ7DvXwUDZFwpFH1RYJEJBperCcE15TsGN",
+  "address": "D2j4hf6476wn2g7f1dmoesEjgXeTdRVPC39s16xhsMrt",
   "metadata": {
     "name": "fight_club",
     "version": "0.1.0",
@@ -14,7 +14,16 @@ export const FIGHT_CLUB_IDL = {
   "instructions": [
     {
       "name": "initialize_house",
-      "discriminator": [112, 146, 238, 68, 186, 143, 197, 129],
+      "discriminator": [
+        112,
+        146,
+        238,
+        68,
+        186,
+        143,
+        197,
+        129
+      ],
       "accounts": [
         {
           "name": "house",
@@ -23,7 +32,24 @@ export const FIGHT_CLUB_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [102, 105, 103, 104, 116, 95, 99, 108, 117, 98, 95, 104, 111, 117, 115, 101]
+                "value": [
+                  102,
+                  105,
+                  103,
+                  104,
+                  116,
+                  95,
+                  99,
+                  108,
+                  117,
+                  98,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
               }
             ]
           }
@@ -42,7 +68,16 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "create_match_v2",
-      "discriminator": [201, 66, 124, 126, 173, 160, 181, 178],
+      "discriminator": [
+        201,
+        66,
+        124,
+        126,
+        173,
+        160,
+        181,
+        178
+      ],
       "accounts": [
         {
           "name": "fight_match",
@@ -51,7 +86,13 @@ export const FIGHT_CLUB_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [109, 97, 116, 99, 104]
+                "value": [
+                  109,
+                  97,
+                  116,
+                  99,
+                  104
+                ]
               },
               {
                 "kind": "account",
@@ -94,20 +135,35 @@ export const FIGHT_CLUB_IDL = {
         {
           "name": "feed_id_a",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         },
         {
           "name": "feed_id_b",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         }
       ]
     },
     {
       "name": "place_bet",
-      "discriminator": [222, 62, 67, 220, 175, 32, 219, 120],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        175,
+        32,
+        219,
+        120
+      ],
       "accounts": [
         {
           "name": "player_bet",
@@ -116,7 +172,18 @@ export const FIGHT_CLUB_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [112, 108, 97, 121, 101, 114, 95, 98, 101, 116]
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  98,
+                  101,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -160,7 +227,16 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "resolve_with_pyth",
-      "discriminator": [145, 71, 223, 128, 33, 163, 148, 52],
+      "discriminator": [
+        145,
+        71,
+        223,
+        128,
+        33,
+        163,
+        148,
+        52
+      ],
       "accounts": [
         {
           "name": "fight_match",
@@ -187,7 +263,16 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "claim_winnings",
-      "discriminator": [104, 216, 76, 139, 54, 88, 15, 121],
+      "discriminator": [
+        104,
+        216,
+        76,
+        139,
+        54,
+        88,
+        15,
+        121
+      ],
       "accounts": [
         {
           "name": "player_bet",
@@ -215,7 +300,16 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "cancel_match",
-      "discriminator": [142, 97, 86, 28, 79, 118, 115, 217],
+      "discriminator": [
+        142,
+        97,
+        86,
+        28,
+        79,
+        118,
+        115,
+        217
+      ],
       "accounts": [
         {
           "name": "match",
@@ -238,7 +332,16 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "refund_bet",
-      "discriminator": [58, 30, 86, 203, 123, 192, 209, 163],
+      "discriminator": [
+        58,
+        30,
+        86,
+        203,
+        123,
+        192,
+        209,
+        163
+      ],
       "accounts": [
         {
           "name": "player_bet",
@@ -266,7 +369,16 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "withdraw_treasury",
-      "discriminator": [48, 70, 195, 165, 136, 159, 239, 205],
+      "discriminator": [
+        48,
+        70,
+        195,
+        165,
+        136,
+        159,
+        239,
+        205
+      ],
       "accounts": [
         {
           "name": "house",
@@ -293,7 +405,64 @@ export const FIGHT_CLUB_IDL = {
   "accounts": [
     {
       "name": "FightClubHouse",
-      "discriminator": [159, 236, 209, 219, 96, 164, 132, 150],
+      "discriminator": [
+        159,
+        236,
+        209,
+        219,
+        96,
+        164,
+        132,
+        150
+      ]
+    },
+    {
+      "name": "FightMatch",
+      "discriminator": [
+        147,
+        23,
+        35,
+        84,
+        91,
+        144,
+        128,
+        74
+      ]
+    },
+    {
+      "name": "PlayerBet",
+      "discriminator": [
+        78,
+        200,
+        32,
+        144,
+        77,
+        61,
+        190,
+        116
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "MatchStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Resolved"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FightClubHouse",
       "type": {
         "kind": "struct",
         "fields": [
@@ -326,7 +495,6 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "FightMatch",
-      "discriminator": [147, 23, 35, 84, 91, 144, 128, 74],
       "type": {
         "kind": "struct",
         "fields": [
@@ -345,13 +513,19 @@ export const FIGHT_CLUB_IDL = {
           {
             "name": "feed_id_a",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "feed_id_b",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -389,7 +563,9 @@ export const FIGHT_CLUB_IDL = {
           {
             "name": "status",
             "type": {
-              "defined": { "name": "MatchStatus" }
+              "defined": {
+                "name": "MatchStatus"
+              }
             }
           },
           {
@@ -421,7 +597,6 @@ export const FIGHT_CLUB_IDL = {
     },
     {
       "name": "PlayerBet",
-      "discriminator": [78, 200, 32, 144, 77, 61, 190, 116],
       "type": {
         "kind": "struct",
         "fields": [
@@ -452,25 +627,6 @@ export const FIGHT_CLUB_IDL = {
           {
             "name": "bump",
             "type": "u8"
-          }
-        ]
-      }
-    }
-  ],
-  "types": [
-    {
-      "name": "MatchStatus",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Open"
-          },
-          {
-            "name": "Resolved"
-          },
-          {
-            "name": "Cancelled"
           }
         ]
       }

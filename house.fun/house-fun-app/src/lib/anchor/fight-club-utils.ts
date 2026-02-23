@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type FightClub, FIGHT_CLUB_IDL } from './fight-club-idl';
 
 // Program ID from deployment
-export const FIGHT_CLUB_PROGRAM_ID = new web3.PublicKey('5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN');
+export const FIGHT_CLUB_PROGRAM_ID = new web3.PublicKey('D2j4hf6476wn2g7f1dmoesEjgXeTdRVPC39s16xhsMrt');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;
@@ -37,8 +37,8 @@ export function createProvider(connection: web3.Connection, wallet: WalletAdapte
 /**
  * Create Fight Club program instance
  */
-export function createFightClubProgram(provider: AnchorProvider): Program<FightClub> {
-  return new Program(FIGHT_CLUB_IDL, provider);
+export function createFightClubProgram(provider: AnchorProvider): Program<any> {
+  return new Program(FIGHT_CLUB_IDL as any, provider);
 }
 
 /**

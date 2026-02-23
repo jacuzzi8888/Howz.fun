@@ -50,21 +50,22 @@ export const MagicBlockProvider: React.FC<{
 
     // Session Timer & Refresh Logic
     useEffect(() => {
-        refreshSession();
+        // Initial check on mount
+        setSessionKey(SessionManager.getStoredSessionKey());
+
         const interval = setInterval(() => {
             const active = SessionManager.isSessionActive();
             setSessionRemainingTime(SessionManager.getRemainingTime());
 
-            // Auto-clear if expired
-            if (!active && sessionKey !== null) {
-                setSessionKey(null);
-            } else if (active && sessionKey === null) {
-                setSessionKey(SessionManager.getStoredSessionKey());
-            }
+            setSessionKey(prev => {
+                if (!active && prev !== null) return null;
+                if (active && prev === null) return SessionManager.getStoredSessionKey();
+                return prev; // Return exact same reference to prevent re-renders
+            });
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [sessionKey]);
+    }, []);
 
     const value = useMemo(() => ({
         standardConnection,

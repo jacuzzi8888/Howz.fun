@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type ShadowPoker, SHADOW_POKER_IDL } from './shadow-poker-idl';
 
 // Program ID from deployment
-export const SHADOW_POKER_PROGRAM_ID = new web3.PublicKey('HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx');
+export const SHADOW_POKER_PROGRAM_ID = new web3.PublicKey('2ntDKv6TbKZUHejWkQG85uXj9c3xHvmssjQ4YYKVAgfJ');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;
@@ -511,7 +511,7 @@ export function isFlush(cards: Card[]): boolean {
  */
 export function isStraight(cards: Card[]): boolean {
   if (cards.length < 5) return false;
-  const uniqueRanks = [...new Set(cards.map(c => c.rank))].sort((a, b) => a - b);
+  const uniqueRanks = Array.from(new Set(cards.map(c => c.rank))).sort((a, b) => a - b);
 
   // Check for regular straight
   for (let i = 0; i <= uniqueRanks.length - 5; i++) {

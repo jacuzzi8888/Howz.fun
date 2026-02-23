@@ -1,10 +1,10 @@
 /**
- * Anchor IDL for Shadow Poker Program
- * Texas Hold'em Poker on Solana with encrypted card reveals
+ * Anchor IDL for ShadowPoker Program
+ * Auto-patched for Anchor 0.30+
  */
 
 export const SHADOW_POKER_IDL = {
-  "address": "6rTzxEePi1mtqs1XXp5ao8Bk6iSXQzzbSaYfCk3tdRKQ",
+  "address": "2ntDKv6TbKZUHejWkQG85uXj9c3xHvmssjQ4YYKVAgfJ",
   "metadata": {
     "name": "shadow_poker",
     "version": "0.1.0",
@@ -14,7 +14,16 @@ export const SHADOW_POKER_IDL = {
   "instructions": [
     {
       "name": "initialize_house",
-      "discriminator": [112, 146, 238, 68, 186, 143, 197, 129],
+      "discriminator": [
+        112,
+        146,
+        238,
+        68,
+        186,
+        143,
+        197,
+        129
+      ],
       "accounts": [
         {
           "name": "house",
@@ -23,7 +32,26 @@ export const SHADOW_POKER_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [115, 104, 97, 100, 111, 119, 95, 112, 111, 107, 101, 114, 95, 104, 111, 117, 115, 101]
+                "value": [
+                  115,
+                  104,
+                  97,
+                  100,
+                  111,
+                  119,
+                  95,
+                  112,
+                  111,
+                  107,
+                  101,
+                  114,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
               }
             ]
           }
@@ -42,7 +70,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "create_table",
-      "discriminator": [201, 66, 124, 126, 173, 160, 181, 178],
+      "discriminator": [
+        201,
+        66,
+        124,
+        126,
+        173,
+        160,
+        181,
+        178
+      ],
       "accounts": [
         {
           "name": "table",
@@ -51,7 +88,13 @@ export const SHADOW_POKER_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [116, 97, 98, 108, 101]
+                "value": [
+                  116,
+                  97,
+                  98,
+                  108,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -99,7 +142,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "join_table",
-      "discriminator": [222, 62, 67, 220, 175, 32, 219, 120],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        175,
+        32,
+        219,
+        120
+      ],
       "accounts": [
         {
           "name": "player_state",
@@ -108,7 +160,20 @@ export const SHADOW_POKER_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [112, 108, 97, 121, 101, 114, 95, 115, 116, 97, 116, 101]
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -144,7 +209,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "start_hand",
-      "discriminator": [145, 71, 223, 128, 33, 163, 148, 52],
+      "discriminator": [
+        145,
+        71,
+        223,
+        128,
+        33,
+        163,
+        148,
+        52
+      ],
       "accounts": [
         {
           "name": "table",
@@ -167,7 +241,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "post_blind",
-      "discriminator": [155, 82, 234, 139, 64, 99, 157, 63],
+      "discriminator": [
+        155,
+        82,
+        234,
+        139,
+        64,
+        99,
+        157,
+        63
+      ],
       "accounts": [
         {
           "name": "player_state",
@@ -190,14 +273,25 @@ export const SHADOW_POKER_IDL = {
         {
           "name": "blind_type",
           "type": {
-            "defined": { "name": "blindType" }
+            "defined": {
+              "name": "blindType"
+            }
           }
         }
       ]
     },
     {
       "name": "player_action",
-      "discriminator": [104, 216, 76, 139, 54, 88, 15, 121],
+      "discriminator": [
+        104,
+        216,
+        76,
+        139,
+        54,
+        88,
+        15,
+        121
+      ],
       "accounts": [
         {
           "name": "player_state",
@@ -220,7 +314,9 @@ export const SHADOW_POKER_IDL = {
         {
           "name": "action",
           "type": {
-            "defined": { "name": "PlayerAction" }
+            "defined": {
+              "name": "PlayerAction"
+            }
           }
         },
         {
@@ -231,7 +327,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "reveal_cards",
-      "discriminator": [142, 97, 86, 28, 79, 118, 115, 217],
+      "discriminator": [
+        142,
+        97,
+        86,
+        28,
+        79,
+        118,
+        115,
+        217
+      ],
       "accounts": [
         {
           "name": "table",
@@ -251,7 +356,9 @@ export const SHADOW_POKER_IDL = {
           "name": "cards",
           "type": {
             "vec": {
-              "defined": { "name": "Card" }
+              "defined": {
+                "name": "Card"
+              }
             }
           }
         }
@@ -259,7 +366,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "showdown",
-      "discriminator": [58, 30, 86, 203, 123, 192, 209, 163],
+      "discriminator": [
+        58,
+        30,
+        86,
+        203,
+        123,
+        192,
+        209,
+        163
+      ],
       "accounts": [
         {
           "name": "table",
@@ -287,7 +403,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "leave_table",
-      "discriminator": [48, 70, 195, 165, 136, 159, 239, 205],
+      "discriminator": [
+        48,
+        70,
+        195,
+        165,
+        136,
+        159,
+        239,
+        205
+      ],
       "accounts": [
         {
           "name": "player_state",
@@ -311,7 +436,16 @@ export const SHADOW_POKER_IDL = {
     },
     {
       "name": "withdraw_treasury",
-      "discriminator": [232, 206, 197, 103, 178, 96, 186, 155],
+      "discriminator": [
+        232,
+        206,
+        197,
+        103,
+        178,
+        96,
+        186,
+        155
+      ],
       "accounts": [
         {
           "name": "house",
@@ -338,178 +472,42 @@ export const SHADOW_POKER_IDL = {
   "accounts": [
     {
       "name": "ShadowPokerHouse",
-      "discriminator": [159, 236, 209, 219, 96, 164, 132, 150],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "treasury",
-            "type": "u64"
-          },
-          {
-            "name": "total_tables",
-            "type": "u64"
-          },
-          {
-            "name": "total_volume",
-            "type": "u64"
-          },
-          {
-            "name": "house_fee_bps",
-            "type": "u16"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        159,
+        236,
+        209,
+        219,
+        96,
+        164,
+        132,
+        150
+      ]
     },
     {
       "name": "Table",
-      "discriminator": [147, 23, 35, 84, 91, 144, 128, 74],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "index",
-            "type": "u64"
-          },
-          {
-            "name": "min_buy_in",
-            "type": "u64"
-          },
-          {
-            "name": "max_buy_in",
-            "type": "u64"
-          },
-          {
-            "name": "small_blind",
-            "type": "u64"
-          },
-          {
-            "name": "big_blind",
-            "type": "u64"
-          },
-          {
-            "name": "max_players",
-            "type": "u8"
-          },
-          {
-            "name": "players",
-            "type": {
-              "vec": "pubkey"
-            }
-          },
-          {
-            "name": "player_states",
-            "type": {
-              "vec": "pubkey"
-            }
-          },
-          {
-            "name": "pot",
-            "type": "u64"
-          },
-          {
-            "name": "status",
-            "type": {
-              "defined": { "name": "TableStatus" }
-            }
-          },
-          {
-            "name": "current_round",
-            "type": {
-              "defined": { "name": "BettingRound" }
-            }
-          },
-          {
-            "name": "dealer_position",
-            "type": "u8"
-          },
-          {
-            "name": "current_player_index",
-            "type": "u8"
-          },
-          {
-            "name": "community_cards",
-            "type": {
-              "vec": {
-                "defined": { "name": "Card" }
-              }
-            }
-          },
-          {
-            "name": "current_bet",
-            "type": "u64"
-          },
-          {
-            "name": "created_at",
-            "type": "i64"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        147,
+        23,
+        35,
+        84,
+        91,
+        144,
+        128,
+        74
+      ]
     },
     {
       "name": "PlayerState",
-      "discriminator": [78, 200, 32, 144, 77, 61, 190, 116],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "player",
-            "type": "pubkey"
-          },
-          {
-            "name": "table",
-            "type": "pubkey"
-          },
-          {
-            "name": "stack",
-            "type": "u64"
-          },
-          {
-            "name": "current_bet",
-            "type": "u64"
-          },
-          {
-            "name": "is_active",
-            "type": "bool"
-          },
-          {
-            "name": "has_acted",
-            "type": "bool"
-          },
-          {
-            "name": "is_all_in",
-            "type": "bool"
-          },
-          {
-            "name": "hole_cards",
-            "type": {
-              "vec": {
-                "defined": { "name": "Card" }
-              }
-            }
-          },
-          {
-            "name": "position",
-            "type": "u8"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        78,
+        200,
+        32,
+        144,
+        77,
+        61,
+        190,
+        116
+      ]
     }
   ],
   "types": [
@@ -611,6 +609,186 @@ export const SHADOW_POKER_IDL = {
           },
           {
             "name": "River"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ShadowPokerHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "u64"
+          },
+          {
+            "name": "total_tables",
+            "type": "u64"
+          },
+          {
+            "name": "total_volume",
+            "type": "u64"
+          },
+          {
+            "name": "house_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Table",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "min_buy_in",
+            "type": "u64"
+          },
+          {
+            "name": "max_buy_in",
+            "type": "u64"
+          },
+          {
+            "name": "small_blind",
+            "type": "u64"
+          },
+          {
+            "name": "big_blind",
+            "type": "u64"
+          },
+          {
+            "name": "max_players",
+            "type": "u8"
+          },
+          {
+            "name": "players",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "player_states",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "pot",
+            "type": "u64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "TableStatus"
+              }
+            }
+          },
+          {
+            "name": "current_round",
+            "type": {
+              "defined": {
+                "name": "BettingRound"
+              }
+            }
+          },
+          {
+            "name": "dealer_position",
+            "type": "u8"
+          },
+          {
+            "name": "current_player_index",
+            "type": "u8"
+          },
+          {
+            "name": "community_cards",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Card"
+                }
+              }
+            }
+          },
+          {
+            "name": "current_bet",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "table",
+            "type": "pubkey"
+          },
+          {
+            "name": "stack",
+            "type": "u64"
+          },
+          {
+            "name": "current_bet",
+            "type": "u64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "has_acted",
+            "type": "bool"
+          },
+          {
+            "name": "is_all_in",
+            "type": "bool"
+          },
+          {
+            "name": "hole_cards",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Card"
+                }
+              }
+            }
+          },
+          {
+            "name": "position",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

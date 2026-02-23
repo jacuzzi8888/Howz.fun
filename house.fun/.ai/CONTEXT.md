@@ -12,17 +12,17 @@ house.fun is a high-performance gaming platform on Solana, leveraging **MagicBlo
 ## 🎮 Game Development Status (Devnet)
 
 ### 1. Shadow Poker
-- **Program ID**: `HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx`
+- **Program ID**: `2ntDKv6TbKZUHejWkQG85uXj9c3xHvmssjQ4YYKVAgfJ`
 - **Logic**: Arcium-encrypted card dealing and showdown proofs.
 - **Status**: Deployed to Devnet. `house_account` PDA successfully provisioned.
 
 ### 2. Degen Derby
-- **Program ID**: `G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB`
+- **Program ID**: `J21s1YjXbutGLbHkLZiY4Xz9aquKV9fVqpAFLBBveFRw`
 - **Logic**: MagicBlock Bolt handlers for real-time horse progress.
 - **Status**: Deployed to Devnet. `house_account` PDA successfully provisioned.
 
 ### 3. Memecoin Fight Club (MFC)
-- **Program ID**: `5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN`
+- **Program ID**: `D2j4hf6476wn2g7f1dmoesEjgXeTdRVPC39s16xhsMrt`
 - **Logic**: Pyth Pull Oracle integration for performance-based resolution.
 - **Status**: Deployed to Devnet. `house_account` PDA successfully provisioned.
 

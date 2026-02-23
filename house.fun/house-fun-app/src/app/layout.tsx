@@ -47,8 +47,8 @@ export default function RootLayout({
       <body className="bg-[#0A0A0F] font-sans text-white antialiased">
         <TRPCReactProvider>
           <SolanaWalletProvider>
-            <WalletSync />
             <MagicBlockProvider>
+              <WalletSync />
               <ArciumProvider>
                 <div className="flex flex-col min-h-screen">
                   <Header />

@@ -1,0 +1,38 @@
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.5075268Z env:
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.5075453Z   SOLANA_VERSION: 3.1.8
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.5075677Z   ANCHOR_VERSION: 0.32.1
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.5075907Z   RUST_TOOLCHAIN: stable
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.5076489Z   RPC_URL: ***
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.5076689Z ##[endgroup]
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.6244396Z Deploying cluster: ***
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.6244859Z Upgrade authority: deployer-key.json
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.6253248Z Deploying program "shadow_poker"...
+deploy	Deploy Shadow Poker	2026-02-22T16:37:07.6254029Z Program path: /home/runner/work/Howz.fun/Howz.fun/house.fun/target/deploy/shadow_poker.so...
+deploy	Deploy Shadow Poker	2026-02-22T16:37:18.7966542Z Program Id: 2ntDKv6TbKZUHejWkQG85uXj9c3xHvmssjQ4YYKVAgfJ
+deploy	Deploy Shadow Poker	2026-02-22T16:37:18.7967112Z 
+---
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8075342Z env:
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8075529Z   SOLANA_VERSION: 3.1.8
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8075766Z   ANCHOR_VERSION: 0.32.1
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8075994Z   RUST_TOOLCHAIN: stable
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8076509Z   RPC_URL: ***
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8076730Z ##[endgroup]
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8963913Z Deploying cluster: ***
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8964457Z Upgrade authority: deployer-key.json
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8972882Z Deploying program "degen_derby"...
+deploy	Deploy Degen Derby	2026-02-22T16:37:18.8973783Z Program path: /home/runner/work/Howz.fun/Howz.fun/house.fun/target/deploy/degen_derby.so...
+deploy	Deploy Degen Derby	2026-02-22T16:37:28.2022733Z Program Id: J21s1YjXbutGLbHkLZiY4Xz9aquKV9fVqpAFLBBveFRw
+deploy	Deploy Degen Derby	2026-02-22T16:37:28.2023392Z 
+---
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2104576Z env:
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2104767Z   SOLANA_VERSION: 3.1.8
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2104993Z   ANCHOR_VERSION: 0.32.1
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2105228Z   RUST_TOOLCHAIN: stable
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2105732Z   RPC_URL: ***
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2105933Z ##[endgroup]
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2860630Z Deploying cluster: ***
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2861183Z Upgrade authority: deployer-key.json
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2868485Z Deploying program "fight_club"...
+deploy	Deploy Fight Club	2026-02-22T16:37:28.2869253Z Program path: /home/runner/work/Howz.fun/Howz.fun/house.fun/target/deploy/fight_club.so...
+deploy	Deploy Fight Club	2026-02-22T16:37:37.5574740Z Program Id: D2j4hf6476wn2g7f1dmoesEjgXeTdRVPC39s16xhsMrt
+deploy	Deploy Fight Club	2026-02-22T16:37:37.5575369Z 

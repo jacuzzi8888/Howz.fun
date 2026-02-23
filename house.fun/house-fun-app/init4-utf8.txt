@@ -1,0 +1,176 @@
+﻿Using authority: DUwMdEHY74DCYMmWDxztMMX8RB9yFGQy5BFRPSEqCCzv
+node.exe : Shadow Poker 
+Error: TypeError: Cannot read 
+properties of undefined 
+(reading 'size')
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo          : 
+    NotSpecified: (Shadow Po  
+  ker Er...reading 'size'):   
+ String) [], RemoteExcepti    
+on
+    + FullyQualifiedErrorId : 
+    NativeCommandError
+ 
+    at new AccountClient 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:121:39)
+    at <anonymous> 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:28:30)
+    at Array.reduce 
+(<anonymous>)
+    at Function.build 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:27:33)
+    at Function.build 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\index.ts:
+56:24)
+    at new Program 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\index.ts:299:24)
+    at 
+createShadowPokerProgram 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sr
+c\lib\anchor\shadow-poker-util
+s.ts:101:10)
+    at main 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sc
+ripts\initialize_houses.ts:25:
+36)
+    at <anonymous> 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sc
+ripts\initialize_houses.ts:91:
+1)
+    at ModuleJob.run (node:int
+ernal/modules/esm/module_job:3
+45:25)
+Degen Derby Error: TypeError: 
+Cannot read properties of 
+undefined (reading 'size')
+    at new AccountClient 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:121:39)
+    at <anonymous> 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:28:30)
+    at Array.reduce 
+(<anonymous>)
+    at Function.build 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:27:33)
+    at Function.build 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\index.ts:
+56:24)
+    at new Program 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\index.ts:299:24)
+    at 
+createDegenDerbyProgram 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sr
+c\lib\anchor\degen-derby-utils
+.ts:47:10)
+    at main 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sc
+ripts\initialize_houses.ts:48:
+35)
+    at <anonymous> 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sc
+ripts\initialize_houses.ts:91:
+1)
+    at ModuleJob.run (node:int
+ernal/modules/esm/module_job:3
+45:25)
+Fight Club Error: TypeError: 
+Cannot read properties of 
+undefined (reading 'size')
+    at new AccountClient 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:121:39)
+    at <anonymous> 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:28:30)
+    at Array.reduce 
+(<anonymous>)
+    at Function.build 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\account.t
+s:27:33)
+    at Function.build 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\namespace\index.ts:
+56:24)
+    at new Program 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\no
+de_modules\@coral-xyz\anchor\s
+rc\program\index.ts:299:24)
+    at createFightClubProgram 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sr
+c\lib\anchor\fight-club-utils.
+ts:41:10)
+    at main 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sc
+ripts\initialize_houses.ts:70:
+34)
+    at <anonymous> 
+(C:\Users\USER\hackathon plann
+ing\house.fun\house-fun-app\sc
+ripts\initialize_houses.ts:91:
+1)
+    at ModuleJob.run (node:int
+ernal/modules/esm/module_job:3
+45:25)

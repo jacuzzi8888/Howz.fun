@@ -84,11 +84,11 @@ export const Header: React.FC = () => {
 
                             {/* Navigation */}
                             <nav className="hidden md:flex items-center gap-4">
-                                <Link href="/profile" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+                                <Link href="/profile" prefetch={true} className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">account_circle</span>
                                     Profile
                                 </Link>
-                                <Link href="/leaderboard" className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
+                                <Link href="/leaderboard" prefetch={true} className="text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">emoji_events</span>
                                     Leaderboard
                                 </Link>

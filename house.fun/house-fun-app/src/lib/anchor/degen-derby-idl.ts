@@ -1,10 +1,10 @@
 /**
- * Anchor IDL for Degen Derby Program
- * Horse racing betting with weighted random winner selection
+ * Anchor IDL for DegenDerby Program
+ * Auto-patched for Anchor 0.30+
  */
 
 export const DEGEN_DERBY_IDL = {
-  "address": "G1qaWMRahGRqNRSPF1NSKRFeokyvPUsTEYF58sVTph38",
+  "address": "J21s1YjXbutGLbHkLZiY4Xz9aquKV9fVqpAFLBBveFRw",
   "metadata": {
     "name": "degen_derby",
     "version": "0.1.0",
@@ -14,7 +14,16 @@ export const DEGEN_DERBY_IDL = {
   "instructions": [
     {
       "name": "initialize_house",
-      "discriminator": [112, 146, 238, 68, 186, 143, 197, 129],
+      "discriminator": [
+        112,
+        146,
+        238,
+        68,
+        186,
+        143,
+        197,
+        129
+      ],
       "accounts": [
         {
           "name": "house",
@@ -23,7 +32,25 @@ export const DEGEN_DERBY_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 103, 101, 110, 95, 100, 101, 114, 98, 121, 95, 104, 111, 117, 115, 101]
+                "value": [
+                  100,
+                  101,
+                  103,
+                  101,
+                  110,
+                  95,
+                  100,
+                  101,
+                  114,
+                  98,
+                  121,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101
+                ]
               }
             ]
           }
@@ -42,7 +69,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "create_race",
-      "discriminator": [201, 66, 124, 126, 173, 160, 181, 178],
+      "discriminator": [
+        201,
+        66,
+        124,
+        126,
+        173,
+        160,
+        181,
+        178
+      ],
       "accounts": [
         {
           "name": "race",
@@ -51,7 +87,12 @@ export const DEGEN_DERBY_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 97, 99, 101]
+                "value": [
+                  114,
+                  97,
+                  99,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -79,7 +120,9 @@ export const DEGEN_DERBY_IDL = {
           "name": "horses",
           "type": {
             "vec": {
-              "defined": { "name": "HorseData" }
+              "defined": {
+                "name": "HorseData"
+              }
             }
           }
         }
@@ -87,7 +130,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "place_bet",
-      "discriminator": [222, 62, 67, 220, 175, 32, 219, 120],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        175,
+        32,
+        219,
+        120
+      ],
       "accounts": [
         {
           "name": "player_bet",
@@ -96,7 +148,18 @@ export const DEGEN_DERBY_IDL = {
             "seeds": [
               {
                 "kind": "const",
-                "value": [112, 108, 97, 121, 101, 114, 95, 98, 101, 116]
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  98,
+                  101,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -140,7 +203,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "start_race",
-      "discriminator": [145, 71, 223, 128, 33, 163, 148, 52],
+      "discriminator": [
+        145,
+        71,
+        223,
+        128,
+        33,
+        163,
+        148,
+        52
+      ],
       "accounts": [
         {
           "name": "race",
@@ -163,7 +235,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "resolve_race",
-      "discriminator": [155, 82, 234, 139, 64, 99, 157, 63],
+      "discriminator": [
+        155,
+        82,
+        234,
+        139,
+        64,
+        99,
+        157,
+        63
+      ],
       "accounts": [
         {
           "name": "race",
@@ -189,7 +270,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "claim_winnings",
-      "discriminator": [104, 216, 76, 139, 54, 88, 15, 121],
+      "discriminator": [
+        104,
+        216,
+        76,
+        139,
+        54,
+        88,
+        15,
+        121
+      ],
       "accounts": [
         {
           "name": "player_bet",
@@ -217,7 +307,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "cancel_race",
-      "discriminator": [142, 97, 86, 28, 79, 118, 115, 217],
+      "discriminator": [
+        142,
+        97,
+        86,
+        28,
+        79,
+        118,
+        115,
+        217
+      ],
       "accounts": [
         {
           "name": "race",
@@ -240,7 +339,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "refund_bet",
-      "discriminator": [58, 30, 86, 203, 123, 192, 209, 163],
+      "discriminator": [
+        58,
+        30,
+        86,
+        203,
+        123,
+        192,
+        209,
+        163
+      ],
       "accounts": [
         {
           "name": "player_bet",
@@ -268,7 +376,16 @@ export const DEGEN_DERBY_IDL = {
     },
     {
       "name": "withdraw_treasury",
-      "discriminator": [48, 70, 195, 165, 136, 159, 239, 205],
+      "discriminator": [
+        48,
+        70,
+        195,
+        165,
+        136,
+        159,
+        239,
+        205
+      ],
       "accounts": [
         {
           "name": "house",
@@ -295,142 +412,42 @@ export const DEGEN_DERBY_IDL = {
   "accounts": [
     {
       "name": "DegenDerbyHouse",
-      "discriminator": [159, 236, 209, 219, 96, 164, 132, 150],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "treasury",
-            "type": "u64"
-          },
-          {
-            "name": "total_races",
-            "type": "u64"
-          },
-          {
-            "name": "total_volume",
-            "type": "u64"
-          },
-          {
-            "name": "house_fee_bps",
-            "type": "u16"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        159,
+        236,
+        209,
+        219,
+        96,
+        164,
+        132,
+        150
+      ]
     },
     {
       "name": "Race",
-      "discriminator": [147, 23, 35, 84, 91, 144, 128, 74],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "index",
-            "type": "u64"
-          },
-          {
-            "name": "horses",
-            "type": {
-              "vec": {
-                "defined": { "name": "Horse" }
-              }
-            }
-          },
-          {
-            "name": "total_bets",
-            "type": {
-              "vec": "u64"
-            }
-          },
-          {
-            "name": "player_counts",
-            "type": {
-              "vec": "u32"
-            }
-          },
-          {
-            "name": "status",
-            "type": {
-              "defined": { "name": "RaceStatus" }
-            }
-          },
-          {
-            "name": "winner",
-            "type": {
-              "option": "u8"
-            }
-          },
-          {
-            "name": "house_fee",
-            "type": "u64"
-          },
-          {
-            "name": "created_at",
-            "type": "i64"
-          },
-          {
-            "name": "started_at",
-            "type": {
-              "option": "i64"
-            }
-          },
-          {
-            "name": "resolved_at",
-            "type": {
-              "option": "i64"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        147,
+        23,
+        35,
+        84,
+        91,
+        144,
+        128,
+        74
+      ]
     },
     {
       "name": "PlayerBet",
-      "discriminator": [78, 200, 32, 144, 77, 61, 190, 116],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "player",
-            "type": "pubkey"
-          },
-          {
-            "name": "race_index",
-            "type": "u64"
-          },
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "horse_index",
-            "type": "u8"
-          },
-          {
-            "name": "claimed",
-            "type": "bool"
-          },
-          {
-            "name": "winnings",
-            "type": "u64"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        78,
+        200,
+        32,
+        144,
+        77,
+        61,
+        190,
+        116
+      ]
     }
   ],
   "types": [
@@ -490,6 +507,146 @@ export const DEGEN_DERBY_IDL = {
           },
           {
             "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DegenDerbyHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "u64"
+          },
+          {
+            "name": "total_races",
+            "type": "u64"
+          },
+          {
+            "name": "total_volume",
+            "type": "u64"
+          },
+          {
+            "name": "house_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Race",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "horses",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Horse"
+                }
+              }
+            }
+          },
+          {
+            "name": "total_bets",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "player_counts",
+            "type": {
+              "vec": "u32"
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "RaceStatus"
+              }
+            }
+          },
+          {
+            "name": "winner",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "house_fee",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "started_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "resolved_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerBet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "race_index",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "horse_index",
+            "type": "u8"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "winnings",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
