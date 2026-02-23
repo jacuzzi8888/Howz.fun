@@ -8,6 +8,7 @@
  * Pattern: Follows Flip It implementation from useFlipItArcium.ts
  */
 
+import { useState, useCallback } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { useArcium } from '~/lib/arcium/ArciumContext';
