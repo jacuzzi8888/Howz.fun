@@ -160,6 +160,27 @@ const FlipItGameContent: React.FC = () => {
             }
 
             setBetResult(bet);
+
+            // Step 2: Request Flip (Arcium/MagicBlock trigger)
+            // This is the missing link that actually resolves the bet
+            const flipTx = await executeGameAction(async () => {
+                // Using placeholder values for Arcium parameters as they are often
+                // handled by the rollup or a separate coordinator.
+                // In a full Arcium setup, these would be derived from the encrypted choice.
+                const result = await requestFlip(
+                    bet.betPDA,
+                    0, // offset
+                    [side === 'HEADS' ? 0 : 1], // user_choice
+                    Array(32).fill(0), // pub_key
+                    bet.nonce || 0
+                );
+                console.log('[FlipIt] Request flip result:', result);
+                return result;
+            });
+
+            if (!flipTx) {
+                throw new Error('Failed to request flip');
+            }
             setTxStatus('confirming');
 
             // Step 2: Record bet in database

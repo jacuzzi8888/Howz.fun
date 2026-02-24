@@ -44,7 +44,7 @@ async function seed() {
             maxBet: 50_000_000_000,
             houseEdgeBps: 100,         // 1%
             isActive: true,
-            programId: null,
+            programId: process.env.NEXT_PUBLIC_FIGHT_CLUB_PROGRAM_ID ?? "5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN",
         },
         {
             type: "DEGEN_DERBY" as const,
@@ -54,7 +54,7 @@ async function seed() {
             maxBet: 50_000_000_000,
             houseEdgeBps: 100,
             isActive: true,
-            programId: null,
+            programId: process.env.NEXT_PUBLIC_DEGEN_DERBY_PROGRAM_ID ?? "G1cMMP2dDQNBDs1jDceKpLLAPiANympZUbAsLyMCXZkB",
         },
         {
             type: "SHADOW_POKER" as const,
@@ -64,8 +64,9 @@ async function seed() {
             maxBet: 200_000_000_000,   // 200 SOL
             houseEdgeBps: 50,          // 0.5%
             isActive: true,
-            programId: null,
+            programId: process.env.NEXT_PUBLIC_SHADOW_POKER_PROGRAM_ID ?? "HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx",
         },
+
     ];
 
     for (const game of gameData) {
