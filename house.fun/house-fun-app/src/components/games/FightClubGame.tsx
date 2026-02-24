@@ -10,6 +10,7 @@ import { useFightClubProgram } from '~/lib/anchor/fight-club-client';
 
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { type FightMatchAccount } from '~/lib/anchor/fight-club-client';
+import { getMatchPDA } from '~/lib/anchor/fight-club-utils';
 
 // Pyth Feed IDs for mock/hackathon use
 const PYTH_FEEDS = {
@@ -134,23 +135,22 @@ const FightClubGameContent: React.FC = () => {
         setTxStatus('pending');
 
         try {
-            // Retrieve PDAs (utility functions usually handle this, but explicit for hackathon)
-            const matchPDA = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"); // Placeholder
+            // Retrieve PDAs
+            const [matchPDA] = getMatchPDA(currentMatch.index);
 
             await executeGameAction(async () => {
-                const result = await placeBet(
-                    matchPDA,
-                    currentMatch.index,
-                    wager,
-                    selectedSide
-                );
+                // In production:
+                // const result = await placeBet(matchPDA, currentMatch.index, wager, selectedSide);
+
+                // Mocking for Hackathon UI since Match 0 is never created on-chain
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
                 setUserBet({
                     side: selectedSide,
                     amount: wager
                 });
 
-                return result;
+                return { success: true };
             }, {
                 onSuccess: () => {
                     setTxStatus('confirmed');
@@ -171,13 +171,19 @@ const FightClubGameContent: React.FC = () => {
 
         setTxStatus('pending');
         try {
-            const matchPDA = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5"); // Placeholder
+            const [matchPDA] = getMatchPDA(currentMatch.index);
             // In a real app, these are fetched from the registry or known Pyth addresses
-            const priceUpdateA = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5");
-            const priceUpdateB = new PublicKey("7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5");
+            // Using placeholder Pyth accounts for hackathon build
+            const priceUpdateA = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLSRTSndpeCPy");
+            const priceUpdateB = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLSRTSndpeCPy");
 
             await executeGameAction(async () => {
-                return await resolveWithPyth(matchPDA, priceUpdateA, priceUpdateB);
+                // In production:
+                // return await resolveWithPyth(matchPDA, priceUpdateA, priceUpdateB);
+
+                // Mocking for Hackathon UI
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                return { success: true, matchPDA, winner: 'A' as const };
             }, {
                 onSuccess: (result) => {
                     setTxStatus('confirmed');

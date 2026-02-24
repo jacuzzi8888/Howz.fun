@@ -4,7 +4,7 @@
  */
 
 export const DEGEN_DERBY_IDL = {
-  "address": "J21s1YjXbutGLbHkLZiY4Xz9aquKV9fVqpAFLBBveFRw",
+  "address": "Bi47R2F3rkyDfvMHEUzyDXuv9TCFPJ3uzHpNCYPBMQeE",
   "metadata": {
     "name": "degen_derby",
     "version": "0.1.0",

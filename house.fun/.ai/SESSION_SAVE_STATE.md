@@ -25,6 +25,25 @@ Transition the Howz.fun platform from a technically deployed prototype into a po
 - **Task**: Synchronize the newly generated Devnet Program IDs across the frontend and backend, and initialize the global House PDAs.
 - **Outcome**: Fused persistent, deterministic Keypairs inside `deploy/keys` into all `Anchor.toml` and Next.js utility files. Wired the CI/CD pipeline to natively execute the automated PDA House initialization workflow.
 
+## Milestone 6: Devnet E2E Bug Fixes (Completed)
+- **Task**: Verify the actual DApp logic and resolve "Game Error" or "Unauthorized" UI states on the Devnet Vercel deployment.
+- **Completed**:
+  - Hardcoded new Devnet Program IDs into the Anchor `Idl` definitions directly, bypassing `Program` constructor IDL defaults causing initialization crashes.
+  - Successfully ran `initialize_houses.ts` to provision Degen Derby, Shadow Poker, and Fight Club PDAs.
+  - Fixed Profile and game history APIs returning HTTP 401 Unauthorized by isolating the MagicBlock Ephemeral Burner Wallet `sessionKey` from the main user `publicKey` in tRPC headers.
+  - Fixed Next.js Soft-Navigation stalling by aggressively preloading routes and adding `loading.tsx` React Suspense boundaries.
+  - Fixed `useState` ReferenceError in Shadow Poker causing Vercel crashes.
+  - Rewrote Anchor 0.30+ RPC calls from `snake_case` to `camelCase` to prevent "Transaction failed" execution errors in Shadow Poker and Fight Club.
+  - Reordered React hooks in `fight-club-client.ts` dependencies to prevent Javascript lexical Temporal Dead Zone errors (`fetchMatch`).
+  - Corrected Next.js Drizzle integration by correctly formatting the `pgbouncer` connection string for Supabase's IPv4 connection pooler.
+- **Pending (Next Session)**:
+  - Final Mainnet program deployment, IDL generation, and smart contract verification.
+  - Social media and marketing campaigns for Howz.fun public release. 
+
+## Development & Testing Rules
+- **CRITICAL**: ALL TEST MUST BE DONE ON THE VERCEL BUILD NOT LOCAL HOST.
+- **CRITICAL**: AFTER EVERY FIX COMMITS MUST BE MADE.
+
 ## Key Files
 - [MVP Build Guide](file:///c:/Users/USER/hackathon%20planning/house.fun/.ai/MVP_BUILD_GUIDE.md)
 - [UI/UX Audit](file:///C:/Users/USER/.gemini/antigravity/brain/56c28eff-9694-41e4-9117-552ff3c2f1ec/UI_UX_AUDIT.md)

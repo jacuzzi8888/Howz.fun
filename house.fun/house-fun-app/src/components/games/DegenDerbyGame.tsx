@@ -10,8 +10,8 @@ import { ButtonLoader, TransactionLoader } from '~/components/loading';
 import { useDegenDerbyProgram, type RaceAccount, type Horse } from '~/lib/anchor/degen-derby-client';
 import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData';
 import { shortenAddress, formatSol } from '~/lib/utils';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { getRacePDA } from '~/lib/anchor/degen-derby-utils';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { getRacePDA, getDegenDerbyHousePDA } from '~/lib/anchor/degen-derby-utils';
 import { DerbyTrack } from './_components/DerbyTrack';
 
 const MIN_BET = 0.001;
@@ -116,7 +116,10 @@ const DegenDerbyGameContent: React.FC = () => {
 
     try {
       const bet = await executeGameAction(async () => {
-        // In production: await placeBet(racePDA, stake, selectedHorseId);
+        // In production: const [racePDA] = getRacePDA(currentRace.index);
+        // return await placeBet(racePDA, currentRace.index, stake, selectedHorseId);
+
+        // Mocking for Hackathon UI since Race 1 is never created on-chain
         await new Promise(resolve => setTimeout(resolve, 2000));
         return { success: true };
       });

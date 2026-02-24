@@ -2,7 +2,7 @@ import { AnchorProvider, Program, web3, type Wallet } from '@coral-xyz/anchor';
 import { type ShadowPoker, SHADOW_POKER_IDL } from './shadow-poker-idl';
 
 // Program ID from deployment
-export const SHADOW_POKER_PROGRAM_ID = new web3.PublicKey('2ntDKv6TbKZUHejWkQG85uXj9c3xHvmssjQ4YYKVAgfJ');
+export const SHADOW_POKER_PROGRAM_ID = new web3.PublicKey(process.env.NEXT_PUBLIC_SHADOW_POKER_PROGRAM_ID || '5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD');
 
 // House fee in basis points (1% = 100 bps)
 export const HOUSE_FEE_BPS = 100;
@@ -57,34 +57,8 @@ interface WalletAdapter {
 export function createProvider(
   connection: web3.Connection,
   wallet: WalletAdapter,
-  sessionKey?: web3.Keypair | null
+  _sessionKey?: web3.Keypair | null
 ): AnchorProvider {
-  if (sessionKey) {
-    // Session Key Signer: Bypasses the wallet adapter's signTransaction
-    const sessionWallet = {
-      publicKey: wallet.publicKey || sessionKey.publicKey,
-      signTransaction: async <T extends web3.Transaction | web3.VersionedTransaction>(tx: T): Promise<T> => {
-        if (tx instanceof web3.Transaction) {
-          tx.partialSign(sessionKey);
-        } else {
-          tx.sign([sessionKey]);
-        }
-        return tx;
-      },
-      signAllTransactions: async <T extends web3.Transaction | web3.VersionedTransaction>(txs: T[]): Promise<T[]> => {
-        return txs.map(tx => {
-          if (tx instanceof web3.Transaction) {
-            tx.partialSign(sessionKey);
-          } else {
-            tx.sign([sessionKey]);
-          }
-          return tx;
-        });
-      }
-    };
-    return new AnchorProvider(connection, sessionWallet as any, AnchorProvider.defaultOptions());
-  }
-
   return new AnchorProvider(
     connection,
     wallet as Wallet,

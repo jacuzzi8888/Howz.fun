@@ -53,3 +53,5 @@ house.fun is a high-performance gaming platform on Solana, leveraging **MagicBlo
 - Consult `.agent/rules.md` and `COMPREHENSIVE_REPORT.md` (in brain) before every task.
 - **Standardization**: Ensure `blindType` naming is consistent across all Rust and IDL files to prevent Anchor parsing errors.
 - **Modular Code**: Use `@solana/kit` sub-packages instead of the monolithic `@solana/web3.js`.
+- **CRITICAL TESTING RULE**: ALL TEST MUST BE DONE ON THE VERCEL BUILD NOT LOCAL HOST.
+- **CRITICAL COMMIT RULE**: AFTER EVERY FIX COMMITS MUST BE MADE.

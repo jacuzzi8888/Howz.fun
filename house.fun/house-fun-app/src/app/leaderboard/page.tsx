@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useLeaderboard } from '~/hooks/useGameData';
 import { shortenAddress, formatSol } from '~/lib/utils';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { FullPageLoader } from '~/components/loading';
 import { GameErrorBoundary } from '~/components/error-boundaries';
 import { cn } from '~/lib/utils';
@@ -18,8 +19,12 @@ export default function LeaderboardPage() {
 }
 
 function LeaderboardContent() {
+  const { connected, publicKey } = useWallet();
   const [activeTab, setActiveTab] = useState<LeaderboardType>('profit');
   const { data: players, isLoading } = useLeaderboard(activeTab, 20);
+
+  const userRankIndex = players?.findIndex(p => p.walletAddress === publicKey?.toBase58());
+  const hasRank = userRankIndex !== undefined && userRankIndex >= 0;
 
   const tabs = [
     { id: 'profit' as LeaderboardType, label: 'Top Profit', icon: 'trending_up' },
@@ -79,18 +84,18 @@ function LeaderboardContent() {
               {players.map((player, index) => {
                 const rank = index + 1;
                 const isTop3 = rank <= 3;
-                const value = (activeTab === 'profit' 
-                  ? player.netProfit 
-                  : activeTab === 'wagered' 
-                    ? player.totalWagered 
+                const value = (activeTab === 'profit'
+                  ? player.netProfit
+                  : activeTab === 'wagered'
+                    ? player.totalWagered
                     : player.totalBets) ?? 0;
                 const isPositive = value >= 0;
                 const totalGames = (player.totalWon ?? 0) + (player.totalLost ?? 0);
                 const winRate = totalGames > 0 ? ((player.totalWon ?? 0) / totalGames) * 100 : 0;
 
                 return (
-                  <div 
-                    key={player.id} 
+                  <div
+                    key={player.id}
                     className={cn(
                       "grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors",
                       isTop3 && "bg-white/5"
@@ -145,7 +150,7 @@ function LeaderboardContent() {
                     <div className="col-span-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <div className="w-16 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-primary rounded-full"
                             style={{ width: `${Math.min(100, winRate)}%` }}
                           />
@@ -171,9 +176,27 @@ function LeaderboardContent() {
         {/* Your Rank Card */}
         <div className="mt-8 glass-panel rounded-2xl p-6">
           <h3 className="text-lg font-black text-white mb-4">Your Ranking</h3>
-          <p className="text-gray-400 text-sm">
-            Connect your wallet and start playing to appear on the leaderboard!
-          </p>
+          {connected ? (
+            hasRank ? (
+              <div className="flex items-center gap-4">
+                <div className="size-12 rounded-full bg-primary/20 text-primary font-black flex items-center justify-center text-xl border border-primary/30">
+                  #{userRankIndex! + 1}
+                </div>
+                <div>
+                  <p className="text-white font-bold">You are ranked #{userRankIndex! + 1}</p>
+                  <p className="text-gray-400 text-sm">Keep playing to reach the top!</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm">
+                You are not on the leaderboard yet. Play some games to get ranked!
+              </p>
+            )
+          ) : (
+            <p className="text-gray-400 text-sm">
+              Connect your wallet and start playing to appear on the leaderboard!
+            </p>
+          )}
         </div>
       </div>
     </div>

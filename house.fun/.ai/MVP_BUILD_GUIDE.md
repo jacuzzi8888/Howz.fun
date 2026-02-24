@@ -29,3 +29,5 @@ This document serves as the architectural and strategic guide for the AI Agent e
 - Ensure the `declare_id!()` macros in the Rust files and `Anchor.toml` files are synchronized.
 - Create an initialization script (`scripts/initialize_houses.ts`) to initialize the master global PDAs for the games.
 - Run end-to-end tests for all core gaming loops (Login -> Bet -> Calculate -> Transfer/Payout).
+- **CRITICAL**: ALL TEST MUST BE DONE ON THE VERCEL BUILD NOT LOCAL HOST.
+- **CRITICAL**: AFTER EVERY FIX COMMITS MUST BE MADE.

@@ -244,7 +244,7 @@ export function useDegenDerbyProgram() {
 
       // Get recent blockhash for randomness
       const { blockhash } = await connection.getLatestBlockhash();
-      const recentBlockhashAccount = new web3.PublicKey('7UVimWpZp93R8M7hKdfun2z1xZpkqUnGid9y9u68kYJ5');
+      const recentBlockhashAccount = web3.SYSVAR_RECENT_BLOCKHASHES_PUBKEY;
 
       const tx = await (program as any).methods
         .resolveRace()
