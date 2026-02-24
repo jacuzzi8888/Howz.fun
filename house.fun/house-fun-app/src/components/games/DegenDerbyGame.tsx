@@ -51,7 +51,7 @@ const DegenDerbyGameContent: React.FC = () => {
   const { isLoading, error, txStatus, setTxStatus, reset, executeGameAction } = useGameState();
   const { isReady, placeBet, claimWinnings, fetchRace, getCurrentOdds, fetchHouse, initializeHouse } = useDegenDerbyProgram();
 
-  const { data: recentBets, isLoading: isLoadingBets } = useRecentBets('DEGEN_DERBY', 10);
+  const { data: recentBets, isLoading: isLoadingBets, isError: isErrorBets } = useRecentBets('DEGEN_DERBY', 10);
   const recordBet = useRecordBet();
   const resolveBet = useResolveBet();
 
@@ -470,6 +470,11 @@ const DegenDerbyGameContent: React.FC = () => {
           {isLoadingBets ? (
             <div className="flex justify-center py-8">
               <div className="size-6 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
+            </div>
+          ) : isErrorBets ? (
+            <div className="text-center py-8 text-danger/60 italic text-xs">
+              <span className="material-symbols-outlined text-xl mb-1 block">warning</span>
+              Failed to load recent races
             </div>
           ) : recentBets && recentBets.length > 0 ? (
             <div className="space-y-3">

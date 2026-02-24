@@ -58,14 +58,39 @@ export const MagicBlockProvider: React.FC<{
             setSessionRemainingTime(SessionManager.getRemainingTime());
 
             setSessionKey(prev => {
+                const current = SessionManager.getStoredSessionKey();
                 if (!active && prev !== null) return null;
-                if (active && prev === null) return SessionManager.getStoredSessionKey();
-                return prev; // Return exact same reference to prevent re-renders
+                if (active && prev === null) return current;
+                // If the stored key changed (e.g. new session started), update it
+                if (active && prev !== null && current !== null && current.publicKey.toBase58() !== prev.publicKey.toBase58()) {
+                    return current;
+                }
+                return prev;
             });
         }, 1000);
 
         return () => clearInterval(interval);
     }, []);
+
+    // Automatic Airdrop for new session keys on Devnet
+    useEffect(() => {
+        if (sessionKey && process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet') {
+            const checkAndAirdrop = async () => {
+                try {
+                    const balance = await standardConnection.getBalance(sessionKey.publicKey);
+                    if (balance < 0.05 * 1e9) { // If less than 0.05 SOL
+                        console.log('[MagicBlock] Low balance on session key, requesting airdrop...');
+                        const signature = await standardConnection.requestAirdrop(sessionKey.publicKey, 1 * 1e9);
+                        await standardConnection.confirmTransaction(signature);
+                        console.log('[MagicBlock] Airdrop successful for session key:', sessionKey.publicKey.toBase58());
+                    }
+                } catch (err) {
+                    console.error('[MagicBlock] Airdrop failed (rate limited?):', err);
+                }
+            };
+            void checkAndAirdrop();
+        }
+    }, [sessionKey, standardConnection]);
 
     const value = useMemo(() => ({
         standardConnection,

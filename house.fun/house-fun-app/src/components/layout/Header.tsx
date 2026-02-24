@@ -46,11 +46,15 @@ export const Header: React.FC = () => {
         };
     }, [publicKey, connection]);
 
-    // Auto-start session when connected
+    // Auto-start session when connected, clear when disconnected
     useEffect(() => {
         if (connected && !isSessionActive && isMounted) {
             console.log('[Header] Auto-starting session...');
             SessionManager.createEphemeralKeypair();
+            refreshSession();
+        } else if (!connected && isMounted && isSessionActive) {
+            console.log('[Header] Wallet disconnected, clearing session...');
+            SessionManager.clearSession();
             refreshSession();
         }
     }, [connected, isSessionActive, isMounted, refreshSession]);

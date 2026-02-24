@@ -21,7 +21,7 @@ export default function LeaderboardPage() {
 function LeaderboardContent() {
   const { connected, publicKey } = useWallet();
   const [activeTab, setActiveTab] = useState<LeaderboardType>('profit');
-  const { data: players, isLoading } = useLeaderboard(activeTab, 20);
+  const { data: players, isLoading, isError } = useLeaderboard(activeTab, 20);
 
   const userRankIndex = players?.findIndex(p => p.walletAddress === publicKey?.toBase58());
   const hasRank = userRankIndex !== undefined && userRankIndex >= 0;
@@ -31,6 +31,24 @@ function LeaderboardContent() {
     { id: 'wagered' as LeaderboardType, label: 'Most Wagered', icon: 'payments' },
     { id: 'bets' as LeaderboardType, label: 'Most Bets', icon: 'casino' },
   ];
+
+  if (isError) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+        <div className="glass-panel rounded-2xl p-8 text-center max-w-md border border-danger/20">
+          <span className="material-symbols-outlined text-6xl text-danger mb-4">cloud_off</span>
+          <h2 className="text-2xl font-black text-white mb-2">Sync Error</h2>
+          <p className="text-gray-400 mb-6">Failed to fetch leaderboard data. The House may be syncing or experiencing connectivity issues.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white font-bold rounded-lg transition-colors border border-white/10"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <FullPageLoader />;

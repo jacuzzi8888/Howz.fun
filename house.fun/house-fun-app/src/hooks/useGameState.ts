@@ -71,11 +71,20 @@ export function useGameState(): UseGameStateReturn {
     setError(null);
 
     try {
-      const result = await action();
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Transaction timed out. Please check your wallet or try again.')), 45000);
+      });
+
+      // Race the action against the timeout
+      const result = await Promise.race([action(), timeoutPromise]) as T;
+
       options?.onSuccess?.(result);
       return result;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error');
+
+      // Special case: if it's a timeout, we ensure the error message is clear
       setError(error.message);
       options?.onError?.(error);
       return null;
