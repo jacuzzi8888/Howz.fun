@@ -4,7 +4,7 @@
  */
 
 export const SHADOW_POKER_IDL = {
-  "address": "5YScsLMogjS2JHeXPfQjxEHoAK17RGMCauo1rj343RWD",
+  "address": "HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx",
   "metadata": {
     "name": "shadow_poker",
     "version": "0.1.0",

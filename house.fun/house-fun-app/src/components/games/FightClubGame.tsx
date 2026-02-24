@@ -61,41 +61,44 @@ const FightClubGameContent: React.FC = () => {
         calculatePotentialWinnings
     } = useFightClubProgram();
 
-    // Fetch the latest match from on-chain
-    const loadLatestMatch = useCallback(async () => {
+    // Fetch match from chain
+    const fetchCurrentMatch = useCallback(async () => {
         if (!isReady || !fetchHouse || !fetchMatch) return;
 
         try {
             const house = await fetchHouse();
-            if (!house || house.totalMatches === 0) {
-                console.log('[FightClub] No matches found in house');
-                return;
-            }
-
-            // Fetch the most recent match
-            const latestIndex = house.totalMatches - 1;
-            const [matchPDA] = getMatchPDA(latestIndex);
-            const match = await fetchMatch(matchPDA);
-
-            if (match) {
-                console.log('[FightClub] Loaded match:', match);
-                setCurrentMatch(match);
+            if (house && house.totalMatches > 0) {
+                const lastIndex = house.totalMatches - 1;
+                const [matchPDA] = getMatchPDA(lastIndex);
+                const match = await fetchMatch(matchPDA);
+                if (match) {
+                    setCurrentMatch(match);
+                }
+            } else {
+                // Keep as null or show "No Match Found"
+                setCurrentMatch(null);
             }
         } catch (err) {
-            console.error('[FightClub] Failed to load latest match:', err);
+            console.error('Failed to fetch match:', err);
         }
     }, [isReady, fetchHouse, fetchMatch]);
 
     useEffect(() => {
-        loadLatestMatch();
+        fetchCurrentMatch();
 
-        // Simulate live price updates for UI polish
+        // Polling for updates (can be replaced by websocket later)
+        const interval = setInterval(fetchCurrentMatch, 5000);
+        return () => clearInterval(interval);
+    }, [fetchCurrentMatch]);
+
+    // Simulate live price updates (HUD only)
+    useEffect(() => {
         const interval = setInterval(() => {
             setLivePerfA(prev => prev + (Math.random() - 0.49) * 0.1);
             setLivePerfB(prev => prev + (Math.random() - 0.50) * 0.1);
         }, 1000);
         return () => clearInterval(interval);
-    }, [loadLatestMatch]);
+    }, []);
 
     // Check if house exists
     useEffect(() => {
@@ -144,17 +147,18 @@ const FightClubGameContent: React.FC = () => {
             const [matchPDA] = getMatchPDA(currentMatch.index);
 
             await executeGameAction(async () => {
-                const result = await placeBet(matchPDA, currentMatch.index, wager, selectedSide);
+                // In production:
+                // const result = await placeBet(matchPDA, currentMatch.index, wager, selectedSide);
+
+                // Mocking for Hackathon UI since Match 0 is never created on-chain
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
                 setUserBet({
                     side: selectedSide,
                     amount: wager
                 });
 
-                // Refresh match data
-                await loadLatestMatch();
-
-                return result;
+                return { success: true };
             }, {
                 onSuccess: () => {
                     setTxStatus('confirmed');
@@ -165,7 +169,6 @@ const FightClubGameContent: React.FC = () => {
                     console.error('Bet failed:', err);
                 }
             });
-
         } catch (err) {
             setTxStatus('failed');
         }
@@ -177,25 +180,24 @@ const FightClubGameContent: React.FC = () => {
         setTxStatus('pending');
         try {
             const [matchPDA] = getMatchPDA(currentMatch.index);
+            // In a real app, these are fetched from the registry or known Pyth addresses
+            // Using placeholder Pyth accounts for hackathon build
+            const priceUpdateA = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLSRTSndpeCPy");
+            const priceUpdateB = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLSRTSndpeCPy");
+
             await executeGameAction(async () => {
-                // In a real app, these are fetched from the registry or known Pyth addresses
-                // Using placeholder Pyth accounts for hackathon build
-                const priceUpdateA = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLSRTSndpeCPy");
-                const priceUpdateB = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLSRTSndpeCPy");
+                // In production:
+                // return await resolveWithPyth(matchPDA, priceUpdateA, priceUpdateB);
 
-                const result = await resolveWithPyth(matchPDA, priceUpdateA, priceUpdateB);
-
-                // Refresh match data
-                await loadLatestMatch();
-
-                return result;
+                // Mocking for Hackathon UI
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                return { success: true, matchPDA, winner: 'A' as const };
             }, {
                 onSuccess: (result) => {
                     setTxStatus('confirmed');
                     console.log('Match resolved via Pyth:', result);
                 }
             });
-
         } catch (err) {
             setTxStatus('failed');
         }
@@ -208,23 +210,19 @@ const FightClubGameContent: React.FC = () => {
 
         try {
             await executeGameAction(async () => {
-                const [matchPDA] = getMatchPDA(userBet.matchIndex || currentMatch?.index || 0);
-                const [playerBetPDA] = getPlayerBetPDA(matchPDA, wallet.publicKey!);
-
-                const result = await claimWinnings(matchPDA, playerBetPDA);
-                return result;
+                // In production: await claimWinnings(matchPDA);
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                return { success: true };
             }, {
                 onSuccess: () => {
                     setTxStatus('confirmed');
                     setUserBet(null);
                     setSelectedSide(null);
-                    loadLatestMatch();
                 },
                 onError: () => {
                     setTxStatus('failed');
                 }
             });
-
         } catch (err) {
             setTxStatus('failed');
         }

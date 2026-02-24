@@ -1,6 +1,11 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import * as dotenv from "dotenv";
+import path from "path";
+
+// Load environment variables from .env.local
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 /**
  * Seed the games table with the 4 game types.
@@ -66,7 +71,6 @@ async function seed() {
             isActive: true,
             programId: process.env.NEXT_PUBLIC_SHADOW_POKER_PROGRAM_ID ?? "HT1ro9KCKv3bzrvrtjonrMWuHZeNYFPvscPWy8bMaogx",
         },
-
     ];
 
     for (const game of gameData) {

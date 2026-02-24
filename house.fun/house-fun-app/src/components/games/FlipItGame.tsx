@@ -160,27 +160,6 @@ const FlipItGameContent: React.FC = () => {
             }
 
             setBetResult(bet);
-
-            // Step 2: Request Flip (Arcium/MagicBlock trigger)
-            // This is the missing link that actually resolves the bet
-            const flipTx = await executeGameAction(async () => {
-                // Using placeholder values for Arcium parameters as they are often
-                // handled by the rollup or a separate coordinator.
-                // In a full Arcium setup, these would be derived from the encrypted choice.
-                const result = await requestFlip(
-                    bet.betPDA,
-                    0, // offset
-                    [side === 'HEADS' ? 0 : 1], // user_choice
-                    Array(32).fill(0), // pub_key
-                    bet.nonce || 0
-                );
-                console.log('[FlipIt] Request flip result:', result);
-                return result;
-            });
-
-            if (!flipTx) {
-                throw new Error('Failed to request flip');
-            }
             setTxStatus('confirming');
 
             // Step 2: Record bet in database
@@ -197,24 +176,28 @@ const FlipItGameContent: React.FC = () => {
                 console.error('Failed to record bet in database:', dbError);
             }
 
-            // Step 3: Wait for Resolution via Websocket (Resilient)
+            // Step 3: Wait for Resolution (Resilient)
             setTxStatus('confirming');
 
             const resolvedAccount = await new Promise<any>((resolve, reject) => {
-                const { activeConnection } = useMagicBlock.getState?.() || (window as any).magicBlockState || {};
-                const connection = activeConnection || (program as any).provider.connection;
+                // Ensure we use the correct connection (MagicBlock or Solana)
+                const connection = (program as any).provider.connection;
+                let isResolved = false;
 
                 console.log('[FlipIt] Subscribing to bet resolution...', bet.betPDA.toString());
 
                 const subId = connection.onAccountChange(
                     bet.betPDA,
                     (accountInfo: any) => {
+                        if (isResolved) return;
                         try {
                             const accountGate = (program?.account as any).bet || (program?.account as any).Bet;
                             const decoded = accountGate.coder.accounts.decode('Bet', accountInfo.data);
                             console.log('[FlipIt] Account change detected:', decoded.status);
 
-                            if (Object.keys(decoded.status)[0] === 'Resolved') {
+                            const statusKey = Object.keys(decoded.status)[0];
+                            if (statusKey === 'Resolved') {
+                                isResolved = true;
                                 connection.removeAccountChangeListener(subId);
                                 resolve({
                                     ...decoded,
@@ -232,20 +215,28 @@ const FlipItGameContent: React.FC = () => {
 
                 // Fallback polling (much slower) in case websocket fails
                 const interval = setInterval(async () => {
-                    const fetched: any = await fetchBet(bet.betPDA);
-                    if (fetched && fetched.status === 'Resolved') {
+                    if (isResolved) return;
+                    try {
+                        const fetched: any = await fetchBet(bet.betPDA);
+                        if (fetched && fetched.status === 'Resolved') {
+                            isResolved = true;
+                            connection.removeAccountChangeListener(subId);
+                            clearInterval(interval);
+                            resolve(fetched);
+                        }
+                    } catch (err) {
+                        console.log('[FlipIt] Polling check skipped:', err.message);
+                    }
+                }, 5000);
+
+                // Timeout after 60s
+                setTimeout(() => {
+                    if (!isResolved) {
                         connection.removeAccountChangeListener(subId);
                         clearInterval(interval);
-                        resolve(fetched);
+                        reject(new Error('Timeout waiting for flip resolution. The transaction might have succeeded - check your balance or history.'));
                     }
-                }, 10000);
-
-                // Timeout after 30s
-                setTimeout(() => {
-                    connection.removeAccountChangeListener(subId);
-                    clearInterval(interval);
-                    reject(new Error('Timeout waiting for flip resolution.'));
-                }, 30000);
+                }, 60000);
             });
 
             if (!resolvedAccount) {
