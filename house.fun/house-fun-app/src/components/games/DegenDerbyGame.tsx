@@ -11,6 +11,7 @@ import { useDegenDerbyProgram, type RaceAccount, type Horse } from '~/lib/anchor
 import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData';
 import { shortenAddress, formatSol } from '~/lib/utils';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { getRacePDA } from '~/lib/anchor/degen-derby-utils';
 import { DerbyTrack } from './_components/DerbyTrack';
 
 const MIN_BET = 0.001;
@@ -156,8 +157,8 @@ const DegenDerbyGameContent: React.FC = () => {
         const pubKey = new Uint8Array(32); // Actual Arcium pubkey
         const nonce = 12345n; // Random nonce
         const computationOffset = 0; // First index
-
-        const result = await resolveRace(currentRace.pda, computationOffset, Array.from(pubKey), nonce);
+        const [racePDA] = getRacePDA(currentRace.index);
+        const result = await resolveRace(racePDA);
         return { success: true, winnerIndex: result.winnerHorseIndex };
       }, {
         onSuccess: (data: any) => {

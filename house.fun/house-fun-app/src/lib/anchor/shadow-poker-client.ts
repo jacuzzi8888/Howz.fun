@@ -183,7 +183,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const [housePDA] = getShadowPokerHousePDA();
 
       const tx = await (program as any).methods
-        .initialize_house()
+        .initializeHouse()
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,
@@ -216,7 +216,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const [tablePDA] = getTablePDA(tableIndex);
 
       const tx = await (program as any).methods
-        .create_table(
+        .createTable(
           new BN(solToLamports(config.minBuyIn)),
           new BN(solToLamports(config.maxBuyIn)),
           new BN(solToLamports(config.smallBlind)),
@@ -260,7 +260,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const lamports = solToLamports(buyIn);
 
       const tx = await (program as any).methods
-        .join_table(new BN(lamports))
+        .joinTable(new BN(lamports))
         .accounts({
           player_state: playerStatePDA,
           table: tablePDA,
@@ -296,7 +296,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const [housePDA] = getShadowPokerHousePDA();
 
       const tx = await (program as any).methods
-        .start_hand()
+        .startHand()
         .accounts({
           table: tablePDA,
           house: housePDA,
@@ -324,7 +324,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
 
     try {
       const tx = await (program as any).methods
-        .init_poker_comp_def()
+        .initPokerCompDef()
         .accounts({
           payer: wallet.publicKey,
           system_program: web3.SystemProgram.programId,
@@ -353,7 +353,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
 
     try {
       const tx = await (program as any).methods
-        .deal_encrypted_cards(computationOffset, pubKey, nonce)
+        .dealEncryptedCards(computationOffset, pubKey, nonce)
         .accounts({
           payer: wallet.publicKey,
           table: tablePDA,
@@ -385,7 +385,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const [housePDA] = getShadowPokerHousePDA();
 
       const tx = await (program as any).methods
-        .showdown_with_proof(computationOffset, pubKey, nonce)
+        .showdownWithProof(computationOffset, pubKey, nonce)
         .accounts({
           payer: wallet.publicKey,
           table: tablePDA,
@@ -415,7 +415,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
 
     try {
       const tx = await (program as any).methods
-        .post_blind({ [blindType]: {} })
+        .postBlind({ [blindType]: {} })
         .accounts({
           player_state: playerStatePDA,
           table: tablePDA,
@@ -450,7 +450,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const lamports = solToLamports(amount);
 
       const tx = await (program as any).methods
-        .player_action(actionArg, new BN(lamports))
+        .playerAction(actionArg, new BN(lamports))
         .accounts({
           player_state: playerStatePDA,
           table: tablePDA,
@@ -485,7 +485,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
 
     try {
       const tx = await (program as any).methods
-        .reveal_cards(cards)
+        .revealCards(cards)
         .accounts({
           table: tablePDA,
           authority: wallet.publicKey,
@@ -563,7 +563,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const remainingStack = lamportsToSol(playerState.stack.toNumber());
 
       const tx = await (program as any).methods
-        .leave_table()
+        .leaveTable()
         .accounts({
           player_state: playerStatePDA,
           table: tablePDA,
@@ -599,7 +599,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
       const lamports = solToLamports(amount);
 
       const tx = await (program as any).methods
-        .withdraw_treasury(new BN(lamports))
+        .withdrawTreasury(new BN(lamports))
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,

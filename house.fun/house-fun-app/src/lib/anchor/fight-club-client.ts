@@ -103,8 +103,8 @@ export function useFightClubProgram() {
     try {
       const [housePDA] = getFightClubHousePDA();
 
-      const tx = await program.methods
-        .initialize_house()
+      const tx = await (program as any).methods
+        .initializeHouse()
         .accounts({
           house: housePDA,
           authority: wallet.publicKey,
@@ -139,8 +139,8 @@ export function useFightClubProgram() {
       const matchIndex = houseAccount ? houseAccount.totalMatches.toNumber() : 0;
       const [matchPDA] = getMatchPDA(matchIndex);
 
-      const tx = await program.methods
-        .create_match_v2(tokenA, tokenB, feedIdA, feedIdB)
+      const tx = await (program as any).methods
+        .createMatchV2(tokenA, tokenB, feedIdA, feedIdB)
         .accounts({
           fightMatch: matchPDA,
           house: housePDA,
@@ -181,8 +181,8 @@ export function useFightClubProgram() {
       const lamports = solToLamports(amount);
       const sideNum = side === 'A' ? 0 : 1;
 
-      const tx = await program.methods
-        .place_bet(new BN(lamports), sideNum)
+      const tx = await (program as any).methods
+        .placeBet(new BN(lamports), sideNum)
         .accounts({
           playerBet: playerBetPDA,
           match: matchPDA,
@@ -199,142 +199,6 @@ export function useFightClubProgram() {
         amount,
         side,
       };
-    } catch (error) {
-      throw new Error(parseFightClubError(error));
-    }
-  }, [program, wallet.publicKey]);
-
-  /**
-   * Resolve a match using Pyth Price Feeds
-   */
-  const resolveWithPyth = useCallback(async (
-    matchPDA: web3.PublicKey,
-    priceUpdateA: web3.PublicKey,
-    priceUpdateB: web3.PublicKey
-  ): Promise<MatchResult> => {
-    if (!program || !wallet.publicKey) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const [housePDA] = getFightClubHousePDA();
-
-      const tx = await program.methods
-        .resolve_with_pyth()
-        .accounts({
-          fightMatch: matchPDA,
-          house: housePDA,
-          priceUpdateA,
-          priceUpdateB,
-          authority: wallet.publicKey,
-        } as any)
-        .rpc();
-
-      const matchAccount = await fetchMatch(matchPDA);
-
-      return {
-        signature: tx,
-        matchPDA,
-        winner: matchAccount?.winner || 'A',
-      };
-    } catch (error) {
-      throw new Error(parseFightClubError(error));
-    }
-  }, [program, wallet.publicKey, fetchMatch]);
-
-  /**
-   * Claim winnings from a resolved match
-   */
-  const claimWinnings = useCallback(async (
-    matchPDA: web3.PublicKey,
-    playerBetPDA: web3.PublicKey
-  ): Promise<ClaimResult> => {
-    if (!program || !wallet.publicKey) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const [housePDA] = getFightClubHousePDA();
-
-      const tx = await program.methods
-        .claim_winnings()
-        .accounts({
-          playerBet: playerBetPDA,
-          match: matchPDA,
-          house: housePDA,
-          player: wallet.publicKey,
-          systemProgram: web3.SystemProgram.programId,
-        } as any)
-        .rpc();
-
-      // Fetch updated bet to get winnings amount
-      const betAccount = await (program.account as any).PlayerBet.fetch(playerBetPDA);
-
-      return {
-        signature: tx,
-        winnings: lamportsToSol(betAccount.winnings.toNumber()),
-        playerBetPDA,
-      };
-    } catch (error) {
-      throw new Error(parseFightClubError(error));
-    }
-  }, [program, wallet.publicKey]);
-
-  /**
-   * Cancel a match (admin only)
-   */
-  const cancelMatch = useCallback(async (
-    matchPDA: web3.PublicKey
-  ): Promise<string> => {
-    if (!program || !wallet.publicKey) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const [housePDA] = getFightClubHousePDA();
-
-      const tx = await program.methods
-        .cancel_match()
-        .accounts({
-          match: matchPDA,
-          house: housePDA,
-          authority: wallet.publicKey,
-          systemProgram: web3.SystemProgram.programId,
-        } as any)
-        .rpc();
-
-      return tx;
-    } catch (error) {
-      throw new Error(parseFightClubError(error));
-    }
-  }, [program, wallet.publicKey]);
-
-  /**
-   * Refund bet from a cancelled match
-   */
-  const refundBet = useCallback(async (
-    matchPDA: web3.PublicKey,
-    playerBetPDA: web3.PublicKey
-  ): Promise<string> => {
-    if (!program || !wallet.publicKey) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const [housePDA] = getFightClubHousePDA();
-
-      const tx = await program.methods
-        .refund_bet()
-        .accounts({
-          playerBet: playerBetPDA,
-          match: matchPDA,
-          house: housePDA,
-          player: wallet.publicKey,
-          systemProgram: web3.SystemProgram.programId,
-        } as any)
-        .rpc();
-
-      return tx;
     } catch (error) {
       throw new Error(parseFightClubError(error));
     }
@@ -421,6 +285,144 @@ export function useFightClubProgram() {
       return null;
     }
   }, [program]);
+
+  /**
+   * Resolve a match using Pyth Price Feeds
+   */
+  const resolveWithPyth = useCallback(async (
+    matchPDA: web3.PublicKey,
+    priceUpdateA: web3.PublicKey,
+    priceUpdateB: web3.PublicKey
+  ): Promise<MatchResult> => {
+    if (!program || !wallet.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const [housePDA] = getFightClubHousePDA();
+
+      const tx = await (program as any).methods
+        .resolveWithPyth()
+        .accounts({
+          fightMatch: matchPDA,
+          house: housePDA,
+          priceUpdateA,
+          priceUpdateB,
+          authority: wallet.publicKey,
+        } as any)
+        .rpc();
+
+      const matchAccount = await fetchMatch(matchPDA);
+
+      return {
+        signature: tx,
+        matchPDA,
+        winner: matchAccount?.winner || 'A',
+      };
+    } catch (error) {
+      throw new Error(parseFightClubError(error));
+    }
+  }, [program, wallet.publicKey, fetchMatch]);
+
+  /**
+   * Claim winnings from a resolved match
+   */
+  const claimWinnings = useCallback(async (
+    matchPDA: web3.PublicKey,
+    playerBetPDA: web3.PublicKey
+  ): Promise<ClaimResult> => {
+    if (!program || !wallet.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const [housePDA] = getFightClubHousePDA();
+
+      const tx = await (program as any).methods
+        .claimWinnings()
+        .accounts({
+          playerBet: playerBetPDA,
+          match: matchPDA,
+          house: housePDA,
+          player: wallet.publicKey,
+          systemProgram: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      // Fetch updated bet to get winnings amount
+      const betAccount = await (program.account as any).PlayerBet.fetch(playerBetPDA);
+
+      return {
+        signature: tx,
+        winnings: lamportsToSol(betAccount.winnings.toNumber()),
+        playerBetPDA,
+      };
+    } catch (error) {
+      throw new Error(parseFightClubError(error));
+    }
+  }, [program, wallet.publicKey]);
+
+  /**
+   * Cancel a match (admin only)
+   */
+  const cancelMatch = useCallback(async (
+    matchPDA: web3.PublicKey
+  ): Promise<string> => {
+    if (!program || !wallet.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const [housePDA] = getFightClubHousePDA();
+
+      const tx = await (program as any).methods
+        .cancelMatch()
+        .accounts({
+          match: matchPDA,
+          house: housePDA,
+          authority: wallet.publicKey,
+          systemProgram: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      return tx;
+    } catch (error) {
+      throw new Error(parseFightClubError(error));
+    }
+  }, [program, wallet.publicKey]);
+
+  /**
+   * Refund bet from a cancelled match
+   */
+  const refundBet = useCallback(async (
+    matchPDA: web3.PublicKey,
+    playerBetPDA: web3.PublicKey
+  ): Promise<string> => {
+    if (!program || !wallet.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const [housePDA] = getFightClubHousePDA();
+
+      const tx = await (program as any).methods
+        .refundBet()
+        .accounts({
+          playerBet: playerBetPDA,
+          match: matchPDA,
+          house: housePDA,
+          player: wallet.publicKey,
+          systemProgram: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+
+      return tx;
+    } catch (error) {
+      throw new Error(parseFightClubError(error));
+    }
+  }, [program, wallet.publicKey]);
+
+
 
   /**
    * Calculate potential winnings for a bet
