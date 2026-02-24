@@ -16,6 +16,7 @@ export default function ProfilePage() {
 }
 
 function ProfileContent() {
+  const { publicKey, connected } = useWallet();
   const { data: stats, isLoading: isLoadingStats, isError: isErrorStats } = usePlayerStats();
   const { data: bets, isLoading: isLoadingBets, isError: isErrorBets } = usePlayerBets(20, 0);
 
