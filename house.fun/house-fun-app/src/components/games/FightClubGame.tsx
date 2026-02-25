@@ -405,15 +405,7 @@ const FightClubGameContent: React.FC = () => {
                             Status: {currentMatch?.status || 'Loading'}
                         </span>
                     </div>
-                    {currentMatch?.status === 'Open' && houseExists && (
-                        <button
-                            onClick={handleResolve}
-                            disabled={isBetting}
-                            className="bg-accentGold/10 hover:bg-accentGold/20 border border-accentGold/30 text-accentGold text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full transition-all"
-                        >
-                            {isBetting ? 'Processing...' : 'Resolve (Admin/Debug)'}
-                        </button>
-                    )}
+                    {/* RESOLVE button hidden — admin/debug only */}
                 </div>
             </div>
 

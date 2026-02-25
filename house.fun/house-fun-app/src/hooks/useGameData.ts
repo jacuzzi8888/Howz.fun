@@ -78,6 +78,7 @@ export function useRecentBets(
         gameType,
         prediction: sides[sideIdx],
         outcome: sides[won ? sideIdx : 1 - sideIdx],
+        playerChoice: i % 8, // horse index for Degen Derby
         status: "Resolved",
         playerWon: won,
         payoutAmount: won ? Math.floor(betAmount * 1.95) : 0,
@@ -131,7 +132,7 @@ export function usePlayerBets(limit = 20, offset = 0) {
 
     return {
       ...query,
-      data: query.data || mockBets,
+      data: mockBets,
       isLoading: false,
       isError: false,
     };
@@ -153,13 +154,13 @@ export function usePlayerStats() {
   if (isDemoMode) {
     return {
       ...query,
-      data: query.data || {
+      data: {
         totalBets: 42,
         totalWagered: Math.floor(156.5 * 1_000_000_000),
         netProfit: Math.floor(88.2 * 1_000_000_000),
         winRate: 58.2,
-        totalWon: 24,
-        totalLost: 18,
+        totalWon: Math.floor(122.35 * 1_000_000_000),
+        totalLost: Math.floor(34.15 * 1_000_000_000),
       },
       isLoading: false,
     };
@@ -182,15 +183,32 @@ export function useLeaderboard(
   );
 
   if (isDemoMode) {
+    const leaderboardAddresses = [
+      '8RvXcK2mN7fPb3qJwL5sYdHz4gAeT6WkU1xn9CjStKm',
+      'EkJ3TqF5cXbW8vNr2jLm6sPy4gAeK7RxD1nJwUzCbYqh',
+      'CwG9jN2cVr8mPf5xLqD3hBs4tAeY7RnZb6JXuWk1dpSv',
+      'A5dWnJ3rK8cFv2xQmTs6gLp4bAeY9Rz7Bk1jNuXwSCfG',
+      '3RvXkM7cNf9wJ2sLqBh5gPd4tAeY8Kz6Wn1jTuCbSpGx',
+      'FnJ8cK5wRv3mXq2hBs6gLp4dAeY9Tz7Wk1rNuCbSpGjD',
+      '2TsXkN7cWf9vJ3mLqBh5gPd4rAeY8Kz6Rn1wJuCbSpFx',
+      '9PvLmN2kRfJ7sW5cXqYb8dHz3gAer6TKwU4xn1CjStGh',
+      'Dh3TqF9c5XkW2vNr8jBm6sPy4gAeK7LxR1nJwUzCbYst',
+      '6KwGjN8cVr2mPf5xLqD3hBs4tAeY7RnZb9JXuWk1CpSv',
+    ];
+    const usernames = [
+      'SolWhale', 'DegenKing', 'CryptoShark', 'MoonBoi',
+      'DiamondApe', 'FlipMaster', 'PokerFace', 'BonkLord',
+      'WifHat_OG', 'JitoMEV',
+    ];
     const mockLeaderboard = Array.from({ length: limit }, (_, i) => {
-      const totalBets = Math.floor(100 - i * 2 + Math.random() * 10);
+      const totalBets = Math.floor(100 - i * 2 + ((i * 7 + 3) % 10));
       const totalWon = Math.floor(totalBets * (0.6 - i * 0.01));
       return {
-        id: `whale-${i}`,
-        walletAddress: `Whale${i + 1}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
-        username: `HighRoller_${i + 1}`,
-        netProfit: Math.floor((500 - i * 20 + Math.random() * 50) * 1_000_000_000),
-        totalWagered: Math.floor((2000 - i * 100 + Math.random() * 200) * 1_000_000_000),
+        id: `player-${i}`,
+        walletAddress: leaderboardAddresses[i % leaderboardAddresses.length],
+        username: usernames[i % usernames.length],
+        netProfit: Math.floor((500 - i * 20 + ((i * 13 + 7) % 50)) * 1_000_000_000),
+        totalWagered: Math.floor((2000 - i * 100 + ((i * 17 + 11) % 200)) * 1_000_000_000),
         totalBets,
         totalWon,
         totalLost: totalBets - totalWon,
@@ -199,7 +217,7 @@ export function useLeaderboard(
 
     return {
       ...query,
-      data: query.data || mockLeaderboard,
+      data: mockLeaderboard,
       isLoading: false,
     };
   }

@@ -550,7 +550,7 @@ const DegenDerbyGameContent: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-white font-bold">
-                      Horse #{bet.playerChoice}
+                      {MOCK_HORSES[bet.playerChoice ?? (parseInt(bet.id?.split('-').pop() || '0') % MOCK_HORSES.length)]?.name || `Horse #${bet.playerChoice}`}
                     </span>
                     <span className={cn(
                       "text-sm font-black",

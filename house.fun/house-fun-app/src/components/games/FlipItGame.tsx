@@ -631,273 +631,275 @@ const FlipItGameContent: React.FC = () => {
                                         "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
                                         side === 'HEADS'
                                             ? "bg-primary border-primary/50 text-black shadow-[0_0_20px_-5px_rgba(7,204,0,0.5)]"
-                                            : "border-transparent text-white/50 hover:text-white"
+                                            : "border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10"
                                     )}
                                 >
-                                    HEADS
-                                </button>
-                                <button
-                                    onClick={() => !isFlipping && setSide('TAILS')}
-                                    disabled={isFlipping}
-                                    className={cn(
-                                        "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
-                                        side === 'TAILS'
-                                            ? "bg-danger border-danger/50 text-white shadow-[0_0_20px_-5px_rgba(255,63,51,0.5)]"
-                                            : "border-transparent text-white/50 hover:text-white"
-                                    )}
-                                >
-                                    TAILS
-                                </button>
-                            </div>
-
-                            {/* Wallet Balance Display */}
-                            {(connected || isDemoMode) && (
-                                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
-                                    <div className="flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Balance</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <span className="font-mono font-bold text-white">
-                                            {balanceLoading ? (
-                                                <span className="inline-block w-12 h-4 bg-white/10 rounded animate-pulse"></span>
-                                            ) : (
-                                                formatBalance(walletBalance)
-                                            )}
-                                        </span>
-                                        <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Bet Amount Input */}
-                            <div className="flex flex-col gap-4">
-                                <div className="flex justify-between items-center text-xs font-bold text-gray-400 px-1 tracking-widest uppercase">
-                                    <span>Wager Amount</span>
-                                    <span>Min: {MIN_BET} SOL | Max: {MAX_BET} SOL</span>
-                                </div>
-                                <div className="flex items-stretch gap-3">
-                                    <button
-                                        onClick={() => setAmount(Math.max(MIN_BET, amount - 0.5))}
-                                        disabled={isFlipping}
-                                        className="size-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
-                                    >-</button>
-                                    <div className="flex-1 relative">
-                                        <input
-                                            type="number"
-                                            value={amount}
-                                            onChange={(e) => {
-                                                const val = parseFloat(e.target.value);
-                                                if (!isNaN(val) && val >= 0) {
-                                                    setAmount(Math.min(MAX_BET, Math.max(MIN_BET, val)));
-                                                }
-                                            }}
-                                            min={MIN_BET}
-                                            max={MAX_BET}
-                                            step={0.1}
-                                            disabled={isFlipping}
-                                            className="w-full h-12 bg-black/40 border border-white/10 rounded-xl pl-4 pr-12 text-white font-mono text-xl font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center disabled:opacity-50"
-                                        />
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-500 pointer-events-none tracking-tighter">SOL</div>
-                                    </div>
-                                    <button
-                                        onClick={() => setAmount(Math.min(MAX_BET, amount + 0.5))}
-                                        disabled={isFlipping}
-                                        className="size-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
-                                    >+</button>
-                                </div>
-                                {amount < MIN_BET && (
-                                    <p className="text-red-400 text-xs">Minimum bet is {MIN_BET} SOL</p>
-                                )}
-                                {amount > MAX_BET && (
-                                    <p className="text-red-400 text-xs">Maximum bet is {MAX_BET} SOL</p>
-                                )}
-                            </div>
-
-                            {/* Action Button */}
+                                HEADS
+                            </button>
                             <button
-                                disabled={!canFlip}
-                                onClick={handleFlip}
+                                onClick={() => !isFlipping && setSide('TAILS')}
+                                disabled={isFlipping}
                                 className={cn(
-                                    "w-full h-14 text-xl font-black tracking-[0.1em] uppercase rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(7,204,0,0.3)] disabled:shadow-none",
-                                    isFlipping
-                                        ? "bg-gray-700 cursor-not-allowed text-gray-400"
-                                        : canFlip
-                                            ? "bg-primary hover:bg-primaryHover text-[#0A0A0F] hover:shadow-[0_0_40px_rgba(7,204,0,0.5)]"
-                                            : "bg-gray-700 cursor-not-allowed text-gray-500"
+                                    "h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-bold tracking-wider disabled:opacity-50",
+                                    side === 'TAILS'
+                                        ? "bg-danger border-danger/50 text-white shadow-[0_0_20px_-5px_rgba(255,63,51,0.5)]"
+                                        : "border-white/20 bg-white/5 text-white/80 hover:text-white hover:bg-white/10"
                                 )}
                             >
-                                {isFlipping ? (
-                                    <ButtonLoader text="FLIPPING..." />
-                                ) : !connected ? (
-                                    <span>CONNECT WALLET</span>
-                                ) : (
-                                    <>
-                                        <span>FLIP NOW</span>
-                                        <span className="material-symbols-outlined transition-transform duration-700 group-hover:rotate-180">sync</span>
-                                    </>
-                                )}
+                                TAILS
                             </button>
+                        </div>
 
-                            {/* Disabled Reason Helper */}
-                            {disabledReason && (
-                                <div className="flex items-center gap-2 text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2">
-                                    <span className="material-symbols-outlined text-sm">info</span>
-                                    <span>{disabledReason}</span>
-                                </div>
-                            )}
-
-                            {/* Debug Info (Dev Only) */}
-                            {process.env.NODE_ENV === 'development' && (
-                                <div className="p-3 bg-black/60 rounded-xl border border-white/10 text-xs font-mono space-y-1">
-                                    <p className="text-gray-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Debug Status</p>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-400">Wallet:</span>
-                                            <span className={connected ? "text-green-400" : "text-red-400"}>{connected ? "Connected" : "Not Connected"}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-400">Ready:</span>
-                                            <span className={isReady ? "text-green-400" : "text-red-400"}>{isReady ? "Yes" : "No"}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-400">House:</span>
-                                            <span className={houseExists ? "text-green-400" : "text-red-400"}>{houseExists === null ? "Loading..." : (houseExists ? "Active" : "Not Found")}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-400">Status:</span>
-                                            <span className={isFlipping ? "text-yellow-400" : "text-blue-400"}>{isFlipping ? "Flipping" : "Idle"}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-400">Amount:</span>
-                                            <span className={(amount >= MIN_BET && amount <= MAX_BET) ? "text-green-400" : "text-red-400"}>{amount} SOL</span>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                console.log('[FlipIt] Manual refresh triggered');
-                                                fetchHouse().then(house => setHouseExists(!!house));
-                                            }}
-                                            className="col-span-2 mt-2 py-1 px-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded text-white text-xs font-black uppercase tracking-tighter transition-all"
-                                        >
-                                            Force Refresh Status
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-center text-xs text-gray-500 font-bold uppercase tracking-[0.2em] px-1">
-                                <span>Multiplier: <span className="text-white">2.0x</span></span>
-                                <span>Win Chance: <span className="text-white">50%</span></span>
-                                <span>House Edge: <span className="text-white">2%</span></span>
+                            {/* Wallet Balance Display */}
+                    {(connected || isDemoMode) && (
+                        <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
+                            <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Balance</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="font-mono font-bold text-white">
+                                    {balanceLoading ? (
+                                        <span className="inline-block w-12 h-4 bg-white/10 rounded animate-pulse"></span>
+                                    ) : (
+                                        formatBalance(walletBalance)
+                                    )}
+                                </span>
+                                <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">SOL</span>
                             </div>
                         </div>
                     )}
-                </div>
 
-                {/* Background Decorative Glows */}
-                <div className="absolute top-1/4 left-1/4 size-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse"></div>
-                <div className="absolute bottom-1/4 right-1/4 size-96 bg-danger/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse delay-700"></div>
-            </div>
+                    {/* Bet Amount Input */}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center text-xs font-bold text-gray-400 px-1 tracking-widest uppercase">
+                            <span>Wager Amount</span>
+                            <span>Min: {MIN_BET} SOL | Max: {MAX_BET} SOL</span>
+                        </div>
+                        <div className="flex items-stretch gap-3">
+                            <button
+                                onClick={() => setAmount(Math.max(MIN_BET, amount - 0.5))}
+                                disabled={isFlipping}
+                                className="size-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
+                            >-</button>
+                            <div className="flex-1 relative">
+                                <input
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => {
+                                        const val = parseFloat(e.target.value);
+                                        if (!isNaN(val) && val >= 0) {
+                                            setAmount(Math.min(MAX_BET, Math.max(MIN_BET, val)));
+                                        }
+                                    }}
+                                    min={MIN_BET}
+                                    max={MAX_BET}
+                                    step={0.1}
+                                    disabled={isFlipping}
+                                    className="w-full h-12 bg-black/40 border border-white/10 rounded-xl pl-4 pr-12 text-white font-mono text-xl font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-center disabled:opacity-50"
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-500 pointer-events-none tracking-tighter">SOL</div>
+                            </div>
+                            <button
+                                onClick={() => setAmount(Math.min(MAX_BET, amount + 0.5))}
+                                disabled={isFlipping}
+                                className="size-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-2xl font-bold text-gray-400 hover:text-white transition-all disabled:opacity-50"
+                            >+</button>
+                        </div>
+                        {amount < MIN_BET && (
+                            <p className="text-red-400 text-xs">Minimum bet is {MIN_BET} SOL</p>
+                        )}
+                        {amount > MAX_BET && (
+                            <p className="text-red-400 text-xs">Maximum bet is {MAX_BET} SOL</p>
+                        )}
+                    </div>
 
-            {/* Mobile History Toggle */}
-            <button
-                onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-                className="lg:hidden fixed bottom-6 right-6 z-50 size-14 rounded-full bg-primary text-black shadow-[0_0_20px_rgba(7,204,0,0.5)] flex items-center justify-center active:scale-95 transition-transform"
-            >
-                <span className="material-symbols-outlined">{isHistoryOpen ? 'close' : 'history'}</span>
-            </button>
+                    {/* Action Button */}
+                    <button
+                        disabled={!canFlip}
+                        onClick={handleFlip}
+                        className={cn(
+                            "w-full h-14 text-xl font-black tracking-[0.1em] uppercase rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(7,204,0,0.3)] disabled:shadow-none",
+                            isFlipping
+                                ? "bg-gray-700 cursor-not-allowed text-gray-400"
+                                : canFlip
+                                    ? "bg-primary hover:bg-primaryHover text-[#0A0A0F] hover:shadow-[0_0_40px_rgba(7,204,0,0.5)]"
+                                    : "bg-gray-700 cursor-not-allowed text-gray-500"
+                        )}
+                    >
+                        {isFlipping ? (
+                            <ButtonLoader text="FLIPPING..." />
+                        ) : !connected ? (
+                            <span>CONNECT WALLET</span>
+                        ) : (
+                            <>
+                                <span>FLIP NOW</span>
+                                <span className="material-symbols-outlined transition-transform duration-700 group-hover:rotate-180">sync</span>
+                            </>
+                        )}
+                    </button>
 
-            {/* Mobile History Backdrop */}
-            {isHistoryOpen && (
-                <div
-                    className="lg:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-30"
-                    onClick={() => setIsHistoryOpen(false)}
-                />
-            )}
+                    {/* Disabled Reason Helper */}
+                    {disabledReason && (
+                        <div className="flex items-center gap-2 text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2">
+                            <span className="material-symbols-outlined text-sm">info</span>
+                            <span>{disabledReason}</span>
+                        </div>
+                    )}
 
-            {/* Sidebar (Recent Flips) */}
-            <aside className={cn(
-                "w-80 border-l border-white/5 bg-[#0A0A0F] lg:bg-[#0A0A0F]/50 backdrop-blur-xl flex flex-col transition-transform duration-300 z-40 lg:z-20",
-                "fixed inset-y-0 right-0 translate-x-full lg:translate-x-0 lg:static",
-                isHistoryOpen && "translate-x-0"
-            )}>
-                <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                    <h3 className="font-bold text-white tracking-tighter flex items-center gap-2 uppercase text-sm">
-                        <span className="material-symbols-outlined text-gray-400 text-lg">history</span>
-                        Recent Flips
-                    </h3>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-                        <span className="size-1.5 rounded-full bg-primary animate-pulse"></span>
-                        <span className="text-xs font-black text-primary uppercase tracking-widest">Live</span>
+                    {/* Debug Info (Dev Only) */}
+                    {process.env.NODE_ENV === 'development' && (
+                        <div className="p-3 bg-black/60 rounded-xl border border-white/10 text-xs font-mono space-y-1">
+                            <p className="text-gray-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Debug Status</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Wallet:</span>
+                                    <span className={connected ? "text-green-400" : "text-red-400"}>{connected ? "Connected" : "Not Connected"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Ready:</span>
+                                    <span className={isReady ? "text-green-400" : "text-red-400"}>{isReady ? "Yes" : "No"}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">House:</span>
+                                    <span className={houseExists ? "text-green-400" : "text-red-400"}>{houseExists === null ? "Loading..." : (houseExists ? "Active" : "Not Found")}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Status:</span>
+                                    <span className={isFlipping ? "text-yellow-400" : "text-blue-400"}>{isFlipping ? "Flipping" : "Idle"}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400">Amount:</span>
+                                    <span className={(amount >= MIN_BET && amount <= MAX_BET) ? "text-green-400" : "text-red-400"}>{amount} SOL</span>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        console.log('[FlipIt] Manual refresh triggered');
+                                        fetchHouse().then(house => setHouseExists(!!house));
+                                    }}
+                                    className="col-span-2 mt-2 py-1 px-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded text-white text-xs font-black uppercase tracking-tighter transition-all"
+                                >
+                                    Force Refresh Status
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-between items-center text-xs text-gray-500 font-bold uppercase tracking-[0.2em] px-1">
+                        <span>Multiplier: <span className="text-white">2.0x</span></span>
+                        <span>Win Chance: <span className="text-white">50%</span></span>
+                        <span>House Edge: <span className="text-white">2%</span></span>
                     </div>
                 </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {/* Real Recent Bets from Database */}
-                    {isLoadingBets ? (
-                        <div className="flex items-center justify-center py-8">
-                            <div className="size-6 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
-                        </div>
-                    ) : recentBets && recentBets.length > 0 ? (
-                        recentBets.map((bet) => (
-                            <div key={bet.id} className="glass-panel rounded-xl p-4 flex items-center justify-between group hover:bg-white/5 transition-all">
-                                <div className="flex items-center gap-3">
-                                    <div className={cn(
-                                        "size-10 rounded-lg flex items-center justify-center border",
-                                        bet.playerWon ? "bg-primary/10 text-primary border-primary/20" : "bg-danger/10 text-danger border-danger/20"
-                                    )}>
-                                        <span className="material-symbols-outlined text-sm">
-                                            {bet.playerWon ? 'check_circle' : 'cancel'}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-mono text-gray-500">
-                                            {shortenAddress(bet.player?.walletAddress || 'Unknown', 4)}
-                                        </span>
-                                        <span className="text-xs font-black text-white uppercase tracking-tighter">
-                                            {bet.outcome}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className={cn("text-sm font-black tracking-tighter", bet.playerWon ? "text-primary" : "text-gray-500")}>
-                                        {bet.playerWon ? '+' : '-'}{((bet.payoutAmount || bet.amount) / 1_000_000_000).toFixed(2)} SOL
-                                    </div>
-                                    <div className="flex items-center gap-1 justify-end">
-                                        <span className="text-xs font-bold text-gray-500 uppercase">
-                                            {bet.resolvedAt ? new Date(bet.resolvedAt).toLocaleTimeString() : 'Pending'}
-                                        </span>
-                                        {bet.transactionSignature && (
-                                            <a
-                                                href={`https://solscan.io/tx/${bet.transactionSignature}?cluster=devnet`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="text-gray-600 hover:text-primary transition-colors"
-                                                title="View on Solscan"
-                                            >
-                                                <span className="material-symbols-outlined text-xs">open_in_new</span>
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            <span className="material-symbols-outlined text-4xl mb-2">casino</span>
-                            <p className="text-sm">No recent flips</p>
-                            <p className="text-xs mt-1">Be the first to play!</p>
-                        </div>
                     )}
-                </div>
+            </div>
 
-                <div className="p-4 border-t border-white/5">
-                    <button className="w-full py-3 rounded-xl border border-white/5 hover:border-white/20 text-xs font-black text-gray-500 hover:text-white transition-all uppercase tracking-widest bg-white/5">
-                        View All History
-                    </button>
-                </div>
-            </aside>
+            {/* Background Decorative Glows */}
+            <div className="absolute top-1/4 left-1/4 size-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 size-96 bg-danger/5 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse delay-700"></div>
         </div>
+
+            {/* Mobile History Toggle */ }
+    <button
+        onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+        className="lg:hidden fixed bottom-6 right-6 z-50 size-14 rounded-full bg-primary text-black shadow-[0_0_20px_rgba(7,204,0,0.5)] flex items-center justify-center active:scale-95 transition-transform"
+    >
+        <span className="material-symbols-outlined">{isHistoryOpen ? 'close' : 'history'}</span>
+    </button>
+
+    {/* Mobile History Backdrop */ }
+    {
+        isHistoryOpen && (
+            <div
+                className="lg:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-30"
+                onClick={() => setIsHistoryOpen(false)}
+            />
+        )
+    }
+
+    {/* Sidebar (Recent Flips) */ }
+    <aside className={cn(
+        "w-80 border-l border-white/5 bg-[#0A0A0F] lg:bg-[#0A0A0F]/50 backdrop-blur-xl flex flex-col transition-transform duration-300 z-40 lg:z-20",
+        "fixed inset-y-0 right-0 translate-x-full lg:translate-x-0 lg:static",
+        isHistoryOpen && "translate-x-0"
+    )}>
+        <div className="p-6 border-b border-white/5 flex justify-between items-center">
+            <h3 className="font-bold text-white tracking-tighter flex items-center gap-2 uppercase text-sm">
+                <span className="material-symbols-outlined text-gray-400 text-lg">history</span>
+                Recent Flips
+            </h3>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                <span className="size-1.5 rounded-full bg-primary animate-pulse"></span>
+                <span className="text-xs font-black text-primary uppercase tracking-widest">Live</span>
+            </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Real Recent Bets from Database */}
+            {isLoadingBets ? (
+                <div className="flex items-center justify-center py-8">
+                    <div className="size-6 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
+                </div>
+            ) : recentBets && recentBets.length > 0 ? (
+                recentBets.map((bet) => (
+                    <div key={bet.id} className="glass-panel rounded-xl p-4 flex items-center justify-between group hover:bg-white/5 transition-all">
+                        <div className="flex items-center gap-3">
+                            <div className={cn(
+                                "size-10 rounded-lg flex items-center justify-center border",
+                                bet.playerWon ? "bg-primary/10 text-primary border-primary/20" : "bg-danger/10 text-danger border-danger/20"
+                            )}>
+                                <span className="material-symbols-outlined text-sm">
+                                    {bet.playerWon ? 'check_circle' : 'cancel'}
+                                </span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs font-mono text-gray-500">
+                                    {shortenAddress(bet.player?.walletAddress || 'Unknown', 4)}
+                                </span>
+                                <span className="text-xs font-black text-white uppercase tracking-tighter">
+                                    {bet.outcome}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className={cn("text-sm font-black tracking-tighter", bet.playerWon ? "text-primary" : "text-gray-500")}>
+                                {bet.playerWon ? '+' : '-'}{((bet.payoutAmount || bet.amount) / 1_000_000_000).toFixed(2)} SOL
+                            </div>
+                            <div className="flex items-center gap-1 justify-end">
+                                <span className="text-xs font-bold text-gray-500 uppercase">
+                                    {bet.resolvedAt ? new Date(bet.resolvedAt).toLocaleTimeString() : 'Pending'}
+                                </span>
+                                {bet.transactionSignature && (
+                                    <a
+                                        href={`https://solscan.io/tx/${bet.transactionSignature}?cluster=devnet`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-gray-600 hover:text-primary transition-colors"
+                                        title="View on Solscan"
+                                    >
+                                        <span className="material-symbols-outlined text-xs">open_in_new</span>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))
+            ) : (
+                <div className="text-center py-8 text-gray-500">
+                    <span className="material-symbols-outlined text-4xl mb-2">casino</span>
+                    <p className="text-sm">No recent flips</p>
+                    <p className="text-xs mt-1">Be the first to play!</p>
+                </div>
+            )}
+        </div>
+
+        <div className="p-4 border-t border-white/5">
+            <button className="w-full py-3 rounded-xl border border-white/5 hover:border-white/20 text-xs font-black text-gray-500 hover:text-white transition-all uppercase tracking-widest bg-white/5">
+                View All History
+            </button>
+        </div>
+    </aside>
+        </div >
     );
 };
