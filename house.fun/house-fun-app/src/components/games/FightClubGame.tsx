@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '~/lib/utils';
+import { GameResultModal } from '~/components/ui/GameResultModal';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useGameState } from '~/hooks/useGameState';
 import { GameErrorBoundary } from '~/components/error-boundaries';
@@ -362,22 +363,22 @@ const FightClubGameContent: React.FC = () => {
                 </div>
             )}
 
-            {/* User Bet Status */}
-            {userBet && currentMatch?.status === 'Resolved' && (
-                <div className="w-full max-w-[960px] mb-6 p-6 bg-primary/10 border border-primary/30 rounded-2xl text-center">
-                    <h3 className="text-xl font-black text-white mb-2">Match Resolved!</h3>
-                    <p className="text-white/60 mb-4">
-                        You bet {userBet.amount.toFixed(2)} SOL on {userBet.side === 'A' ? currentMatch.tokenA : currentMatch.tokenB}
-                    </p>
-                    <button
-                        onClick={handleClaim}
-                        disabled={isBetting}
-                        className="px-8 py-3 bg-primary hover:bg-primaryHover text-black font-black rounded-xl transition-colors disabled:opacity-50"
-                    >
-                        {isBetting ? <ButtonLoader text="Claiming..." /> : 'Claim Winnings'}
-                    </button>
-                </div>
-            )}
+            {/* Game Result Modal */}
+            <GameResultModal
+                isOpen={!!(userBet && currentMatch?.status === 'Resolved')}
+                playerWon={true}
+                title="Match Resolved!"
+                subtitle={`You bet ${userBet?.amount.toFixed(2)} SOL on ${userBet?.side === 'A' ? currentMatch?.tokenA : currentMatch?.tokenB}`}
+                amount={userBet ? userBet.amount * getOdds(userBet.side) : undefined}
+                gameName="Fight Club"
+                onPlayAgain={() => window.location.reload()}
+                ctaLabel="New Match"
+                secondaryCta={{
+                    label: 'Claim Winnings',
+                    onClick: handleClaim,
+                    loading: isBetting,
+                }}
+            />
 
             {/* Page Heading */}
             <div className="w-full max-w-[960px] flex flex-col md:flex-row justify-between items-center gap-4 mb-8 md:mb-12">

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '~/lib/utils';
+import { GameResultModal } from '~/components/ui/GameResultModal';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 import { useGameState } from '~/hooks/useGameState';
@@ -353,42 +354,23 @@ const DegenDerbyGameContent: React.FC = () => {
           </div>
         )}
 
-        {/* Race Results */}
-        {gameState === 'RESULTS' && (
-          <div className={cn(
-            "p-6 rounded-2xl border-2 text-center",
-            isWinner ? "bg-primary/10 border-primary/30" : "bg-danger/10 border-danger/30"
-          )}>
-            <h3 className={cn("text-2xl font-black mb-2", isWinner ? "text-primary" : "text-danger")}>
-              {isWinner ? '🎉 You Won!' : '😔 Better Luck Next Time'}
-            </h3>
-            <p className="text-white/60 mb-4">
-              Winner: {MOCK_HORSES[winnerId!]?.name}
-            </p>
-            {isWinner && userBet && (
-              <p className="text-3xl font-black text-primary mb-4">
-                +{(userBet.amount * getOdds(userBet.horseIndex)).toFixed(2)} SOL
-              </p>
-            )}
-            <div className="flex gap-3 justify-center">
-              {isWinner && (
-                <button
-                  onClick={handleClaim}
-                  disabled={isBetting}
-                  className="px-6 py-3 bg-primary hover:bg-primaryHover text-black font-black rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {isBetting ? <ButtonLoader text="Claiming..." /> : 'Claim Winnings'}
-                </button>
-              )}
-              <button
-                onClick={handleReset}
-                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors"
-              >
-                Race Again
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Race Result Modal */}
+        <GameResultModal
+          isOpen={gameState === 'RESULTS'}
+          playerWon={!!isWinner}
+          title={isWinner ? '🎉 You Won!' : 'Better Luck Next Time'}
+          subtitle={winnerId !== null ? `Winner: ${MOCK_HORSES[winnerId]?.name}` : undefined}
+          amount={isWinner && userBet ? userBet.amount * getOdds(userBet.horseIndex) : undefined}
+          betAmount={!isWinner && userBet ? userBet.amount : undefined}
+          gameName="Degen Derby"
+          onPlayAgain={handleReset}
+          ctaLabel="Race Again"
+          secondaryCta={isWinner ? {
+            label: 'Claim Winnings',
+            onClick: handleClaim,
+            loading: isBetting,
+          } : undefined}
+        />
 
         {/* Race Track */}
         {gameState === 'RACING' && (
