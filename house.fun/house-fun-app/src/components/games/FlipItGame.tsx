@@ -33,7 +33,7 @@ const FlipItGameContent: React.FC = () => {
     const [showResult, setShowResult] = useState(false);
     const [useArciumMode, setUseArciumMode] = useState(false); // Arcium integration pending
 
-    const { isUsingRollup, setIsUsingRollup, sessionKey, isSessionActive } = useMagicBlock();
+    const { isUsingRollup, setIsUsingRollup, sessionKey, isSessionActive, activeConnection } = useMagicBlock();
     const { connected, publicKey } = useWallet();
     const {
         isLoading,
