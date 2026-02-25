@@ -47,7 +47,8 @@ export function useRecentBets(
     // Generate high-quality mock bets for the feed
     const mockBets = Array.from({ length: limit }, (_, i) => ({
       id: `mock-bet-${i}`,
-      player: `Whale${Math.floor(Math.random() * 999)}...${Math.random().toString(36).slice(2, 6)}`,
+      // Use a real-looking address to prevent .slice() errors
+      player: `Howz${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`,
       amount: (Math.random() * 5 + 0.1) * 1_000_000_000,
       payout: Math.random() > 0.5 ? (Math.random() * 10 + 0.5) * 1_000_000_000 : 0,
       gameType,
@@ -92,8 +93,10 @@ export function usePlayerStats() {
       data: query.data || {
         totalBets: 42,
         totalWagered: 156.5 * 1_000_000_000,
-        totalProfit: 88.2 * 1_000_000_000,
-        winRate: 0.58,
+        netProfit: 88.2 * 1_000_000_000,
+        winRate: 58.2, // Component expects direct % value
+        totalWon: 24,
+        totalLost: 18,
       },
       isLoading: false,
     };
@@ -116,10 +119,20 @@ export function useLeaderboard(
   );
 
   if (isDemoMode) {
-    const mockLeaderboard = Array.from({ length: limit }, (_, i) => ({
-      wallet: `Player${i + 1}...${Math.random().toString(36).slice(2, 6)}`,
-      value: (100 - i * 5 + Math.random() * 5) * 1_000_000_000,
-    }));
+    const mockLeaderboard = Array.from({ length: limit }, (_, i) => {
+      const totalBets = Math.floor(100 - i * 2 + Math.random() * 10);
+      const totalWon = Math.floor(totalBets * (0.6 - i * 0.01));
+      return {
+        id: `whale-${i}`,
+        walletAddress: `Whale${i + 1}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
+        username: `HighRoller_${i + 1}`,
+        netProfit: (500 - i * 20 + Math.random() * 50) * 1_000_000_000,
+        totalWagered: (2000 - i * 100 + Math.random() * 200) * 1_000_000_000,
+        totalBets,
+        totalWon,
+        totalLost: totalBets - totalWon,
+      };
+    });
 
     return {
       ...query,
