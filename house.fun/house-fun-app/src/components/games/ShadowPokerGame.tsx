@@ -132,28 +132,25 @@ const ShadowPokerGameContent: React.FC = () => {
     setTablePDA(pda);
   }, []);
 
-  // Consolidated polling logic for table and player state
+  // Consolidated polling logic for table and player state — SKIP in demo mode
   useEffect(() => {
+    if (isDemoMode) return; // No RPC in demo
     if (!tablePDA || !isReady) return;
 
     const pollData = async () => {
-      // Only poll if tab is visible to save RPC units
       if (document.visibilityState !== 'visible') return;
 
       try {
-        // 1. Fetch table data
         const tableData = await fetchTable(tablePDA);
         if (tableData) {
           setTable(tableData);
 
-          // 2. Fetch player state if at table
           if (isAtTable && playerStatePDA) {
             const playerData = await fetchPlayerState(playerStatePDA);
             if (playerData) {
               setPlayerState(playerData);
             }
 
-            // 3. Check turn and actions
             const turn = await isPlayerTurn(tablePDA, playerStatePDA);
             setIsPlayerTurnState(turn);
 
@@ -171,20 +168,24 @@ const ShadowPokerGameContent: React.FC = () => {
     };
 
     pollData();
-    const interval = setInterval(pollData, 5000); // Consolidated 5s poll
+    const interval = setInterval(pollData, 5000);
 
     return () => clearInterval(interval);
-  }, [tablePDA, playerStatePDA, isReady, isAtTable]); // Removed functions from dependencies to prevent infinite render loops
+  }, [tablePDA, playerStatePDA, isReady, isAtTable, isDemoMode]);
 
-  // Check if house exists
+  // Check if house exists — SKIP in demo mode
   useEffect(() => {
+    if (isDemoMode) {
+      setHouseExists(true);
+      return;
+    }
     const checkHouse = async () => {
       if (!isReady || !fetchHouse) return;
       const house = await fetchHouse();
       setHouseExists(!!house);
     };
     checkHouse();
-  }, [isReady, fetchHouse]);
+  }, [isReady, fetchHouse, isDemoMode]);
 
   const handleInitializeHouse = async () => {
     if (!initializeHouse) return;
@@ -193,7 +194,6 @@ const ShadowPokerGameContent: React.FC = () => {
       const tx = await initializeHouse();
       console.log('House initialized:', tx);
 
-      // Also initialize Poker Computation Definition for Arcium
       console.log('Initializing Poker Arcium Definition...');
       await initPokerCompDef();
 
@@ -209,10 +209,11 @@ const ShadowPokerGameContent: React.FC = () => {
 
   // Auto-initialize house if it doesn't exist
   useEffect(() => {
+    if (isDemoMode) return;
     if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
       handleInitializeHouse();
     }
-  }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
+  }, [connected, isReady, houseExists, isInitializingHouse, txStatus, isDemoMode]);
 
 
 
@@ -242,7 +243,7 @@ const ShadowPokerGameContent: React.FC = () => {
   }, [table, publicKey]);
 
   const handleJoinTable = async () => {
-    if (!connected || !isReady || !tablePDA) return;
+    if (!isDemoMode && (!connected || !isReady || !tablePDA)) return;
     if (buyInAmount < MIN_BUY_IN || buyInAmount > MAX_BUY_IN) return;
 
     if (isDemoMode) {

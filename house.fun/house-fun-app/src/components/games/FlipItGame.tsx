@@ -13,6 +13,7 @@ import { useWalletBalance, formatBalance } from '~/hooks/useWalletBalance';
 import { shortenAddress } from '~/lib/utils';
 import { useGameSounds } from '~/hooks/useGameSounds';
 import { useFlipItArcium } from '~/hooks/useFlipItArcium';
+import { PublicKey } from '@solana/web3.js';
 import Link from 'next/link';
 
 const MIN_BET = 0.001; // 0.001 SOL
@@ -84,11 +85,16 @@ const FlipItGameContent: React.FC = () => {
         setShowResult(false);
     }, []);
 
-    // Check if house exists
+    // Check if house exists — SKIP in demo mode to avoid RPC/wallet interactions
     useEffect(() => {
+        if (isDemoMode) {
+            setHouseExists(true);
+            setHouseData({ totalBets: 420 });
+            return;
+        }
         if (isReady) {
             console.log('[FlipIt] Checking house account status...');
-            setHouseExists(null); // Reset to loading when program becomes ready
+            setHouseExists(null);
 
             fetchHouse().then(house => {
                 console.log('[FlipIt] House status:', !!house);
@@ -99,15 +105,16 @@ const FlipItGameContent: React.FC = () => {
                 setHouseExists(false);
             });
         }
-    }, [isReady]);
+    }, [isReady, isDemoMode]);
 
     // Auto-initialize house if it doesn't exist and wallet is connected
     useEffect(() => {
+        if (isDemoMode) return; // Skip in demo
         if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
             console.log('[FlipIt] Auto-initializing house account...');
             handleInitializeHouse();
         }
-    }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
+    }, [connected, isReady, houseExists, isInitializingHouse, txStatus, isDemoMode]);
 
 
     const handleInitializeHouse = async () => {
@@ -135,8 +142,8 @@ const FlipItGameContent: React.FC = () => {
             return;
         }
 
-        // Validate wallet connection
-        if (!connected || !isReady || !publicKey) {
+        // Skip wallet validation in demo mode
+        if (!isDemoMode && (!connected || !isReady || !publicKey)) {
             return;
         }
 
@@ -358,7 +365,9 @@ const FlipItGameContent: React.FC = () => {
     };
 
     const isFlipping = isLoading || txStatus === 'pending' || txStatus === 'confirming';
-    const canFlip = connected && isReady && houseExists && !isFlipping && amount >= MIN_BET && amount <= MAX_BET;
+    const canFlip = isDemoMode
+        ? (!isFlipping && amount >= MIN_BET && amount <= MAX_BET)
+        : (connected && isReady && houseExists && !isFlipping && amount >= MIN_BET && amount <= MAX_BET);
 
     // Keyboard shortcuts: Space/Enter to flip, H/T for side, R to reset, M to mute
     useEffect(() => {

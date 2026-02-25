@@ -62,8 +62,9 @@ const FightClubGameContent: React.FC = () => {
         calculatePotentialWinnings
     } = useFightClubProgram();
 
-    // Fetch match from chain
+    // Fetch match from chain — SKIP in demo mode
     const fetchCurrentMatch = useCallback(async () => {
+        if (isDemoMode) return; // Skip RPC in demo
         if (!isReady || !fetchHouse || !fetchMatch) return;
 
         try {
@@ -87,23 +88,41 @@ const FightClubGameContent: React.FC = () => {
                     playerCountB: 3,
                     status: 'Open',
                     winner: null,
-                    startTime: BigInt(Date.now() / 1000),
-                    endTime: BigInt(Date.now() / 1000 + 3600),
+                    startTime: BigInt(Math.floor(Date.now() / 1000)),
+                    endTime: BigInt(Math.floor(Date.now() / 1000) + 3600),
                     pda: new PublicKey("11111111111111111111111111111111")
                 });
             }
         } catch (err) {
             console.error('Failed to fetch match:', err);
         }
-    }, [isReady, fetchHouse, fetchMatch]);
+    }, [isReady, fetchHouse, fetchMatch, isDemoMode]);
 
+    // In demo mode, set mock match immediately without RPC
     useEffect(() => {
+        if (isDemoMode) {
+            setCurrentMatch({
+                index: 0,
+                tokenA: 'PEPE',
+                tokenB: 'DOGE',
+                totalBetA: 15 * LAMPORTS_PER_SOL,
+                totalBetB: 12 * LAMPORTS_PER_SOL,
+                playerCountA: 5,
+                playerCountB: 3,
+                status: 'Open',
+                winner: null,
+                startTime: BigInt(Math.floor(Date.now() / 1000)),
+                endTime: BigInt(Math.floor(Date.now() / 1000) + 3600),
+                pda: new PublicKey("11111111111111111111111111111111")
+            });
+            return;
+        }
         fetchCurrentMatch();
 
         // Polling for updates (can be replaced by websocket later)
         const interval = setInterval(fetchCurrentMatch, 5000);
         return () => clearInterval(interval);
-    }, [fetchCurrentMatch]);
+    }, [fetchCurrentMatch, isDemoMode]);
 
     // Simulate live price updates (HUD only)
     useEffect(() => {
@@ -114,15 +133,19 @@ const FightClubGameContent: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Check if house exists
+    // Check if house exists — SKIP in demo mode
     useEffect(() => {
+        if (isDemoMode) {
+            setHouseExists(true);
+            return;
+        }
         const checkHouse = async () => {
             if (!isReady || !fetchHouse) return;
             const house = await fetchHouse();
             setHouseExists(!!house);
         };
         checkHouse();
-    }, [isReady]); // Removed fetchHouse to prevent infinite render loops
+    }, [isReady, isDemoMode]);
 
     const handleInitializeHouse = async () => {
         if (!initializeHouse) return;
@@ -145,13 +168,15 @@ const FightClubGameContent: React.FC = () => {
 
     // Auto-initialize house if it doesn't exist
     useEffect(() => {
+        if (isDemoMode) return;
         if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
             handleInitializeHouse();
         }
-    }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
+    }, [connected, isReady, houseExists, isInitializingHouse, txStatus, isDemoMode]);
 
     const handlePlaceBet = async () => {
-        if (!selectedSide || !connected || !isReady || !currentMatch) return;
+        if (!selectedSide || !currentMatch) return;
+        if (!isDemoMode && (!connected || !isReady)) return;
         if (wager < MIN_BET || wager > MAX_BET) return;
 
         if (isDemoMode) {

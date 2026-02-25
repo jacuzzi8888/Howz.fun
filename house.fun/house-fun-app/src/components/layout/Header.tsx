@@ -24,6 +24,7 @@ export const Header: React.FC = () => {
     }, []);
 
     useEffect(() => {
+        if (isDemoMode) return; // Skip balance fetch in demo
         if (!publicKey) {
             setBalance(null);
             return;
@@ -46,10 +47,11 @@ export const Header: React.FC = () => {
         return () => {
             void connection.removeAccountChangeListener(id);
         };
-    }, [publicKey, connection]);
+    }, [publicKey, connection, isDemoMode]);
 
-    // Auto-start session when connected, clear when disconnected
+    // Auto-start session when connected, clear when disconnected — SKIP in demo
     useEffect(() => {
+        if (isDemoMode) return; // No session management in demo
         if (connected && !isSessionActive && isMounted) {
             console.log('[Header] Auto-starting session...');
             SessionManager.createEphemeralKeypair();
@@ -59,7 +61,7 @@ export const Header: React.FC = () => {
             SessionManager.clearSession();
             refreshSession();
         }
-    }, [connected, isSessionActive, isMounted, refreshSession]);
+    }, [connected, isSessionActive, isMounted, refreshSession, isDemoMode]);
 
     const displayBalance = isDemoMode ? 888.8888 : balance;
     const formattedBalance = displayBalance !== null ? displayBalance.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "0.00";

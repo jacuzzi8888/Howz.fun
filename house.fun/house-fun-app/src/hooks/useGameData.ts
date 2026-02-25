@@ -47,14 +47,17 @@ export function useRecentBets(
     // Generate high-quality mock bets for the feed
     const mockBets = Array.from({ length: limit }, (_, i) => ({
       id: `mock-bet-${i}`,
-      // Use a real-looking address to prevent .slice() errors
       player: `Howz${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`,
-      amount: (Math.random() * 5 + 0.1) * 1_000_000_000,
-      payout: Math.random() > 0.5 ? (Math.random() * 10 + 0.5) * 1_000_000_000 : 0,
+      amount: Math.floor((Math.random() * 5 + 0.1) * 1_000_000_000),
+      payout: Math.random() > 0.5 ? Math.floor((Math.random() * 10 + 0.5) * 1_000_000_000) : 0,
       gameType,
       prediction: "Demo Prediction",
       status: "Resolved",
+      playerWon: Math.random() > 0.4,
+      payoutAmount: Math.floor(Math.random() * 5 * 1_000_000_000),
+      transactionSignature: `mock-sig-${Math.random().toString(36).substring(7)}`,
       createdAt: new Date(Date.now() - i * 60000).toISOString(),
+      resolvedAt: new Date(Date.now() - i * 60000 + 5000).toISOString(),
     }));
 
     return {
@@ -126,8 +129,8 @@ export function useLeaderboard(
         id: `whale-${i}`,
         walletAddress: `Whale${i + 1}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
         username: `HighRoller_${i + 1}`,
-        netProfit: (500 - i * 20 + Math.random() * 50) * 1_000_000_000,
-        totalWagered: (2000 - i * 100 + Math.random() * 200) * 1_000_000_000,
+        netProfit: Math.floor((500 - i * 20 + Math.random() * 50) * 1_000_000_000),
+        totalWagered: Math.floor((2000 - i * 100 + Math.random() * 200) * 1_000_000_000),
         totalBets,
         totalWon,
         totalLost: totalBets - totalWon,

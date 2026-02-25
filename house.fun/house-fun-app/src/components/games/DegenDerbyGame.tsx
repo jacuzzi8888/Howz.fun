@@ -73,15 +73,19 @@ const DegenDerbyGameContent: React.FC = () => {
     });
   }, []);
 
-  // Check if house exists
+  // Check if house exists — SKIP in demo mode
   useEffect(() => {
+    if (isDemoMode) {
+      setHouseExists(true);
+      return;
+    }
     const checkHouse = async () => {
       if (!isReady || !fetchHouse) return;
       const house = await fetchHouse();
       setHouseExists(!!house);
     };
     checkHouse();
-  }, [isReady]); // Removed fetchHouse to prevent infinite render loops
+  }, [isReady, isDemoMode]);
 
   const handleInitializeHouse = async () => {
     if (!initializeHouse) return;
@@ -104,13 +108,15 @@ const DegenDerbyGameContent: React.FC = () => {
 
   // Auto-initialize house if it doesn't exist
   useEffect(() => {
+    if (isDemoMode) return;
     if (connected && isReady && houseExists === false && !isInitializingHouse && txStatus === 'idle') {
       handleInitializeHouse();
     }
-  }, [connected, isReady, houseExists, isInitializingHouse, txStatus]);
+  }, [connected, isReady, houseExists, isInitializingHouse, txStatus, isDemoMode]);
 
   const handlePlaceBet = async () => {
-    if (selectedHorseId === null || !connected || !isReady || !currentRace) return;
+    if (selectedHorseId === null || !currentRace) return;
+    if (!isDemoMode && (!connected || !isReady)) return;
     if (stake < MIN_BET || stake > MAX_BET) return;
 
     setTxStatus('pending');
