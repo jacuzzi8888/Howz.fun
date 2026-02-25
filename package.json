@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@arcium-hq/client": "^0.7.0",
-    "@arcium-hq/reader": "^0.7.0"
-  }
-}
