@@ -47,9 +47,9 @@ const DegenDerbyGameContent: React.FC = () => {
   const [isInitializingHouse, setIsInitializingHouse] = useState(false);
 
   const { setIsUsingRollup } = useMagicBlock();
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
   const { isLoading, error, txStatus, setTxStatus, reset, executeGameAction } = useGameState();
-  const { isReady, placeBet, claimWinnings, fetchRace, getCurrentOdds, fetchHouse, initializeHouse } = useDegenDerbyProgram();
+  const { isReady, placeBet, claimWinnings, fetchRace, getCurrentOdds, fetchHouse, initializeHouse, resolveRace } = useDegenDerbyProgram();
 
   const { data: recentBets, isLoading: isLoadingBets, isError: isErrorBets } = useRecentBets('DEGEN_DERBY', 10);
   const recordBet = useRecordBet();
@@ -121,24 +121,28 @@ const DegenDerbyGameContent: React.FC = () => {
 
         // Mocking for Hackathon UI since Race 1 is never created on-chain
         await new Promise(resolve => setTimeout(resolve, 2000));
-        return { success: true };
+        return { success: true, signature: 'mock-sig-' + Date.now() };
       });
 
       if (!bet) throw new Error('Failed to place bet');
 
-      // Record in database
+      // Record bet in TRPC database
       try {
-        await recordBet.mutateAsync({
-          gameType: 'DEGEN_DERBY',
-          betPda: 'mock-race-pda-' + Date.now(),
-          transactionSignature: 'mock-sig-' + Date.now(),
-          amount: stake * LAMPORTS_PER_SOL,
-          playerChoice: selectedHorseId,
-        });
+        const racePDA = currentRace.pda;
+        if (racePDA && publicKey) {
+          await recordBet.mutateAsync({
+            gameType: 'DEGEN_DERBY',
+            amount: stake * LAMPORTS_PER_SOL,
+            housePDA: getDegenDerbyHousePDA()[0].toBase58(),
+            gamePDA: racePDA.toBase58(),
+            playerPDA: publicKey.toBase58(),
+            signature: bet.signature,
+            prediction: `Horse ${selectedHorseId + 1}`,
+          });
+        }
       } catch (dbError) {
-        console.error('DB error:', dbError);
+        console.error('Failed to record bet in database:', dbError);
       }
-
       setUserBet({ horseIndex: selectedHorseId, amount: stake });
       setTxStatus('confirmed');
       setGameState('RACING');

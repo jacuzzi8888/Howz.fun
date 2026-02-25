@@ -180,8 +180,8 @@ const FlipItGameContent: React.FC = () => {
             setTxStatus('confirming');
 
             const resolvedAccount = await new Promise<any>((resolve, reject) => {
-                // Ensure we use the correct connection (MagicBlock or Solana)
-                const connection = (program as any).provider.connection;
+                // Use the active connection (Standard or MagicBlock Rollup)
+                const connection = activeConnection;
                 let isResolved = false;
 
                 console.log('[FlipIt] Subscribing to bet resolution...', bet.betPDA.toString());

@@ -75,8 +75,21 @@ const FightClubGameContent: React.FC = () => {
                     setCurrentMatch(match);
                 }
             } else {
-                // Keep as null or show "No Match Found"
-                setCurrentMatch(null);
+                // Mock Fallback for Hackathon UI if no matches exist on-chain
+                setCurrentMatch({
+                    index: 0,
+                    tokenA: 'PEPE',
+                    tokenB: 'DOGE',
+                    totalBetA: 15 * LAMPORTS_PER_SOL,
+                    totalBetB: 12 * LAMPORTS_PER_SOL,
+                    playerCountA: 5,
+                    playerCountB: 3,
+                    status: 'Open',
+                    winner: null,
+                    startTime: BigInt(Date.now() / 1000),
+                    endTime: BigInt(Date.now() / 1000 + 3600),
+                    pda: new PublicKey("11111111111111111111111111111111")
+                });
             }
         } catch (err) {
             console.error('Failed to fetch match:', err);

@@ -4,7 +4,7 @@
  */
 
 export const FIGHT_CLUB_IDL = {
-  "address": "5BZ86FTWQGrFnMLk17D882N7shNqoVuohbkKo2Ljt7GN",
+  "address": "D2j4hf6476wn2g7f1dmoesEjgXeTdRVPC39s16xhsMrt",
   "metadata": {
     "name": "fight_club",
     "version": "0.1.0",
