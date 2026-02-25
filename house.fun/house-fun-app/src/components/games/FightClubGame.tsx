@@ -181,12 +181,23 @@ const FightClubGameContent: React.FC = () => {
 
         if (isDemoMode) {
             setTxStatus('pending');
-            await new Promise(r => setTimeout(r, 1200));
+            await new Promise(r => setTimeout(r, 800));
             setUserBet({
                 side: selectedSide,
                 amount: wager
             });
             setTxStatus('confirmed');
+
+            // Transition match to InProgress
+            await new Promise(r => setTimeout(r, 500));
+            setCurrentMatch(prev => prev ? { ...prev, status: 'InProgress' } : prev);
+
+            // Simulate fight duration
+            await new Promise(r => setTimeout(r, 8000));
+
+            // Resolve — bias toward user's side 60%
+            const winner = Math.random() > 0.4 ? selectedSide : (selectedSide === 'A' ? 'B' : 'A');
+            setCurrentMatch(prev => prev ? { ...prev, status: 'Resolved', winner } : prev);
             return;
         }
 
@@ -259,7 +270,8 @@ const FightClubGameContent: React.FC = () => {
     };
 
     const handleClaim = async () => {
-        if (!userBet || !connected || !isReady) return;
+        if (!userBet) return;
+        if (!isDemoMode && (!connected || !isReady)) return;
 
         if (isDemoMode) {
             setTxStatus('pending');
@@ -293,7 +305,9 @@ const FightClubGameContent: React.FC = () => {
     };
 
     const isBetting = isLoading || txStatus === 'pending' || txStatus === 'confirming';
-    const canBet = connected && isReady && !isBetting && selectedSide && wager >= MIN_BET && wager <= MAX_BET && !userBet;
+    const canBet = isDemoMode
+        ? (!isBetting && selectedSide && wager >= MIN_BET && wager <= MAX_BET && !userBet)
+        : (connected && isReady && !isBetting && selectedSide && wager >= MIN_BET && wager <= MAX_BET && !userBet);
 
     // Calculate odds dynamically based on pool
     const getOdds = (side: 'A' | 'B') => {
@@ -313,7 +327,7 @@ const FightClubGameContent: React.FC = () => {
             <div className="fixed top-[10%] right-[-10%] w-[50%] h-[60%] rounded-full bg-[#08CB00] opacity-[0.06] blur-[150px] pointer-events-none z-0"></div>
 
             {/* Wallet Not Connected */}
-            {!connected && (
+            {!isDemoMode && !connected && (
                 <div className="w-full max-w-[960px] mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-yellow-500 text-sm">wallet</span>

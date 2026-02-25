@@ -124,12 +124,26 @@ const DegenDerbyGameContent: React.FC = () => {
 
     if (isDemoMode) {
       setTxStatus('pending');
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 800));
       setUserBet({
         horseIndex: selectedHorseId,
         amount: stake,
       });
       setTxStatus('confirmed');
+
+      // Transition to RACING after brief confirmation
+      await new Promise(r => setTimeout(r, 600));
+      setGameState('RACING');
+
+      // Simulate race duration (let DerbyTrack animation play)
+      await new Promise(r => setTimeout(r, 6000));
+
+      // Pick winner — bias toward user's horse 60% of the time
+      const winnerIndex = Math.random() > 0.4
+        ? selectedHorseId
+        : Math.floor(Math.random() * MOCK_HORSES.length);
+      setWinnerId(winnerIndex);
+      setGameState('RESULTS');
       return;
     }
 
@@ -264,7 +278,9 @@ const DegenDerbyGameContent: React.FC = () => {
   };
 
   const isBetting = isLoading || txStatus === 'pending' || txStatus === 'confirming';
-  const canBet = connected && isReady && !isBetting && selectedHorseId !== null && stake >= MIN_BET && stake <= MAX_BET && gameState === 'BETTING';
+  const canBet = isDemoMode
+    ? (!isBetting && selectedHorseId !== null && stake >= MIN_BET && stake <= MAX_BET && gameState === 'BETTING')
+    : (connected && isReady && !isBetting && selectedHorseId !== null && stake >= MIN_BET && stake <= MAX_BET && gameState === 'BETTING');
 
   // Calculate dynamic odds based on pool
   const getOdds = (horseIndex: number) => {
@@ -303,7 +319,7 @@ const DegenDerbyGameContent: React.FC = () => {
         </div>
 
         {/* Wallet Warning */}
-        {!connected && (
+        {!isDemoMode && !connected && (
           <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-yellow-500 text-sm">wallet</span>
@@ -374,7 +390,7 @@ const DegenDerbyGameContent: React.FC = () => {
         {gameState === 'RACING' && (
           <DerbyTrack
             horses={MOCK_HORSES.map((h, i) => ({ id: i, name: h.name, image: '' }))}
-            onRaceEnd={handleRaceEnd}
+            onRaceEnd={isDemoMode ? () => { } : handleRaceEnd}
           />
         )}
 

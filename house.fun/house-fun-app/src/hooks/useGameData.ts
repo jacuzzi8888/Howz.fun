@@ -44,21 +44,28 @@ export function useRecentBets(
   );
 
   if (isDemoMode) {
-    // Generate high-quality mock bets for the feed
-    const mockBets = Array.from({ length: limit }, (_, i) => ({
-      id: `mock-bet-${i}`,
-      player: `Howz${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`,
-      amount: Math.floor((Math.random() * 5 + 0.1) * 1_000_000_000),
-      payout: Math.random() > 0.5 ? Math.floor((Math.random() * 10 + 0.5) * 1_000_000_000) : 0,
-      gameType,
-      prediction: "Demo Prediction",
-      status: "Resolved",
-      playerWon: Math.random() > 0.4,
-      payoutAmount: Math.floor(Math.random() * 5 * 1_000_000_000),
-      transactionSignature: `mock-sig-${Math.random().toString(36).substring(7)}`,
-      createdAt: new Date(Date.now() - i * 60000).toISOString(),
-      resolvedAt: new Date(Date.now() - i * 60000 + 5000).toISOString(),
-    }));
+    const sides = ['HEADS', 'TAILS'];
+    const mockBets = Array.from({ length: limit }, (_, i) => {
+      const won = Math.random() > 0.4;
+      const betAmount = Math.floor((Math.random() * 5 + 0.1) * 1_000_000_000);
+      return {
+        id: `mock-bet-${i}`,
+        player: {
+          walletAddress: `Howz${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}xxxxxxxxxxxx`,
+        },
+        amount: betAmount,
+        payout: won ? Math.floor(betAmount * 1.95) : 0,
+        gameType,
+        prediction: sides[Math.floor(Math.random() * 2)],
+        outcome: sides[Math.floor(Math.random() * 2)],
+        status: "Resolved",
+        playerWon: won,
+        payoutAmount: won ? Math.floor(betAmount * 1.95) : 0,
+        transactionSignature: `${Math.random().toString(36).substring(2, 12)}${Math.random().toString(36).substring(2, 12)}`,
+        createdAt: new Date(Date.now() - i * 60000).toISOString(),
+        resolvedAt: new Date(Date.now() - i * 60000 + 5000).toISOString(),
+      };
+    });
 
     return {
       ...query,
@@ -74,10 +81,42 @@ export function useRecentBets(
  * Hook to fetch player's bet history
  */
 export function usePlayerBets(limit = 20, offset = 0) {
-  return api.game.getPlayerBets.useQuery(
+  const { isDemoMode } = useDemoMode();
+  const query = api.game.getPlayerBets.useQuery(
     { limit, offset },
     { enabled: typeof window !== "undefined" }
   );
+
+  if (isDemoMode) {
+    const gameTypes = ['FLIP_IT', 'DEGEN_DERBY', 'FIGHT_CLUB', 'SHADOW_POKER'];
+    const gameNames = ['Flip It', 'Degen Derby', 'Fight Club', 'Shadow Poker'];
+    const mockBets = Array.from({ length: limit }, (_, i) => {
+      const won = Math.random() > 0.4;
+      const gameIdx = Math.floor(Math.random() * 4);
+      const betAmt = Math.floor((Math.random() * 5 + 0.1) * 1_000_000_000);
+      return {
+        id: `mock-history-${i}`,
+        gameType: gameTypes[gameIdx],
+        game: { name: gameNames[gameIdx] },
+        amount: betAmt,
+        playerWon: won,
+        payoutAmount: won ? Math.floor(betAmt * 1.95) : 0,
+        status: 'Resolved',
+        placedAt: new Date(Date.now() - i * 3600000).toISOString(),
+        resolvedAt: new Date(Date.now() - i * 3600000 + 5000).toISOString(),
+        transactionSignature: `${Math.random().toString(36).substring(2, 12)}`,
+      };
+    });
+
+    return {
+      ...query,
+      data: query.data || mockBets,
+      isLoading: false,
+      isError: false,
+    };
+  }
+
+  return query;
 }
 
 /**
@@ -95,9 +134,9 @@ export function usePlayerStats() {
       ...query,
       data: query.data || {
         totalBets: 42,
-        totalWagered: 156.5 * 1_000_000_000,
-        netProfit: 88.2 * 1_000_000_000,
-        winRate: 58.2, // Component expects direct % value
+        totalWagered: Math.floor(156.5 * 1_000_000_000),
+        netProfit: Math.floor(88.2 * 1_000_000_000),
+        winRate: 58.2,
         totalWon: 24,
         totalLost: 18,
       },

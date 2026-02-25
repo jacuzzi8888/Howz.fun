@@ -175,9 +175,12 @@ const FlipItGameContent: React.FC = () => {
                     await new Promise(r => setTimeout(r, 1200));
 
                     const win = Math.random() > 0.4; // 60% win rate for better demo visuals
+                    const resultSide = win ? side : (side === 'HEADS' ? 'TAILS' : 'HEADS');
                     const mockResolvedResult = {
                         status: 'Resolved',
                         playerWins: win,
+                        playerWon: win,
+                        outcome: resultSide,
                         payout: win ? amount * 1.95 : 0,
                         side: side === 'HEADS' ? 0 : 1,
                         winnerSide: win ? (side === 'HEADS' ? 0 : 1) : (side === 'HEADS' ? 1 : 0),
@@ -403,6 +406,7 @@ const FlipItGameContent: React.FC = () => {
 
     // Debug why button is disabled
     const getDisabledReason = () => {
+        if (isDemoMode) return null; // No warnings in demo
         if (!connected) return 'Connect wallet to play';
         if (!isReady) return 'Wallet not ready - check provider';
         if (houseExists === null) return 'Checking house account status...';
@@ -428,7 +432,7 @@ const FlipItGameContent: React.FC = () => {
                 <div className="w-full max-w-lg flex flex-col items-center gap-4 bg-black/5 rounded-3xl p-2 sm:p-4">
 
                     {/* Wallet Not Connected Warning */}
-                    {!connected && (
+                    {!isDemoMode && !connected && (
                         <div className="w-full p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                             <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-yellow-500 text-sm">wallet</span>
@@ -438,7 +442,7 @@ const FlipItGameContent: React.FC = () => {
                     )}
 
                     {/* Loading State Fallback (Full Page) */}
-                    {(connected && (isReady === false || houseExists === null)) && (
+                    {!isDemoMode && (connected && (isReady === false || houseExists === null)) && (
                         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#0A0A0F] gap-6 rounded-3xl">
                             <div className="size-16 border-4 border-white/5 border-t-primary rounded-full animate-spin shadow-[0_0_15px_rgba(187,255,0,0.2)]"></div>
                             <div className="flex flex-col items-center gap-2">
@@ -647,7 +651,7 @@ const FlipItGameContent: React.FC = () => {
                             </div>
 
                             {/* Wallet Balance Display */}
-                            {connected && (
+                            {(connected || isDemoMode) && (
                                 <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>

@@ -6,6 +6,7 @@ import { usePlayerStats, usePlayerBets } from '~/hooks/useGameData';
 import { shortenAddress, formatSol } from '~/lib/utils';
 import { FullPageLoader } from '~/components/loading';
 import { GameErrorBoundary } from '~/components/error-boundaries';
+import { useDemoMode } from '~/context/DemoModeContext';
 
 export default function ProfilePage() {
   return (
@@ -17,10 +18,11 @@ export default function ProfilePage() {
 
 function ProfileContent() {
   const { publicKey, connected } = useWallet();
+  const { isDemoMode } = useDemoMode();
   const { data: stats, isLoading: isLoadingStats, isError: isErrorStats } = usePlayerStats();
   const { data: bets, isLoading: isLoadingBets, isError: isErrorBets } = usePlayerBets(20, 0);
 
-  if (!connected) {
+  if (!isDemoMode && !connected) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
         <div className="glass-panel rounded-2xl p-8 text-center max-w-md">

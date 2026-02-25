@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { useDemoMode } from '~/context/DemoModeContext';
 
 export interface WalletBalanceState {
   balance: number | null;
@@ -20,9 +21,21 @@ export interface WalletBalanceState {
 export function useWalletBalance(): WalletBalanceState {
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
+  const { isDemoMode } = useDemoMode();
   const [balanceLamports, setBalanceLamports] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Demo mode: return mock balance immediately
+  if (isDemoMode) {
+    return {
+      balance: 888.8888,
+      balanceLamports: Math.floor(888.8888 * LAMPORTS_PER_SOL),
+      isLoading: false,
+      error: null,
+      refetch: async () => { },
+    };
+  }
 
   const fetchBalance = useCallback(async () => {
     if (!publicKey || !connected) {
