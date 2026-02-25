@@ -195,10 +195,13 @@ const FlipItGameContent: React.FC = () => {
                             const decoded = accountGate.coder.accounts.decode('Bet', accountInfo.data);
                             console.log('[FlipIt] Account change detected:', decoded.status);
 
-                            const statusKey = Object.keys(decoded.status)[0];
-                            if (statusKey === 'Resolved') {
+                            const statusKey = Object.keys(decoded.status)[0].toLowerCase();
+                            console.log('[FlipIt] Account change detected, status:', statusKey);
+
+                            if (statusKey === 'resolved') {
                                 isResolved = true;
                                 connection.removeAccountChangeListener(subId);
+                                clearInterval(interval);
                                 resolve({
                                     ...decoded,
                                     status: 'Resolved',
@@ -213,12 +216,14 @@ const FlipItGameContent: React.FC = () => {
                     'confirmed'
                 );
 
-                // Fallback polling (much slower) in case websocket fails
-                const interval = setInterval(async () => {
+                // Immediate check & Fallback polling (faster for hackathon)
+                const checkStatus = async () => {
                     if (isResolved) return;
                     try {
                         const fetched: any = await fetchBet(bet.betPDA);
-                        if (fetched && fetched.status === 'Resolved') {
+                        console.log('[FlipIt] Polling status check:', fetched?.status);
+
+                        if (fetched && fetched.status.toLowerCase() === 'resolved') {
                             isResolved = true;
                             connection.removeAccountChangeListener(subId);
                             clearInterval(interval);
@@ -227,7 +232,11 @@ const FlipItGameContent: React.FC = () => {
                     } catch (err) {
                         console.log('[FlipIt] Polling check skipped:', err.message);
                     }
-                }, 5000);
+                };
+
+                // Run immediate check
+                checkStatus();
+                const interval = setInterval(checkStatus, 2000);
 
                 // Timeout after 60s
                 setTimeout(() => {
