@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 interface DemoModeContextType {
@@ -15,6 +15,19 @@ const DemoModeContext = createContext<DemoModeContextType>({
 
 export const DemoModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isDemoMode, setIsDemoMode] = useState(true);
+
+    return (
+        <DemoModeContext.Provider value={{ isDemoMode, setIsDemoMode }}>
+            <Suspense fallback={null}>
+                <DemoModeURLHandler />
+            </Suspense>
+            {children}
+        </DemoModeContext.Provider>
+    );
+};
+
+const DemoModeURLHandler = () => {
+    const { setIsDemoMode } = useDemoMode();
     const searchParams = useSearchParams();
 
     useEffect(() => {
@@ -27,13 +40,9 @@ export const DemoModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setIsDemoMode(true);
             console.log('[DemoMode] Presentation God-Mode Activated via URL');
         }
-    }, [searchParams]);
+    }, [searchParams, setIsDemoMode]);
 
-    return (
-        <DemoModeContext.Provider value={{ isDemoMode, setIsDemoMode }}>
-            {children}
-        </DemoModeContext.Provider>
-    );
+    return null;
 };
 
 export const useDemoMode = () => useContext(DemoModeContext);
