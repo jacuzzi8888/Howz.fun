@@ -66,7 +66,8 @@ const ShadowPokerGameContent: React.FC = () => {
     txStatus,
     setTxStatus,
     reset,
-    executeGameAction
+    executeGameAction,
+    isDemoMode
   } = useGameState();
 
   const {
@@ -244,7 +245,14 @@ const ShadowPokerGameContent: React.FC = () => {
     if (!connected || !isReady || !tablePDA) return;
     if (buyInAmount < MIN_BUY_IN || buyInAmount > MAX_BUY_IN) return;
 
-    setTxStatus('pending');
+    if (isDemoMode) {
+      setTxStatus('pending');
+      await new Promise(r => setTimeout(r, 1000));
+      setPlayerStatePDA(new PublicKey("Poker11111111111111111111111111111111111111"));
+      setIsAtTable(true);
+      setTxStatus('confirmed');
+      return;
+    }
 
     try {
       const result = await executeGameAction(async () => {
@@ -327,7 +335,14 @@ const ShadowPokerGameContent: React.FC = () => {
   const handlePlayerAction = async (action: PlayerAction) => {
     if (!connected || !isReady || !tablePDA || !playerStatePDA || !isPlayerTurnState) return;
 
-    setTxStatus('pending');
+    if (isDemoMode) {
+      setTxStatus('pending');
+      await new Promise(r => setTimeout(r, 800));
+      setLastAction(formatPlayerAction(action));
+      setTxStatus('confirmed');
+      setBetAmount(0);
+      return;
+    }
 
     try {
       const result = await executeGameAction(async () => {
@@ -363,7 +378,13 @@ const ShadowPokerGameContent: React.FC = () => {
   const handleStartHand = async () => {
     if (!connected || !isReady || !tablePDA) return;
 
-    setTxStatus('pending');
+    if (isDemoMode) {
+      setTxStatus('pending');
+      await new Promise(r => setTimeout(r, 1200));
+      setTxStatus('confirmed');
+      setLastAction('Hand Started (Encrypted)');
+      return;
+    }
 
     try {
       // Step 1: Arcium generates encrypted deck (automatic on-chain init inside hook)

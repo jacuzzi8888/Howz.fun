@@ -48,7 +48,8 @@ const FightClubGameContent: React.FC = () => {
         txStatus,
         setTxStatus,
         reset,
-        executeGameAction
+        executeGameAction,
+        isDemoMode
     } = useGameState();
 
     const {
@@ -153,7 +154,16 @@ const FightClubGameContent: React.FC = () => {
         if (!selectedSide || !connected || !isReady || !currentMatch) return;
         if (wager < MIN_BET || wager > MAX_BET) return;
 
-        setTxStatus('pending');
+        if (isDemoMode) {
+            setTxStatus('pending');
+            await new Promise(r => setTimeout(r, 1200));
+            setUserBet({
+                side: selectedSide,
+                amount: wager
+            });
+            setTxStatus('confirmed');
+            return;
+        }
 
         try {
             // Retrieve PDAs
@@ -190,6 +200,13 @@ const FightClubGameContent: React.FC = () => {
     const handleResolve = async () => {
         if (!connected || !isReady || !currentMatch) return;
 
+        if (isDemoMode) {
+            setTxStatus('pending');
+            await new Promise(r => setTimeout(r, 2000));
+            setTxStatus('confirmed');
+            return;
+        }
+
         setTxStatus('pending');
         try {
             const [matchPDA] = getMatchPDA(currentMatch.index);
@@ -218,6 +235,15 @@ const FightClubGameContent: React.FC = () => {
 
     const handleClaim = async () => {
         if (!userBet || !connected || !isReady) return;
+
+        if (isDemoMode) {
+            setTxStatus('pending');
+            await new Promise(r => setTimeout(r, 1000));
+            setTxStatus('confirmed');
+            setUserBet(null);
+            setSelectedSide(null);
+            return;
+        }
 
         setTxStatus('pending');
 

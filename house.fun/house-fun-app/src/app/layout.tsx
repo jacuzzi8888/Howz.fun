@@ -9,6 +9,7 @@ import { Header } from "~/components/layout/Header";
 import { SolanaWalletProvider } from "~/providers/SolanaWalletProvider";
 import { MagicBlockProvider } from "~/lib/magicblock/MagicBlockContext";
 import { ArciumProvider } from "~/lib/arcium/ArciumContext";
+import { DemoModeProvider } from "~/context/DemoModeContext";
 import { WalletSync } from "~/components/wallet/WalletSync";
 import { FullPageLoader } from "~/components/loading";
 
@@ -48,17 +49,19 @@ export default function RootLayout({
         <TRPCReactProvider>
           <SolanaWalletProvider>
             <MagicBlockProvider>
-              <WalletSync />
-              <ArciumProvider>
-                <div className="flex flex-col min-h-screen">
-                  <Header />
-                  <Suspense fallback={<FullPageLoader />}>
-                    <div className="flex-1 overflow-y-auto">
-                      {children}
-                    </div>
-                  </Suspense>
-                </div>
-              </ArciumProvider>
+              <DemoModeProvider>
+                <WalletSync />
+                <ArciumProvider>
+                  <div className="flex flex-col min-h-screen">
+                    <Header />
+                    <Suspense fallback={<FullPageLoader />}>
+                      <div className="flex-1 overflow-y-auto">
+                        {children}
+                      </div>
+                    </Suspense>
+                  </div>
+                </ArciumProvider>
+              </DemoModeProvider>
             </MagicBlockProvider>
           </SolanaWalletProvider>
         </TRPCReactProvider>

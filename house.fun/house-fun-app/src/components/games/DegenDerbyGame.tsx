@@ -13,6 +13,7 @@ import { shortenAddress, formatSol } from '~/lib/utils';
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { getRacePDA, getDegenDerbyHousePDA } from '~/lib/anchor/degen-derby-utils';
 import { DerbyTrack } from './_components/DerbyTrack';
+import { useDegenDerbyArcium } from '~/hooks/useDegenDerbyArcium';
 
 const MIN_BET = 0.001;
 const MAX_BET = 100;
@@ -48,8 +49,9 @@ const DegenDerbyGameContent: React.FC = () => {
 
   const { setIsUsingRollup } = useMagicBlock();
   const { connected, publicKey } = useWallet();
-  const { isLoading, error, txStatus, setTxStatus, reset, executeGameAction } = useGameState();
+  const { isLoading, error, txStatus, setTxStatus, reset, executeGameAction, isDemoMode } = useGameState();
   const { isReady, placeBet, claimWinnings, fetchRace, getCurrentOdds, fetchHouse, initializeHouse, resolveRace } = useDegenDerbyProgram();
+  const { generateProvablyFairWinner } = useDegenDerbyArcium();
 
   const { data: recentBets, isLoading: isLoadingBets, isError: isErrorBets } = useRecentBets('DEGEN_DERBY', 10);
   const recordBet = useRecordBet();
@@ -114,6 +116,17 @@ const DegenDerbyGameContent: React.FC = () => {
     setTxStatus('pending');
     setIsUsingRollup(true);
 
+    if (isDemoMode) {
+      setTxStatus('pending');
+      await new Promise(r => setTimeout(r, 1500));
+      setUserBet({
+        horseIndex: selectedHorseId,
+        amount: stake,
+      });
+      setTxStatus('confirmed');
+      return;
+    }
+
     try {
       const bet = await executeGameAction(async () => {
         // In production: const [racePDA] = getRacePDA(currentRace.index);
@@ -156,14 +169,28 @@ const DegenDerbyGameContent: React.FC = () => {
   const handleRaceResolve = async () => {
     if (!connected || !isReady || !currentRace) return;
 
+    if (isDemoMode) {
+      setTxStatus('pending');
+      await new Promise(r => setTimeout(r, 2000));
+      const winnerIndex = Math.floor(Math.random() * MOCK_HORSES.length);
+      handleRaceEnd(winnerIndex);
+      setTxStatus('confirmed');
+      return;
+    }
+
     setTxStatus('pending');
     try {
       await executeGameAction(async () => {
-        // Arcium Resolution Flow:
-        // 1. Get nonce and public key (mock for now or from Arcium SDK)
-        const pubKey = new Uint8Array(32); // Actual Arcium pubkey
-        const nonce = 12345n; // Random nonce
-        const computationOffset = 0; // First index
+        // Step 1: Trigger Arcium computation (Mocked in client.ts)
+        console.log('[DegenDerby] Triggering Arcium race resolution...');
+        const horsesList = MOCK_HORSES.map((h, i) => ({ id: i.toString(), odds: 2.0 }));
+        const arciumResult = await generateProvablyFairWinner(currentRace.index.toString(), horsesList);
+
+        if (!arciumResult.success || !arciumResult.proof) {
+          throw new Error(arciumResult.error || 'Arcium resolution failed');
+        }
+
+        // Step 2: Trigger on-chain resolution
         const [racePDA] = getRacePDA(currentRace.index);
         const result = await resolveRace(racePDA);
         return { success: true, winnerIndex: result.winnerHorseIndex };

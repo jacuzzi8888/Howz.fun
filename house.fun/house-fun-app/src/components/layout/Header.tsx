@@ -8,6 +8,7 @@ import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useMagicBlock } from '~/lib/magicblock/MagicBlockContext';
 import { CashierModal } from '~/components/wallet/CashierModal';
 import { SessionManager } from '~/lib/magicblock/SessionManager';
+import { useDemoMode } from '~/context/DemoModeContext';
 
 export const Header: React.FC = () => {
     const [isCashierOpen, setIsCashierOpen] = useState(false);
@@ -15,6 +16,7 @@ export const Header: React.FC = () => {
     const { isUsingRollup, setIsUsingRollup, isSessionActive, sessionRemainingTime, refreshSession } = useMagicBlock();
     const { connection } = useConnection();
     const [balance, setBalance] = useState<number | null>(null);
+    const { isDemoMode } = useDemoMode();
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -59,7 +61,8 @@ export const Header: React.FC = () => {
         }
     }, [connected, isSessionActive, isMounted, refreshSession]);
 
-    const formattedBalance = balance !== null ? balance.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "0.00";
+    const displayBalance = isDemoMode ? 888.8888 : balance;
+    const formattedBalance = displayBalance !== null ? displayBalance.toLocaleString(undefined, { maximumFractionDigits: 4 }) : "0.00";
 
     if (!isMounted) return <div className="h-20 w-full bg-[#0A0A0F]/80 border-b border-white/5" />;
 
@@ -117,6 +120,12 @@ export const Header: React.FC = () => {
                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
                                     <span className="material-symbols-outlined text-[14px] text-primary">speed</span>
                                     <span className="text-xs font-black text-primary uppercase tracking-tighter">0-Latency Mode</span>
+                                </div>
+                            )}
+                            {isDemoMode && (
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accentGold/10 border border-accentGold/30 shadow-[0_0_10px_rgba(255,183,0,0.2)]">
+                                    <span className="material-symbols-outlined text-[14px] text-accentGold animate-pulse">verified</span>
+                                    <span className="text-xs font-black text-accentGold uppercasetracking-tighter">Demo Active</span>
                                 </div>
                             )}
                         </div>

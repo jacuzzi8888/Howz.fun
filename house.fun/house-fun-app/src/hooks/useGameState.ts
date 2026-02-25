@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useDemoMode } from '~/context/DemoModeContext';
 
 interface GameState {
   isLoading: boolean;
@@ -10,6 +11,7 @@ interface GameState {
 }
 
 interface UseGameStateReturn extends GameState {
+  isDemoMode: boolean;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setTxStatus: (status: GameState['txStatus'], signature?: string) => void;
@@ -27,6 +29,7 @@ interface UseGameStateReturn extends GameState {
  * Hook for managing game state with loading and error handling
  */
 export function useGameState(): UseGameStateReturn {
+  const { isDemoMode } = useDemoMode();
   const [state, setState] = useState<GameState>({
     isLoading: false,
     error: null,
@@ -95,6 +98,7 @@ export function useGameState(): UseGameStateReturn {
 
   return {
     ...state,
+    isDemoMode,
     setLoading,
     setError,
     setTxStatus,
