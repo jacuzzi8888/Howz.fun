@@ -19,7 +19,14 @@ export const metadata: Metadata = {
   title: "Howz.fun | The House Always Wins. So Can You.",
   description:
     "The ultimate on-chain casino where memecoins battle, flip, race, and bluff — all provably fair on Solana.",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#000000",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Howz.fun",
+  },
   openGraph: {
     title: "Howz.fun",
     description: "On-chain casino on Solana",
