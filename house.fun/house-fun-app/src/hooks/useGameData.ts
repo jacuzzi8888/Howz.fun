@@ -47,14 +47,31 @@ export function useRecentBets(
     const sides = ['HEADS', 'TAILS'];
     const games = { FLIP_IT: 'Flip It', FIGHT_CLUB: 'Fight Club', DEGEN_DERBY: 'Degen Derby', SHADOW_POKER: 'Shadow Poker' };
     // Use a seeded approach so data is stable across renders
+    // Realistic Base58 characters for wallet addresses
+    const base58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const mockAddresses = [
+      '7EgaR2Kp9vXbDfL4kWn8qJmYcNtHs5BzPx3uA1rVLgrX',
+      '4FqJhN5cDvPmK8wAe3Tz2rYR7xGbCsLg9nUWjSd6XkVp',
+      'Bx8YnKj3mQ6wRvCf2hN5sLpD4gWr7ATz9JEcXuM1VkSd',
+      '9PvLmN2kRfJ7sW5cXqYb8dHz3gAer6TKwU4xn1CjStGh',
+      'Dh3TqF9c5XkW2vNr8jBm6sPy4gAeK7LxR1nJwUzCbYst',
+      '6KwGjN8cVr2mPf5xLqD3hBs4tAeY7RnZb9JXuWk1CpSv',
+      'H5dWnJ3rK8cFv2xQmTs6gLp4bAeY9Rz7Bk1jNuXwSCfG',
+      '3RvXkM7cNf9wJ2sLqBh5gPd4tAeY8Kz6Wn1jTuCbSpGx',
+      'FnJ8cK5wRv3mXq2hBs6gLp4dAeY9Tz7Wk1rNuCbSpGjD',
+      '2TsXkN7cWf9vJ3mLqBh5gPd4rAeY8Kz6Rn1wJuCbSpFx',
+    ];
+    // Variable time intervals (not all exactly 1 minute apart)
+    const timeOffsets = [0, 47, 123, 198, 256, 341, 412, 489, 567, 630];
     const mockBets = Array.from({ length: limit }, (_, i) => {
       const won = i % 3 !== 0; // 67% win rate pattern
       const betAmount = Math.floor(((i * 1.3 + 0.5) % 5 + 0.1) * 1_000_000_000);
       const sideIdx = i % 2;
+      const offsetSec = (timeOffsets[i] || i * 60) * 1000;
       return {
         id: `mock-bet-${gameType}-${i}`,
         player: {
-          walletAddress: `Howz${gameType.slice(0, 4)}${String(i).padStart(8, '0')}xxxxxxxxxxxx`,
+          walletAddress: mockAddresses[i % mockAddresses.length],
         },
         amount: betAmount,
         payout: won ? Math.floor(betAmount * 1.95) : 0,
@@ -64,9 +81,9 @@ export function useRecentBets(
         status: "Resolved",
         playerWon: won,
         payoutAmount: won ? Math.floor(betAmount * 1.95) : 0,
-        transactionSignature: `mocktx${gameType.toLowerCase()}${i}`,
-        createdAt: new Date(Date.now() - i * 60000).toISOString(),
-        resolvedAt: new Date(Date.now() - i * 60000 + 5000).toISOString(),
+        transactionSignature: `5${mockAddresses[i % mockAddresses.length].slice(1, 44)}`,
+        createdAt: new Date(Date.now() - offsetSec).toISOString(),
+        resolvedAt: new Date(Date.now() - offsetSec + 5000).toISOString(),
       };
     });
 

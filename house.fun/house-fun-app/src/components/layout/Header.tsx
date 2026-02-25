@@ -134,15 +134,15 @@ export const Header: React.FC = () => {
 
                         {/* Right Actions */}
                         <div className="flex items-center gap-2 sm:gap-4">
-                            {connected && (
+                            {(connected || isDemoMode) && (
                                 <>
                                     {/* Session Key Status (Hidden on Home) */}
                                     {typeof window !== 'undefined' && window.location.pathname !== '/' && (
                                         <div className="hidden lg:flex flex-col items-end px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
                                             <div className="flex items-center gap-2">
-                                                <span className={`size-1.5 rounded-full ${isSessionActive ? 'bg-primary animate-pulse shadow-[0_0_5px_#BBFF00]' : 'bg-gray-500'}`}></span>
+                                                <span className={`size-1.5 rounded-full ${(isDemoMode || isSessionActive) ? 'bg-primary animate-pulse shadow-[0_0_5px_#BBFF00]' : 'bg-gray-500'}`}></span>
                                                 <span className="text-xs font-black text-white/40 uppercase tracking-widest">
-                                                    {isSessionActive ? 'Session Active' : 'Initializing...'}
+                                                    {(isDemoMode || isSessionActive) ? 'Session Active' : 'Initializing...'}
                                                 </span>
                                             </div>
                                         </div>
