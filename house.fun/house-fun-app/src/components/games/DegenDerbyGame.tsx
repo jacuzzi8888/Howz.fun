@@ -233,6 +233,8 @@ const DegenDerbyGameContent: React.FC = () => {
   const handleRaceEnd = async (winningHorseId: number) => {
     setWinnerId(winningHorseId);
     setIsUsingRollup(false);
+    // 1s delay so the user sees the winning horse cross the finish line
+    await new Promise(resolve => setTimeout(resolve, 1000));
     setGameState('RESULTS');
 
     // Resolve bet in database (skip in demo mode)

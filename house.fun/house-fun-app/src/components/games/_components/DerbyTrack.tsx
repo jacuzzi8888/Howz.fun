@@ -24,9 +24,9 @@ interface HorseProgress {
 export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => {
     const { isUsingRollup } = useMagicBlock();
     const [horseProgress, setHorseProgress] = useState<HorseProgress[]>(
-        horses.map(h => ({ id: h.id, progress: 0, speed: 0.35 + Math.random() * 0.1 }))
+        horses.map(h => ({ id: h.id, progress: 0, speed: 0.7 + Math.random() * 0.15 }))
     );
-    const [timeLeft, setTimeLeft] = useState(9); // 9 second race
+    const [timeLeft, setTimeLeft] = useState(5); // 5 second race
     const requestRef = useRef<number>(null);
     const lastTimeRef = useRef<number>(null);
 
@@ -40,7 +40,7 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
             setHorseProgress(prev => {
                 const next = prev.map(hp => {
                     if (hp.progress >= 100) return hp;
-                    const serverProgress = hp.progress + (hp.speed * 0.5);
+                    const serverProgress = hp.progress + (hp.speed * 1.0);
                     return { ...hp, progress: Math.min(100, serverProgress) };
                 });
 
@@ -69,7 +69,7 @@ export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => 
                     const newSpeed = Math.max(0.05, hp.speed + variance);
                     return {
                         ...hp,
-                        progress: Math.min(100, hp.progress + hp.speed * (deltaTime / 16.6) * 0.5),
+                        progress: Math.min(100, hp.progress + hp.speed * (deltaTime / 16.6) * 1.0),
                         speed: newSpeed
                     };
                 });
