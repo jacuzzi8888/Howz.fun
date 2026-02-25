@@ -135,14 +135,17 @@ const DegenDerbyGameContent: React.FC = () => {
       await new Promise(r => setTimeout(r, 600));
       setGameState('RACING');
 
-      // Simulate race duration (let DerbyTrack animation play)
-      await new Promise(r => setTimeout(r, 6000));
+      // Wait for race duration (9s to let DerbyTrack animation finish)
+      await new Promise(r => setTimeout(r, 9000));
 
-      // Pick winner — bias toward user's horse 60% of the time
-      const winnerIndex = Math.random() > 0.4
-        ? selectedHorseId
-        : Math.floor(Math.random() * MOCK_HORSES.length);
-      setWinnerId(winnerIndex);
+      // Fallback: if DerbyTrack hasn't announced winner yet, pick one
+      setWinnerId(prev => {
+        if (prev !== null) return prev; // DerbyTrack already set it
+        const fallbackWinner = Math.random() > 0.4
+          ? selectedHorseId
+          : Math.floor(Math.random() * MOCK_HORSES.length);
+        return fallbackWinner;
+      });
       setGameState('RESULTS');
       return;
     }
@@ -231,8 +234,8 @@ const DegenDerbyGameContent: React.FC = () => {
     setIsUsingRollup(false);
     setGameState('RESULTS');
 
-    // Resolve bet in database
-    if (userBet) {
+    // Resolve bet in database (skip in demo mode)
+    if (userBet && !isDemoMode) {
       const won = userBet.horseIndex === winningHorseId;
       try {
         await resolveBet.mutateAsync({
@@ -249,7 +252,8 @@ const DegenDerbyGameContent: React.FC = () => {
   };
 
   const handleClaim = async () => {
-    if (!userBet || !connected || !isReady) return;
+    if (!userBet) return;
+    if (!isDemoMode && (!connected || !isReady)) return;
 
     setTxStatus('pending');
     try {
@@ -390,7 +394,7 @@ const DegenDerbyGameContent: React.FC = () => {
         {gameState === 'RACING' && (
           <DerbyTrack
             horses={MOCK_HORSES.map((h, i) => ({ id: i, name: h.name, image: '' }))}
-            onRaceEnd={isDemoMode ? () => { } : handleRaceEnd}
+            onRaceEnd={handleRaceEnd}
           />
         )}
 

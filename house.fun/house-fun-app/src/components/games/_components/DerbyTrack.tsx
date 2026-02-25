@@ -24,9 +24,9 @@ interface HorseProgress {
 export const DerbyTrack: React.FC<DerbyTrackProps> = ({ horses, onRaceEnd }) => {
     const { isUsingRollup } = useMagicBlock();
     const [horseProgress, setHorseProgress] = useState<HorseProgress[]>(
-        horses.map(h => ({ id: h.id, progress: 0, speed: 0.1 + Math.random() * 0.2 }))
+        horses.map(h => ({ id: h.id, progress: 0, speed: 0.35 + Math.random() * 0.1 }))
     );
-    const [timeLeft, setTimeLeft] = useState(15); // 15 second race
+    const [timeLeft, setTimeLeft] = useState(9); // 9 second race
     const requestRef = useRef<number>(null);
     const lastTimeRef = useRef<number>(null);
 
