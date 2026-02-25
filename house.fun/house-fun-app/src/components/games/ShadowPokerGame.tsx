@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '~/lib/utils';
+import { GameResultModal } from '~/components/ui/GameResultModal';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { web3 } from '@coral-xyz/anchor';
 import { useGameState } from '~/hooks/useGameState';
@@ -106,6 +107,11 @@ const ShadowPokerGameContent: React.FC = () => {
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [houseExists, setHouseExists] = useState<boolean | null>(null);
   const [isInitializingHouse, setIsInitializingHouse] = useState(false);
+
+  // Demo game state
+  const [demoShowResult, setDemoShowResult] = useState(false);
+  const [demoPlayerWon, setDemoPlayerWon] = useState(false);
+  const [demoPotWon, setDemoPotWon] = useState(0);
 
   // Arcium encrypted card state
   const {
@@ -219,8 +225,9 @@ const ShadowPokerGameContent: React.FC = () => {
 
 
 
-  // Generate mock opponents based on table state
+  // Generate mock opponents based on table state — SKIP in demo mode (demo sets its own)
   useEffect(() => {
+    if (isDemoMode) return; // Demo mode sets opponents in handleJoinTable
     if (!table || !publicKey) {
       setOpponents([]);
       return;
@@ -240,7 +247,7 @@ const ShadowPokerGameContent: React.FC = () => {
       }));
 
     setOpponents(mockOpponents);
-  }, [table, publicKey]);
+  }, [table, publicKey, isDemoMode]);
 
   const handleJoinTable = async () => {
     if (!isDemoMode && (!connected || !isReady || !tablePDA)) return;
@@ -261,10 +268,10 @@ const ShadowPokerGameContent: React.FC = () => {
             new web3.PublicKey("11111111111111111111111111111111"),
             new web3.PublicKey("BrEAK7zGZ6dM71jNy3efib9mUjLLvWaVCpT1Bpm3do8j"),
           ],
-          minBuyIn: MIN_BUY_IN * 1_000_000_000,
-          maxBuyIn: MAX_BUY_IN * 1_000_000_000,
-          pot: buyInAmount * 3 * 1_000_000_000,
-          currentBet: 0.5 * 1_000_000_000,
+          minBuyIn: MIN_BUY_IN,
+          maxBuyIn: MAX_BUY_IN,
+          pot: buyInAmount * 3,
+          currentBet: 0.5,
           status: 'InProgress',
           round: 'Flop',
           communityCards: [
@@ -282,8 +289,8 @@ const ShadowPokerGameContent: React.FC = () => {
             id: '11111111111111111111111111111111',
             name: 'ShadowWhale',
             avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=whale1',
-            stack: 25 * 1_000_000_000,
-            currentBet: 0.5 * 1_000_000_000,
+            stack: 25,
+            currentBet: 0.5,
             isActive: true,
             position: 1,
             lastAction: 'Call',
@@ -292,8 +299,8 @@ const ShadowPokerGameContent: React.FC = () => {
             id: '22222222222222222222222222222222',
             name: 'CryptoShark',
             avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=shark1',
-            stack: 18 * 1_000_000_000,
-            currentBet: 0.5 * 1_000_000_000,
+            stack: 18,
+            currentBet: 0.5,
             isActive: true,
             position: 2,
             lastAction: 'Check',
@@ -302,7 +309,7 @@ const ShadowPokerGameContent: React.FC = () => {
 
         // Set player state
         setPlayerState({
-          stack: buyInAmount * 1_000_000_000,
+          stack: buyInAmount,
           currentBet: 0,
           isActive: true,
           isFolded: false,
@@ -316,6 +323,8 @@ const ShadowPokerGameContent: React.FC = () => {
         setIsPlayerTurnState(true);
         setAvailableActions(['Check', 'Raise', 'Fold'] as any);
         setTxStatus('confirmed');
+        // Auto-dismiss transaction banner after 2s
+        setTimeout(() => setTxStatus('idle'), 2000);
         return;
       } catch (demoErr) {
         console.error('[DemoMode] Join table failed:', demoErr);
@@ -402,15 +411,140 @@ const ShadowPokerGameContent: React.FC = () => {
     }
   };
 
+  // Helper: full deck for demo dealing
+  const DEMO_DECK = [
+    { suit: 'Hearts', rank: 'Ace' }, { suit: 'Hearts', rank: 'King' }, { suit: 'Hearts', rank: 'Queen' },
+    { suit: 'Hearts', rank: 'Jack' }, { suit: 'Hearts', rank: 'Ten' }, { suit: 'Hearts', rank: 'Nine' },
+    { suit: 'Diamonds', rank: 'Ace' }, { suit: 'Diamonds', rank: 'King' }, { suit: 'Diamonds', rank: 'Queen' },
+    { suit: 'Diamonds', rank: 'Jack' }, { suit: 'Diamonds', rank: 'Ten' }, { suit: 'Diamonds', rank: 'Nine' },
+    { suit: 'Clubs', rank: 'Ace' }, { suit: 'Clubs', rank: 'King' }, { suit: 'Clubs', rank: 'Queen' },
+    { suit: 'Clubs', rank: 'Jack' }, { suit: 'Clubs', rank: 'Ten' }, { suit: 'Clubs', rank: 'Nine' },
+    { suit: 'Spades', rank: 'Ace' }, { suit: 'Spades', rank: 'King' }, { suit: 'Spades', rank: 'Queen' },
+    { suit: 'Spades', rank: 'Jack' }, { suit: 'Spades', rank: 'Ten' }, { suit: 'Spades', rank: 'Nine' },
+  ];
+
+  // Helper: pick a random card not already in use
+  const pickCard = (exclude: Array<{ suit: string; rank: string }>) => {
+    const available = DEMO_DECK.filter(c => !exclude.some(e => e.suit === c.suit && e.rank === c.rank));
+    return available[Math.floor(Math.random() * available.length)];
+  };
+
+  // Demo: simulate opponent responses after player acts
+  const simulateOpponentActions = async () => {
+    for (let i = 0; i < opponents.length; i++) {
+      if (!opponents[i].isActive) continue;
+      await new Promise(r => setTimeout(r, 800 + Math.random() * 600));
+
+      const actions = ['Call', 'Check', 'Raise'];
+      const weights = [0.5, 0.3, 0.2]; // mostly call/check
+      const roll = Math.random();
+      let action = 'Call';
+      if (roll < weights[2]) action = 'Raise';
+      else if (roll < weights[2] + weights[1]) action = 'Check';
+
+      setOpponents(prev => prev.map((opp, idx) => {
+        if (idx !== i) return opp;
+        const betIncrease = action === 'Raise' ? 0.5 + Math.random() * 1.5 : (action === 'Call' ? (table?.currentBet || 0.5) - opp.currentBet : 0);
+        return {
+          ...opp,
+          lastAction: action,
+          currentBet: action === 'Check' ? opp.currentBet : opp.currentBet + Math.max(0, betIncrease),
+          stack: opp.stack - Math.max(0, betIncrease),
+        };
+      }));
+
+      // Update pot
+      if (action !== 'Check') {
+        setTable(prev => prev ? { ...prev, pot: prev.pot + 0.5 } as any : prev);
+      }
+    }
+  };
+
+  // Demo: advance to next round
+  const advanceDemoRound = () => {
+    if (!table) return;
+    const currentCards = table.communityCards || [];
+    const usedCards = [...currentCards, ...(playerState?.holeCards || [])];
+
+    const roundOrder = ['Preflop', 'Flop', 'Turn', 'River', 'Showdown'];
+    const currentIdx = roundOrder.indexOf(table.round || 'Flop');
+    const nextRound = roundOrder[Math.min(currentIdx + 1, roundOrder.length - 1)];
+
+    let newCards = [...currentCards];
+    if (nextRound === 'Turn' && currentCards.length === 3) {
+      newCards.push(pickCard(usedCards));
+    } else if (nextRound === 'River' && currentCards.length === 4) {
+      newCards.push(pickCard([...usedCards, ...newCards]));
+    }
+
+    // Reset bets for new round
+    setOpponents(prev => prev.map(opp => ({ ...opp, currentBet: 0, lastAction: undefined })));
+    setPlayerState(prev => prev ? { ...prev, currentBet: 0 } as any : prev);
+    setTable(prev => prev ? { ...prev, round: nextRound, currentBet: 0, communityCards: newCards } as any : prev);
+
+    return nextRound;
+  };
+
+  // Demo: determine showdown winner
+  const demoShowdown = async () => {
+    setIsPlayerTurnState(false);
+    setLastAction('Showdown!');
+
+    // Dramatic pause
+    await new Promise(r => setTimeout(r, 1500));
+
+    // ~55% chance player wins (slight house edge)
+    const playerWins = Math.random() < 0.55;
+    const pot = table?.pot || 0;
+
+    setDemoPlayerWon(playerWins);
+    setDemoPotWon(playerWins ? pot : (playerState?.stack || 0) * -0.5);
+    setDemoShowResult(true);
+  };
+
   const handlePlayerAction = async (action: PlayerAction) => {
     if (!isDemoMode && (!connected || !isReady || !tablePDA || !playerStatePDA || !isPlayerTurnState)) return;
 
     if (isDemoMode) {
       setTxStatus('pending');
-      await new Promise(r => setTimeout(r, 800));
+      setIsPlayerTurnState(false);
+      await new Promise(r => setTimeout(r, 500));
       setLastAction(formatPlayerAction(action));
-      setTxStatus('confirmed');
+      setTxStatus('idle');
+
+      // Handle FOLD — instant loss
+      if (formatPlayerAction(action) === 'Fold') {
+        setDemoPlayerWon(false);
+        setDemoPotWon(playerState?.stack ? -buyInAmount : 0);
+        setDemoShowResult(true);
+        return;
+      }
+
+      // Update player state based on action
+      const actionName = formatPlayerAction(action);
+      if (actionName === 'Raise' && betAmount > 0) {
+        setPlayerState(prev => prev ? { ...prev, stack: prev.stack - betAmount, currentBet: prev.currentBet + betAmount } as any : prev);
+        setTable(prev => prev ? { ...prev, pot: prev.pot + betAmount, currentBet: prev.currentBet + betAmount } as any : prev);
+      } else if (actionName === 'Call' && callAmount > 0) {
+        setPlayerState(prev => prev ? { ...prev, stack: prev.stack - callAmount, currentBet: prev.currentBet + callAmount } as any : prev);
+        setTable(prev => prev ? { ...prev, pot: prev.pot + callAmount } as any : prev);
+      }
       setBetAmount(0);
+
+      // Simulate opponents
+      await simulateOpponentActions();
+
+      // Advance round
+      const nextRound = advanceDemoRound();
+
+      if (nextRound === 'Showdown') {
+        await demoShowdown();
+      } else {
+        // Player's turn again
+        setIsPlayerTurnState(true);
+        setLastAction(null);
+      }
+
       return;
     }
 
@@ -498,6 +632,14 @@ const ShadowPokerGameContent: React.FC = () => {
   const handleReset = () => {
     reset();
     setLastAction(null);
+    setDemoShowResult(false);
+    setDemoPlayerWon(false);
+    setDemoPotWon(0);
+    setIsAtTable(false);
+    setTable(null);
+    setPlayerState(null);
+    setOpponents([]);
+    setIsPlayerTurnState(false);
   };
 
   const isProcessing = isLoading || txStatus === 'pending' || txStatus === 'confirming';
@@ -693,7 +835,7 @@ const ShadowPokerGameContent: React.FC = () => {
                   <span className="text-primary text-[9px] tracking-[0.2em] font-black uppercase opacity-60 mb-1">Total Pot</span>
                   <div className="text-white text-2xl font-black tracking-tight drop-shadow-lg flex items-center gap-2">
                     <span className="material-symbols-outlined text-accentGold text-[20px]">monetization_on</span>
-                    {table ? `${table.pot.toFixed(2)} USDC` : '0 USDC'}
+                    {table ? `${table.pot.toFixed(2)} SOL` : '0 SOL'}
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-[9px] text-primary/60 font-black tracking-[0.2em] mt-2 uppercase italic">
@@ -811,9 +953,9 @@ const ShadowPokerGameContent: React.FC = () => {
                 </div>
                 <div className="glass-panel px-4 py-1.5 rounded-xl text-center min-w-[110px] bg-black/40 backdrop-blur-md border border-white/5">
                   <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">{opponent.name}</p>
-                  <p className="text-xs font-black text-white">${opponent.stack.toFixed(0)}</p>
+                  <p className="text-xs font-black text-white">{opponent.stack.toFixed(2)} SOL</p>
                   {opponent.currentBet > 0 && (
-                    <p className="text-[8px] text-accentGold font-bold">Bet: ${opponent.currentBet.toFixed(0)}</p>
+                    <p className="text-[8px] text-accentGold font-bold">Bet: {opponent.currentBet.toFixed(2)} SOL</p>
                   )}
                 </div>
               </div>
@@ -934,11 +1076,11 @@ const ShadowPokerGameContent: React.FC = () => {
                   <span className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(7,204,0,0.8)]"></span>
                 </div>
                 <div className="text-primary font-black text-xl tracking-tighter mt-1">
-                  {playerState.stack.toFixed(2)} <span className="text-[10px] opacity-60">USDC</span>
+                  {playerState.stack.toFixed(2)} <span className="text-[10px] opacity-60">SOL</span>
                 </div>
                 {playerState.currentBet > 0 && (
                   <div className="text-accentGold text-sm font-bold">
-                    Current Bet: {playerState.currentBet.toFixed(2)} USDC
+                    Current Bet: {playerState.currentBet.toFixed(2)} SOL
                   </div>
                 )}
                 {lastAction && (
@@ -966,7 +1108,7 @@ const ShadowPokerGameContent: React.FC = () => {
                     onChange={(e) => setBetAmount(parseFloat(e.target.value))}
                   />
                   <div className="text-center text-white font-mono text-sm">
-                    {betAmount.toFixed(2)} USDC
+                    {betAmount.toFixed(2)} SOL
                   </div>
                 </div>
               )}
@@ -1095,6 +1237,19 @@ const ShadowPokerGameContent: React.FC = () => {
           </button>
         </div>
       </aside>
+
+      {/* Demo Showdown Result Modal */}
+      <GameResultModal
+        isOpen={demoShowResult}
+        playerWon={demoPlayerWon}
+        title={demoPlayerWon ? 'You Won the Pot!' : 'Better Luck Next Hand'}
+        subtitle={demoPlayerWon ? 'Your hand takes the pot!' : 'The table got the better of you this time.'}
+        amount={demoPlayerWon ? demoPotWon : undefined}
+        betAmount={!demoPlayerWon ? buyInAmount : undefined}
+        gameName="Shadow Poker"
+        onPlayAgain={handleReset}
+        ctaLabel="Play Again"
+      />
     </div>
   );
 };
