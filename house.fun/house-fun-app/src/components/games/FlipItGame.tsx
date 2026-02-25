@@ -47,6 +47,7 @@ const FlipItGameContent: React.FC = () => {
     } = useGameState();
 
     const { program, isReady, placeBet, requestFlip, reveal, initializeHouse, fetchHouse, fetchBet } = useFlipItProgram(sessionKey);
+    const { generateProvablyFairOutcome } = useFlipItArcium();
     const { play, isMuted, toggleMute } = useGameSounds();
     const [houseExists, setHouseExists] = useState<boolean | null>(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
