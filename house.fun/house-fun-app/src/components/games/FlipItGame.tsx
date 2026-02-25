@@ -12,6 +12,7 @@ import { useRecentBets, useRecordBet, useResolveBet } from '~/hooks/useGameData'
 import { useWalletBalance, formatBalance } from '~/hooks/useWalletBalance';
 import { shortenAddress } from '~/lib/utils';
 import { useGameSounds } from '~/hooks/useGameSounds';
+import { useFlipItArcium } from '~/hooks/useFlipItArcium';
 import Link from 'next/link';
 
 const MIN_BET = 0.001; // 0.001 SOL
@@ -174,6 +175,23 @@ const FlipItGameContent: React.FC = () => {
                 });
             } catch (dbError) {
                 console.error('Failed to record bet in database:', dbError);
+            }
+
+            // Step 2.5: Trigger Arcium Flip (New for MVP)
+            setTxStatus('confirming');
+            console.log('[FlipIt] Triggering Arcium flip request...');
+            const arciumResult = await generateProvablyFairOutcome(side, publicKey);
+
+            if (arciumResult.success && arciumResult.proof && arciumResult.commitment && arciumResult.nonce) {
+                const offset = Date.now();
+                const userChoice = Array.from(Buffer.from(arciumResult.commitment, 'hex')).slice(0, 32);
+                const pubKey = Array.from(arciumResult.proof.publicInputs).slice(0, 32);
+                const nonce = parseInt(arciumResult.nonce, 16); // Nonce is hex string in hook
+
+                await requestFlip(bet.betPDA, offset, userChoice, pubKey, nonce);
+                console.log('[FlipIt] Flip requested successfully');
+            } else {
+                console.warn('[FlipIt] Arcium generation failed, attempting manual resolution polling...');
             }
 
             // Step 3: Wait for Resolution (Resilient)
