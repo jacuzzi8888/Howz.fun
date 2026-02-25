@@ -40,28 +40,31 @@ export function useRecentBets(
   const { isDemoMode } = useDemoMode();
   const query = api.game.getRecentBets.useQuery(
     { gameType, limit },
-    { refetchInterval: 5000 } // Refetch every 5 seconds for live updates
+    { refetchInterval: isDemoMode ? false : 5000, enabled: !isDemoMode }
   );
 
   if (isDemoMode) {
     const sides = ['HEADS', 'TAILS'];
+    const games = { FLIP_IT: 'Flip It', FIGHT_CLUB: 'Fight Club', DEGEN_DERBY: 'Degen Derby', SHADOW_POKER: 'Shadow Poker' };
+    // Use a seeded approach so data is stable across renders
     const mockBets = Array.from({ length: limit }, (_, i) => {
-      const won = Math.random() > 0.4;
-      const betAmount = Math.floor((Math.random() * 5 + 0.1) * 1_000_000_000);
+      const won = i % 3 !== 0; // 67% win rate pattern
+      const betAmount = Math.floor(((i * 1.3 + 0.5) % 5 + 0.1) * 1_000_000_000);
+      const sideIdx = i % 2;
       return {
-        id: `mock-bet-${i}`,
+        id: `mock-bet-${gameType}-${i}`,
         player: {
-          walletAddress: `Howz${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}xxxxxxxxxxxx`,
+          walletAddress: `Howz${gameType.slice(0, 4)}${String(i).padStart(8, '0')}xxxxxxxxxxxx`,
         },
         amount: betAmount,
         payout: won ? Math.floor(betAmount * 1.95) : 0,
         gameType,
-        prediction: sides[Math.floor(Math.random() * 2)],
-        outcome: sides[Math.floor(Math.random() * 2)],
+        prediction: sides[sideIdx],
+        outcome: sides[won ? sideIdx : 1 - sideIdx],
         status: "Resolved",
         playerWon: won,
         payoutAmount: won ? Math.floor(betAmount * 1.95) : 0,
-        transactionSignature: `${Math.random().toString(36).substring(2, 12)}${Math.random().toString(36).substring(2, 12)}`,
+        transactionSignature: `mocktx${gameType.toLowerCase()}${i}`,
         createdAt: new Date(Date.now() - i * 60000).toISOString(),
         resolvedAt: new Date(Date.now() - i * 60000 + 5000).toISOString(),
       };
@@ -69,8 +72,9 @@ export function useRecentBets(
 
     return {
       ...query,
-      data: query.data || mockBets,
+      data: mockBets,
       isLoading: false,
+      isError: false,
     };
   }
 

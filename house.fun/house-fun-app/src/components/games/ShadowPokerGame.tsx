@@ -397,7 +397,7 @@ const ShadowPokerGameContent: React.FC = () => {
   };
 
   const handlePlayerAction = async (action: PlayerAction) => {
-    if (!connected || !isReady || !tablePDA || !playerStatePDA || !isPlayerTurnState) return;
+    if (!isDemoMode && (!connected || !isReady || !tablePDA || !playerStatePDA || !isPlayerTurnState)) return;
 
     if (isDemoMode) {
       setTxStatus('pending');
@@ -440,7 +440,7 @@ const ShadowPokerGameContent: React.FC = () => {
   };
 
   const handleStartHand = async () => {
-    if (!connected || !isReady || !tablePDA) return;
+    if (!isDemoMode && (!connected || !isReady || !tablePDA)) return;
 
     if (isDemoMode) {
       setTxStatus('pending');
@@ -468,7 +468,7 @@ const ShadowPokerGameContent: React.FC = () => {
   };
 
   const handleShowdown = async () => {
-    if (!connected || !isReady || !tablePDA) return;
+    if (!isDemoMode && (!connected || !isReady || !tablePDA)) return;
 
     setTxStatus('pending');
 
@@ -495,14 +495,18 @@ const ShadowPokerGameContent: React.FC = () => {
   };
 
   const isProcessing = isLoading || txStatus === 'pending' || txStatus === 'confirming';
-  const canJoin = connected && isReady && !isProcessing && !isAtTable && buyInAmount >= MIN_BUY_IN && buyInAmount <= MAX_BUY_IN;
-  const canLeave = connected && isReady && !isProcessing && isAtTable;
+  const canJoin = isDemoMode
+    ? (!isProcessing && !isAtTable && buyInAmount >= MIN_BUY_IN && buyInAmount <= MAX_BUY_IN)
+    : (connected && isReady && !isProcessing && !isAtTable && buyInAmount >= MIN_BUY_IN && buyInAmount <= MAX_BUY_IN);
+  const canLeave = isDemoMode
+    ? (!isProcessing && isAtTable)
+    : (connected && isReady && !isProcessing && isAtTable);
   const canAct = isPlayerTurnState && !isProcessing && isAtTable;
 
   // Debug helper to show why actions are disabled
   const getDisabledReason = () => {
-    if (!connected) return 'Connect wallet';
-    if (!isReady) return 'Wallet not ready - reconnect or try a different wallet';
+    if (!isDemoMode && !connected) return 'Connect wallet';
+    if (!isDemoMode && !isReady) return 'Wallet not ready - reconnect or try a different wallet';
     if (isProcessing) return 'Transaction in progress';
     if (!isAtTable) return 'Join table first';
     if (!isPlayerTurnState) return 'Waiting for your turn';
@@ -545,7 +549,7 @@ const ShadowPokerGameContent: React.FC = () => {
         )}
 
         {/* Wallet Not Connected */}
-        {!connected && (
+        {!isDemoMode && !connected && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-yellow-500 text-sm">wallet</span>
