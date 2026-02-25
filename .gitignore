@@ -14,8 +14,35 @@ authority.json
 # Node
 node_modules/
 .env*
+!.env.example
 dist/
 build/
 
-# Logs
+# Next.js
+.next/
+.turbo/
+
+# Vercel
+.vercel/
+
+# Logs & temp
 *.log
+build_log.txt
+run_log.txt
+
+# Debug/one-off scripts
+check_encoding.js
+final_id_check.js
+validate_mismatch.js
+
+# Planning docs (not part of the app)
+CONTEXT.md
+DEPLOY-SCRIPT-README.md
+STEP-BY-STEP-GUIDE.md
+arcium-forum-post.md
+hackathon-deploy.sh
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

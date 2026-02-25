@@ -250,72 +250,78 @@ const ShadowPokerGameContent: React.FC = () => {
       setTxStatus('pending');
       await new Promise(r => setTimeout(r, 1000));
 
-      // Inject mock table state
-      const mockTablePDA = new web3.PublicKey("Poker11111111111111111111111111111111111111");
-      setPlayerStatePDA(mockTablePDA);
-      setTable({
-        index: DEFAULT_TABLE_INDEX,
-        players: [
-          mockTablePDA,
-          new web3.PublicKey("11111111111111111111111111111111"),
-          new web3.PublicKey("22222222222222222222222222222222"),
-        ],
-        minBuyIn: MIN_BUY_IN * 1_000_000_000,
-        maxBuyIn: MAX_BUY_IN * 1_000_000_000,
-        pot: buyInAmount * 3 * 1_000_000_000,
-        currentBet: 0.5 * 1_000_000_000,
-        status: 'InProgress',
-        round: 'Flop',
-        communityCards: [
-          { suit: 'Hearts', rank: 'Ace' },
-          { suit: 'Diamonds', rank: 'King' },
-          { suit: 'Spades', rank: 'Ten' },
-        ],
-        dealerIndex: 0,
-        currentPlayerIndex: 0,
-      } as any);
-
-      // Inject mock opponents
-      setOpponents([
-        {
-          id: '11111111111111111111111111111111',
-          name: 'ShadowWhale',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=whale1',
-          stack: 25 * 1_000_000_000,
+      try {
+        // Inject mock table state
+        const mockTablePDA = new web3.PublicKey("Poker11111111111111111111111111111111111111");
+        setPlayerStatePDA(mockTablePDA);
+        setTable({
+          index: DEFAULT_TABLE_INDEX,
+          players: [
+            mockTablePDA,
+            new web3.PublicKey("11111111111111111111111111111111"),
+            new web3.PublicKey("BrEAK7zGZ6dM71jNy3efib9mUjLLvWaVCpT1Bpm3do8j"),
+          ],
+          minBuyIn: MIN_BUY_IN * 1_000_000_000,
+          maxBuyIn: MAX_BUY_IN * 1_000_000_000,
+          pot: buyInAmount * 3 * 1_000_000_000,
           currentBet: 0.5 * 1_000_000_000,
-          isActive: true,
-          position: 1,
-          lastAction: 'Call',
-        },
-        {
-          id: '22222222222222222222222222222222',
-          name: 'CryptoShark',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=shark1',
-          stack: 18 * 1_000_000_000,
-          currentBet: 0.5 * 1_000_000_000,
-          isActive: true,
-          position: 2,
-          lastAction: 'Check',
-        },
-      ]);
+          status: 'InProgress',
+          round: 'Flop',
+          communityCards: [
+            { suit: 'Hearts', rank: 'Ace' },
+            { suit: 'Diamonds', rank: 'King' },
+            { suit: 'Spades', rank: 'Ten' },
+          ],
+          dealerIndex: 0,
+          currentPlayerIndex: 0,
+        } as any);
 
-      // Set player state
-      setPlayerState({
-        stack: buyInAmount * 1_000_000_000,
-        currentBet: 0,
-        isActive: true,
-        isFolded: false,
-        holeCards: [
-          { suit: 'Hearts', rank: 'Queen' },
-          { suit: 'Clubs', rank: 'Jack' },
-        ],
-      } as any);
+        // Inject mock opponents
+        setOpponents([
+          {
+            id: '11111111111111111111111111111111',
+            name: 'ShadowWhale',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=whale1',
+            stack: 25 * 1_000_000_000,
+            currentBet: 0.5 * 1_000_000_000,
+            isActive: true,
+            position: 1,
+            lastAction: 'Call',
+          },
+          {
+            id: '22222222222222222222222222222222',
+            name: 'CryptoShark',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=shark1',
+            stack: 18 * 1_000_000_000,
+            currentBet: 0.5 * 1_000_000_000,
+            isActive: true,
+            position: 2,
+            lastAction: 'Check',
+          },
+        ]);
 
-      setIsAtTable(true);
-      setIsPlayerTurnState(true);
-      setAvailableActions(['Check', 'Raise', 'Fold'] as any);
-      setTxStatus('confirmed');
-      return;
+        // Set player state
+        setPlayerState({
+          stack: buyInAmount * 1_000_000_000,
+          currentBet: 0,
+          isActive: true,
+          isFolded: false,
+          holeCards: [
+            { suit: 'Hearts', rank: 'Queen' },
+            { suit: 'Clubs', rank: 'Jack' },
+          ],
+        } as any);
+
+        setIsAtTable(true);
+        setIsPlayerTurnState(true);
+        setAvailableActions(['Check', 'Raise', 'Fold'] as any);
+        setTxStatus('confirmed');
+        return;
+      } catch (demoErr) {
+        console.error('[DemoMode] Join table failed:', demoErr);
+        setTxStatus('failed');
+        return;
+      }
     }
 
     try {
