@@ -429,7 +429,7 @@ const FlipItGameContent: React.FC = () => {
     return (
         <div className="flex flex-1 relative overflow-y-auto overflow-x-hidden">
             {/* Game Area (Center) */}
-            <div className="flex-1 flex flex-col items-center justify-center py-4 px-3 sm:px-4 lg:px-6 relative z-10 min-w-0 min-h-[500px]">
+            <div className="flex-1 flex flex-col items-center justify-start pt-6 py-4 px-3 sm:px-4 lg:px-6 relative z-10 min-w-0 min-h-[500px]">
                 <div className="w-full max-w-lg flex flex-col items-center gap-4 bg-black/5 rounded-3xl p-2 sm:p-4">
 
                     {/* Wallet Not Connected Warning */}
