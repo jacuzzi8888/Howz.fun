@@ -1,8 +1,8 @@
-# house.fun (2026 Edition) 🎰
+# howz.fun (2026 Edition) 🎰
 
 The ultimate on-chain casino where memecoins battle, flip, race, and bluff — all provably fair on Solana.
 
-### 🚀 Live Demo: [house-fun-app.vercel.app](https://house-fun-app.vercel.app)
+### 🚀 Live Demo: https://howz-fun.vercel.app/
 
 ---
 
