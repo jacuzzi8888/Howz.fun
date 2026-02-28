@@ -1,13 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import { Connection, Keypair } from '@solana/web3.js';
+import { Connection, Keypair, Transaction, VersionedTransaction } from '@solana/web3.js';
+import { MagicRouter } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { SessionManager } from './SessionManager';
 
 interface MagicBlockContextState {
     standardConnection: Connection;
     rollupConnection: Connection;
     activeConnection: Connection;
+    router: MagicRouter | null;
     isUsingRollup: boolean;
     setIsUsingRollup: (val: boolean) => void;
     // Session Keys
@@ -38,6 +40,12 @@ export const MagicBlockProvider: React.FC<{
     const rollupConnection = useMemo(() =>
         new Connection('https://devnet.magicblock.app', 'confirmed'),
         []);
+
+    // Magic Router for automatic orchestration
+    const router = useMemo(() => {
+        if (typeof window === 'undefined') return null;
+        return new MagicRouter(standardConnection, rollupConnection);
+    }, [standardConnection, rollupConnection]);
 
     const refreshSession = () => {
         setSessionKey(SessionManager.getStoredSessionKey());
@@ -96,6 +104,7 @@ export const MagicBlockProvider: React.FC<{
         standardConnection,
         rollupConnection,
         activeConnection: isUsingRollup ? rollupConnection : standardConnection,
+        router,
         isUsingRollup,
         setIsUsingRollup,
         sessionKey,

@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
-// use arcium_anchor::prelude::*;
+use arcium_anchor::prelude::*;
+use ephemeral_rollups_sdk::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
 // Program ID - Replace with actual after deployment
@@ -15,6 +16,7 @@ pub const MAX_HORSES: u8 = 8;
 
 // const COMP_DEF_OFFSET_DERBY: u32 = comp_def_offset("derby");
 
+#[ephemeral]
 #[program]
 pub mod degen_derby {
     use super::*;
@@ -236,6 +238,39 @@ pub mod degen_derby {
         msg!("Treasury withdrawal: {} lamports", amount);
         Ok(())
     }
+
+    /// Delegate race to Ephemeral Rollup
+    pub fn delegate_race(ctx: Context<DelegateRace>) -> Result<()> {
+        let race = &ctx.accounts.race;
+        ephemeral_rollups_sdk::cpi::delegate(
+            CpiContext::new(
+                ctx.accounts.delegation_program.to_account_info(),
+                ephemeral_rollups_sdk::cpi::Delegate {
+                    payer: ctx.accounts.payer.to_account_info(),
+                    account: ctx.accounts.race.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                },
+            ),
+        )?;
+        msg!("Race {} delegated to rollup", race.key());
+        Ok(())
+    }
+
+    /// Undelegate race from Ephemeral Rollup
+    pub fn undelegate_race(ctx: Context<UndelegateRace>) -> Result<()> {
+        let race = &ctx.accounts.race;
+        ephemeral_rollups_sdk::cpi::undelegate(
+            CpiContext::new(
+                ctx.accounts.delegation_program.to_account_info(),
+                ephemeral_rollups_sdk::cpi::Undelegate {
+                    payer: ctx.accounts.payer.to_account_info(),
+                    account: ctx.accounts.race.to_account_info(),
+                },
+            ),
+        )?;
+        msg!("Race {} undelegated from rollup", race.key());
+        Ok(())
+    }
 }
 
 // Helper function for weighted random selection
@@ -360,10 +395,24 @@ pub struct StartRace<'info> {
 #[derive(Accounts)]
 pub struct ResolveRace<'info> {
     #[account(mut)]
-    pub race: Account<'info, Race>,
-    
-    #[account(mut)]
     pub house: Account<'info, DegenDerbyHouse>,
+}
+
+#[derive(Accounts)]
+pub struct DelegateRace<'info> {
+    #[account(mut)]
+    pub race: Account<'info, Race>,
+    pub payer: Signer<'info>,
+    pub delegation_program: Program<'info, EphemeralRollup>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UndelegateRace<'info> {
+    #[account(mut)]
+    pub race: Account<'info, Race>,
+    pub payer: Signer<'info>,
+    pub delegation_program: Program<'info, EphemeralRollup>,
 }
 
 #[derive(Accounts)]

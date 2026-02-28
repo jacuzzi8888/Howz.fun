@@ -570,6 +570,29 @@ export function useDegenDerbyProgram() {
     cancelRace,
     refundBet,
     withdrawTreasury,
+    delegateRace: async (racePDA: web3.PublicKey) => {
+      if (!program || !wallet.publicKey) throw new Error('Wallet not connected');
+      return await (program as any).methods
+        .delegateRace()
+        .accounts({
+          race: racePDA,
+          payer: wallet.publicKey,
+          delegationProgram: new web3.PublicKey("DELeGATE1111111111111111111111111111111"),
+          systemProgram: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+    },
+    undelegateRace: async (racePDA: web3.PublicKey) => {
+      if (!program || !wallet.publicKey) throw new Error('Wallet not connected');
+      return await (program as any).methods
+        .undelegateRace()
+        .accounts({
+          race: racePDA,
+          payer: wallet.publicKey,
+          delegationProgram: new web3.PublicKey("DELeGATE1111111111111111111111111111111"),
+        } as any)
+        .rpc();
+    },
     fetchPlayerBet,
     fetchRace,
     fetchHouse,

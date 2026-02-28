@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
+use ephemeral_rollups_sdk::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
 // Program ID - Replace with actual after deployment
@@ -15,6 +16,7 @@ pub const TIMEOUT_SLOTS: u64 = 600; // 4 minutes timeout
 
 const COMP_DEF_OFFSET_POKER: u32 = comp_def_offset("poker");
 
+#[ephemeral]
 #[arcium_program]
 pub mod shadow_poker {
     use super::*;
@@ -336,6 +338,40 @@ pub mod shadow_poker {
         Ok(())
     }
 
+    /// Delegate table to Ephemeral Rollup
+    pub fn delegate_table(ctx: Context<DelegateTable>) -> Result<()> {
+        let table = &ctx.accounts.table;
+        // In 2026 patterns, we use the SDK's delegate CPI
+        ephemeral_rollups_sdk::cpi::delegate(
+            CpiContext::new(
+                ctx.accounts.delegation_program.to_account_info(),
+                ephemeral_rollups_sdk::cpi::Delegate {
+                    payer: ctx.accounts.payer.to_account_info(),
+                    account: ctx.accounts.table.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                },
+            ),
+        )?;
+        msg!("Table {} delegated to rollup", table.key());
+        Ok(())
+    }
+
+    /// Undelegate table from Ephemeral Rollup
+    pub fn undelegate_table(ctx: Context<UndelegateTable>) -> Result<()> {
+        let table = &ctx.accounts.table;
+        ephemeral_rollups_sdk::cpi::undelegate(
+            CpiContext::new(
+                ctx.accounts.delegation_program.to_account_info(),
+                ephemeral_rollups_sdk::cpi::Undelegate {
+                    payer: ctx.accounts.payer.to_account_info(),
+                    account: ctx.accounts.table.to_account_info(),
+                },
+            ),
+        )?;
+        msg!("Table {} undelegated from rollup", table.key());
+        Ok(())
+    }
+
     /// Initialize Poker Computation Definition (Arcium)
     pub fn init_poker_comp_def(_ctx: Context<InitPokerCompDef>) -> Result<()> {
         msg!("Poker Computation Definition initialized");
@@ -581,6 +617,23 @@ pub struct ShowdownWithProof<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct DelegateTable<'info> {
+    #[account(mut)]
+    pub table: Account<'info, Table>,
+    pub payer: Signer<'info>,
+    pub delegation_program: Program<'info, EphemeralRollup>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UndelegateTable<'info> {
+    #[account(mut)]
+    pub table: Account<'info, Table>,
+    pub payer: Signer<'info>,
+    pub delegation_program: Program<'info, EphemeralRollup>,
 }
 
 #[derive(Accounts)]

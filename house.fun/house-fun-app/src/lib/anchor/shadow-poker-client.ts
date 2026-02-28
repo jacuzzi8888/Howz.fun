@@ -838,6 +838,47 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
     }
   }, [wallet, activeConnection]);
 
+  /**
+   * Program-specific Delegate Table
+   */
+  const delegateTable = useCallback(async (tablePDA: web3.PublicKey): Promise<string> => {
+    if (!program || !wallet.publicKey) throw new Error('Wallet not connected');
+    try {
+      const tx = await (program as any).methods
+        .delegateTable()
+        .accounts({
+          table: tablePDA,
+          payer: wallet.publicKey,
+          delegationProgram: DELEGATION_PROGRAM_ID,
+          systemProgram: web3.SystemProgram.programId,
+        } as any)
+        .rpc();
+      return tx;
+    } catch (error) {
+      throw new Error(parseShadowPokerError(error));
+    }
+  }, [program, wallet.publicKey]);
+
+  /**
+   * Program-specific Undelegate Table
+   */
+  const undelegateTable = useCallback(async (tablePDA: web3.PublicKey): Promise<string> => {
+    if (!program || !wallet.publicKey) throw new Error('Wallet not connected');
+    try {
+      const tx = await (program as any).methods
+        .undelegateTable()
+        .accounts({
+          table: tablePDA,
+          payer: wallet.publicKey,
+          delegationProgram: DELEGATION_PROGRAM_ID,
+        } as any)
+        .rpc();
+      return tx;
+    } catch (error) {
+      throw new Error(parseShadowPokerError(error));
+    }
+  }, [program, wallet.publicKey]);
+
   return {
     program,
     isReady: !!program,
@@ -861,5 +902,7 @@ export function useShadowPokerProgram(sessionKey?: web3.Keypair | null) {
     initPokerCompDef,
     dealEncryptedCards,
     showdownWithProof,
+    delegateTable,
+    undelegateTable,
   };
 }
