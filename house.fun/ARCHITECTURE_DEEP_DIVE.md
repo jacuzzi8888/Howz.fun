@@ -4,49 +4,48 @@ This analysis compares our current implementation against the "State-of-the-Art"
 
 ---
 
-## 🏗️ Current vs. Better Version
+## 🏗️ Architecture Matrix
 
-| Feature | Current `house.fun` | Industry Standard (SOTA) | Our "Better Version" Goal |
+| Feature | Current `house.fun` (Demo Phase) | Production Goal (develop Phase) | Tech Stack |
 | :--- | :--- | :--- | :--- |
-| **User Friction** | Wallet popup for every bet/action. | Session Keys (Sign-once, play for 1hr). | **MagicBlock Session Keys Integration**. |
-| **Latency** | 400ms - 2s (L1/Simulated delays). | 1ms - 50ms (Ephemeral Rollups). | **Native Ephemeral Rollup ECS**. |
-| **Data Privacy** | Client-side "Lock" visuals (Simulated). | MPC / TEE Confidential State. | **Arcium MPC Confidential Shuffle**. |
-| **State Sync** | React State + `setTimeout`. | Entity-Component-System (ECS). | **Bolt/MagicBlock ECS Framework**. |
-| **Gas/Fees** | User pays per action. | Account Abstraction (Paymasters). | **Gasless Gaming (House-sponsored)**. |
+| **User Flow** | Wallet popup for initial joins. | Session Keys (Sign-once, play for 1hr). | **MagicBlock** |
+| **Logic** | High-performance local loops. | 1ms tick rate Rollup state. | **MagicBlock / Bolt** |
+| **Privacy** | Commitment schemes (Flip It). | MPC Confidential Shuffle (All games). | **Arcium MXE** |
+| **Display** | Premium Glassmorphism + PWA. | Real-time Social HFT Feed. | **Next.js 15 / Helius** |
+| **Fees** | User pays per action (on L1). | House-sponsored gas (on Rollup). | **Account Abstraction** |
 
 ---
 
-## 🕵️ The "Gap" Analysis
+## 🕵️ Post-Submission "Gap" Analysis
 
-### 1. The "Confirmation Fatigue" Problem
-Our current architecture uses a standard `useWallet` hook. In Poker, if a player has to click "Approve" for every *Check*, *Fold*, or *Raise*, the game becomes unplayable.
-> **Fix**: Implement **Session Keys**. The user signs a single transaction at the start that delegates authority to an ephemeral key stored in the browser's session storage. This key can only call `poker_action` instructions and is capped at the user's buy-in amount.
+### 1. From Simulation to Rollup
+While our current "Demo Mode" engines enable smooth evaluation, true production scale requires moving the game loop off L1.
+> **Next Step**: Implement the **Bolt ECS** framework. Game entities (hands, bets, horses) will be processed on a MagicBlock Rollup every 10ms, settling the final state root to Solana L1 only when the pot is awarded.
 
-### 2. High-Frequency State Synchronization
-We are currently "polling" or using simulated delays. In a fast-paced environment like **Degen Derby** or **Shadow Poker**, the UI must be optimistic.
-> **Fix**: Move to an **ECS (Entity-Component-System)** architecture. Game objects (Players, Cards, Bets) are entities. Systems (Shuffle, Bet, Win) process these entities every "tick" (10ms) on an Ephemeral Rollup.
+### 2. Confidential State (The Arcium Edge)
+We successfully integrated Arcium for `Flip It`. Now we must expand this to the more complex requirements of Poker.
+> **Next Step**: The `Arcium MXE` will generate a deck of 52 encrypted indices. Players will receive decryption keys for their specific hole cards. This physically prevents the house from seeing the cards in memory.
 
-### 3. Oracle & Reconciliation (The Observer)
-We lack a service that reconciles the "On-Chain Reality" with the "UI Display" if a user loses connection.
-> **Fix**: Implement a **Vibe-Listener** service using Helius Webhooks to push real-time on-chain events via WebSockets to the frontend, ensuring the state is never "stuck."
+### 3. Friction Removal
+The current wallet-heavy experience is a bottleneck for high-frequency betting.
+> **Next Step**: Implementation of **Session Keys**. A user signs one authorization at the start of their session, delegating authority to a restricted local keypair for the duration of the match.
 
 ---
 
-## 🚀 The "Better Version" Architecture
+## 🚀 The Post-Submission Architecture
 
 ```mermaid
 graph TD
-    User((User)) -->|Sign Session| Wallet[Phantom/Solflare]
-    Wallet -->|Delegated Auth| SessionKey[Ephemeral Session Key]
+    User((User)) -->|Sign once| SessionKey[Ephemeral Session Key]
     
-    subgraph "Client (Next.js)"
+    subgraph "Client (Next.js PWA)"
         UI[Glass UI] -->|Optimistic Update| ECS_Client[ECS Client State]
         ECS_Client -->|Action| SessionKey
     end
     
     SessionKey -->|Signless TX| Rollup[MagicBlock Ephemeral Rollup]
     
-    subgraph "Confidential Layer"
+    subgraph "Confidential Computing"
         Rollup <-->|Privacy Request| Arcium[Arcium MPC MXE]
         Arcium -->|Confidential Result| Rollup
     end
@@ -57,23 +56,4 @@ graph TD
 ```
 
 ---
-
-## 🛠️ Implementation Strategy (Phase 1-2)
-
-### A. Session Keys (MagicBlock)
-1.  **Authorize**: User joins table and signs an "Authorization" instruction.
-2.  **Ephemeral Key**: Generate a local `Ed25519` keypair.
-3.  **Interaction**: The `handlePlayerAction` hook uses the local key to sign, resulting in **zero popups** during the match.
-
-### B. Arcium Confidential Shuffle
-1.  **Phase 0 (Current)**: Client "pretends" cards are locked.
-2.  **Better Version**: 
-    *   The `Arcium MXE` generates a deck of 52 encrypted indices.
-    *   Validators shuffle the encrypted indices.
-    *   The user receives their 2 indices and a **Decryption Key** specific to their public key.
-    *   The house/validators **cannot** see the indices even though they participate in the shuffle.
-
----
-
-## 🏆 Recommendation
-To achieve a "Winning" hackathon entry, we must prioritize **removing the wallet popup** via Session Keys and **moving the game loop** to a real MagicBlock Rollup. This transforms `house.fun` from a "Site" into a "Game Engine."
+*Last Updated: 2026-02-27 (Post-Submission Update)*

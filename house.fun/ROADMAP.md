@@ -16,82 +16,56 @@ We have established a robust, high-performance foundation for a Solana-native ga
 - **Commit-Reveal Scheme**: Secure betting flow that prevents manipulation.
 # Roadmap: house.fun On-Chain Casino
 
-This document outlines the current state of the project, identifying what has been built and the technical roadmap for the **Playsolana Matrix Hackathon**.
+This document outlines the current state of the project and the technical roadmap as we transition from a **Hackathon Demo** to a **Production Mainnet** platform.
 
-## ✅ Current Status: The Foundation is Built
-We have established a robust, high-performance foundation for a Solana-native gaming platform.
+## ✅ Current Status: Demo Submission Complete
+We successfully submitted the project for the Playsolana Matrix Hackathon with a feature-rich, stable demo implementation.
 
-### Core Infrastructure
-- **Next.js 15 App Router**: Modern SSR-compatible architecture.
-- **Anchor Framework**: Four dedicated Solana programs (`flip-it`, `fight-club`, `shadow-poker`, `degen-derby`).
-- **Database Layer**: Supabase + Drizzle ORM with full schema for bettors, tables, and sessions.
-- **Premium UI**: Glassmorphism aesthetic, custom animations, and responsive design systems.
+### Core Infrastructure (Completed)
+- **Next.js 15 App Router**: Modern SSR-compatible architecture with tRPC for server-client communication.
+- **Anchor Framework**: Programs for `flip-it`, `fight-club`, `shadow-poker`, and `degen-derby` deployed to Devnet.
+- **Branding & UX**: Premium "Dark Arcade" UI with consistent design language across all 4 games.
+- **PWA Support**: App is installable on mobile and desktop for a native-like experience.
 
-### 🪙 Flip It (Production Ready)
-- **Arcium Integrated**: Provably fair randomness via encrypted computations.
-- **Commit-Reveal Scheme**: Secure betting flow that prevents manipulation.
-- **Production Build**: Verified for Vercel deployment with SSR safety.
-
----
-
-## 🏗️ The Roadmap: What's Next?
-
-## 🏎️ Phase 2: Rapid Game Portfolio Expansion (Hackathon Week)
-**Goal**: Launch all remaining games with the complete High-Performance Stack.
-
-### 🪙 Flip It (Coin Flip) - [EST: 1 DAY]
-- [ ] Implement Signless UX (Session Keys).
-- [ ] Route `place_bet` through MagicBlock Ephemeral Rollups.
-- [ ] Integrate Arcium MPC for 100% provable fairness.
-
-### 🐎 Degen Derby (Horse Racing) - [EST: 1.5 DAYS]
-- [ ] Upgrade to `arcium-anchor` for private winner selection.
-- [ ] Implement Session Keys for continuous betting.
-- [ ] Delegation: Move race state to Ephemeral Layer for real-time odds updates.
-
-### 🥊 Fight Club (PVP Betting) - [EST: 1.5 DAYS]
-- [ ] Implement Arcium-based match resolution (Oracle-free).
-- [ ] Signless UI for high-frequency betting rounds.
-
-## 🌉 Phase 3: Omnichain & Social Integration (Final 48h)
-- [ ] **Omni-Liquidity**: LayerZero integration for SOL/USDC deposits from any chain.
-- [ ] **Social Layer**: Telegram Mini App (TMA) deployment for viral growth.
-- [ ] **Vibe Check**: Final UI/UX polish and sound design.
-
-- **[ ] Session Keys (MagicBlock)**: 
-  - *Plan*: Implement signless gaming. Users sign once at the start of a session; no more wallet popups during the match.
-- **[x] Shadow Poker - Private Hands (Arcium Client Implemented)**: 
-  - *Status*: ✅ **Frontend Complete** - Arcium MXE client integrated.
-  - *Completed*: 
-    - `useShadowPokerArcium.ts` hook with deck generation
-    - `ArciumContext.tsx` extended with poker methods
-    - Encrypted card types and deck structures
-    - UI shows locked cards with "Encrypted by Arcium" badges
-### Phase 3: Fast Loops & Retention
-- **[ ] MagicBlock Ephemeral Rollups**:
-  - *Plan*: Implement MagicBlock for Shadow Poker betting rounds to enable sub-second interactions without waiting for Solana L1 finality.
-- **[ ] Metaplex VIP System**:
-  - *Plan*: Token-gate certain high-stakes tables to holders of specific NFTs (e.g., Mad Lads, SMB).
-
-### Phase 4: Economy (Jupiter Swap)
-- **[ ] In-Game Token Swaps**:
-  - *Plan*: Allow users to bet any SPL token directly by integrating Jupiter's swap API into the bet placement flow (Swap-to-Bet).
+### Gameplay Status (Demo/Mockup Phase Completed)
+- 🪙 **Flip It**: ✅ **Production Ready**. Arcium-based provably fair logic integrated.
+- 🏇 **Degen Derby**: ✅ **Demo Ready**. High-speed (5s) race engine with MagicBlock simulation.
+- 🃏 **Shadow Poker**: ✅ **Demo Ready**. Comprehensive gameplay loop with AI opponents and round progression.
+- 🥊 **Memecoin Fight Club**: ✅ **UI Ready**. Betting logic and standard resolution cycle functional.
 
 ---
 
-## 🛠️ How Best to Build It
+## 🏗️ Post-Submission Roadmap - develop Branch
+Development continues at high speed on the `develop` branch to replace simulated components with fully autonomous on-chain logic.
 
-### Recommendation 1: The "Arcium Pattern"
-Follow the pattern established in `Flip It`:
-1. **Commit**: Player commits on-chain.
-2. **Compute**: Request Arcium confidential computation.
-3. **Resolve**: Pass Arcium proof back to the Solana contract for zero-knowledge-like verification.
+### 🟢 Phase 1: Hardening & Integration (Immediate)
+- **[ ] Real Arcium Hand Dealing (Poker)**:
+  - Replace the simulated card dealing with real Arcium MPC encrypted packets.
+  - Implement on-chain verification for showdown proofs.
+- **[ ] Live MagicBlock Rollup (Derby & Poker)**:
+  - Transition the poker betting loop and horse race telemetry to a live Ephemeral Rollup for 1ms latency.
+- **[ ] Pyth Pull Oracles (Fight Club)**:
+  - Integrate Pyth pull oracles to resolve fights based on real-time market data without admin intervention.
 
-### Recommendation 2: Component Hardening
-Many components (Fight Club, Degen Derby) currently use `setTimeout` simulations. To move to production:
-1. Replace `window.setTimeout` with `connection.onAccountChange` listeners.
-2. Use the `useGameState` hook consistently across all games for transaction lifecycle management.
+### 🟡 Phase 2: UX & Retention (Next 2 Weeks)
+- **[ ] Global Jackpot Loop**: Implement the on-chain jackpot logic that triggers a payout across the entire ecosystem.
+- **[ ] Telegram Mini App (TMA)**: Expand accessibility by wrapping the PWA for Telegram deployment.
+- **[ ] Sound Design**: Add reactive audio cues for wins, losses, and dealer actions.
 
-### Recommendation 3: Data Plumbing
-The Postgres schema is already designed for leaderboards. 
-- Implement tRPC procedures to read from the `bets` and `leaderboard` tables to drive the "Social Feed" on the lobby page.
+### 🔴 Phase 3: Ecosystem & Scale (Post-Judging)
+- **[ ] Metaplex VIP System**: Token-gate high-roller tables for specific NFT collections.
+- **[ ] Jupiter Swap-to-Bet**: Allow betting with any SPL token via atomic swaps within the game transaction.
+- **[ ] Mainnet Launch**: Final program audits and deployment to Solana Mainnet-Beta.
+
+---
+
+## 🛠️ Implementation Guidance
+
+### 1. The "Momentum" Rule
+Commit messages on the `develop` branch should clearly state which "mock" is being replaced (e.g., `feat: replaced demo poker engine with live MagicBlock rollup`). This builds proof of execution for judges watching the repo.
+
+### 2. Consistency
+Maintain the `GameResultModal` standard for all new game wins to ensure the premium feel is preserved.
+
+---
+*Last Updated: 2026-02-27 (Post-Submission)*

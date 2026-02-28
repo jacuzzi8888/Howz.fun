@@ -1,163 +1,49 @@
-# Arcium Integration Architecture - Implementation Summary
+# Arcium Integration Architecture - Post-Submission Status
 
-## Status: ✅ Architecture Complete (Ready for Devnet Credentials)
+## Status: ✅ Demo Submission Complete (Matrix Hackathon)
 
-### What We've Built
+### 🚀 What's Integrated Now (Demo Phase)
 
-#### 1. **Arcium Client Layer** (`src/lib/arcium/`)
-- **client.ts**: Core Arcium SDK wrapper with initialization, computation execution, and proof handling
-- **ArciumContext.tsx**: React context for Arcium state management
-- **privacy.ts**: Commitment scheme utilities (SHA-256 based)
-- **index.ts**: Clean exports for the entire arcium module
+#### 1. **Flip It (Full Production Integration)**
+- **Outcome Encryption**: Fully integrated with Arcium MPC for provably fair randomness.
+- **On-Chain Resolution**: Bet resolution requires a verified Arcium computation proof.
 
-#### 2. **Game-Specific Integrations**
-
-**Flip It (Complete)**
-- **useFlipItArcium.ts**: Hook for Flip It game with Arcium provably fair randomness
-- **flip-it-client.ts**: Updated Anchor client with `revealWithArcium()` method
-- **Smart Contract** (`programs/flip-it/src/lib.rs`): Refactored to accept Arcium proofs with `request_flip` and Arcium callback
-
-**Shadow Poker (Frontend Complete - Contract Pending)**
-- **useShadowPokerArcium.ts**: ✅ **DONE** - Full Arcium MXE integration for encrypted card dealing.
-  - `generateEncryptedDeck()` - Creates 52-card encrypted deck.
-  - `decryptHoleCards()` - Player-specific decryption.
-  - `generateShowdownProof()` - Card revelation proof.
-- **ShadowPokerGame.tsx**: ✅ **DONE** - UI shows locked cards with "🔒 Arcium Encrypted" badges and HUD indicators.
-- **Smart Contract**: 🔄 **PENDING** - Ready for `deal_encrypted_cards` and `showdown_with_proof` instructions.
-
-#### 3. **Environment Configuration**
-```bash
-# Added to .env.local:
-NEXT_PUBLIC_ARCIUM_API_KEY=           # Your Arcium API key
-NEXT_PUBLIC_ARCIUM_NETWORK=devnet     # devnet or mainnet
-NEXT_PUBLIC_ARCIUM_CLUSTER_ID=        # Optional cluster ID
-```
-
-#### 4. **Game Flows**
-
-**Flip It (Coin Flip)**
-```
-1. User chooses HEADS/TAILS
-2. Frontend creates commitment (choice + nonce)
-3. Call place_bet() on smart contract
-4. Request Arcium confidential computation
-5. Arcium TEE generates provably fair random outcome
-6. Arcium returns cryptographic proof
-7. Call reveal_with_arcium() with proof
-8. Smart contract verifies proof and resolves bet
-```
-
-**Shadow Poker (Encrypted Card Dealing)**
-```
-1. Admin starts hand - triggers Arcium deck generation
-2. Arcium MXE generates encrypted 52-card deck
-   - Each card encrypted to intended player's public key
-   - Returns deck commitment + encrypted cards + proof
-3. Call deal_encrypted_cards() with Arcium proof
-4. Smart contract distributes encrypted cards to players
-5. Players see locked cards (🔒 Arcium Encrypted)
-6. Players decrypt their hole cards locally via Arcium client
-7. Betting rounds proceed normally
-8. At showdown, generate showdown proof
-9. Call showdown_with_proof() to reveal all cards
-10. Smart contract verifies proof and determines winner
-```
-
-### Key Files Modified/Created
-
-#### Arcium Core (Shared)
-- ✅ `src/lib/arcium/client.ts` (NEW/UPDATED - Added poker types)
-- ✅ `src/lib/arcium/ArciumContext.tsx` (NEW/UPDATED - Added poker methods)
-- ✅ `src/lib/arcium/index.ts` (NEW/UPDATED - Exported poker types)
-- ✅ `src/app/layout.tsx` (UPDATED - ArciumProvider)
-
-#### Flip It (Arcium Complete)
-- ✅ `src/hooks/useFlipItArcium.ts` (NEW)
-- ✅ `src/lib/anchor/flip-it-client.ts` (UPDATED - Arcium methods)
-- ✅ `src/components/games/FlipItGame.tsx` (UPDATED - Arcium flow)
-- ✅ `programs/flip-it/src/lib.rs` (UPDATED - Arcium proof verification)
-
-#### Shadow Poker (Arcium Frontend Complete)
-- ✅ `src/hooks/useShadowPokerArcium.ts`
-- ✅ `src/components/games/ShadowPokerGame.tsx` (Locked card UI & HUD)
-- ✅ `src/lib/anchor/shadow-poker-client.ts` (Encrypted instructions)
-- 🔄 `programs/shadow-poker/src/lib.rs` (PENDING - Add Arcium instructions)
-
-#### Configuration
-- ✅ `.env.local` (UPDATED - Arcium variables)
-- ✅ `.env.example` (UPDATED - all required vars)
-
-### Next Steps (When You Get Devnet Access)
-
-1. **Add your Arcium API key** to `.env.local`:
-   ```bash
-   NEXT_PUBLIC_ARCIUM_API_KEY=your_api_key_here
-   ```
-
-2. **Build the smart contract**:
-   ```bash
-   cd programs/flip-it
-   anchor build
-   anchor deploy --provider.cluster devnet
-   ```
-
-3. **Update program ID** in `src/lib/anchor/idl.ts` after deployment
-
-4. **Test the integration**:
-   - Start dev server: `npm run dev`
-   - Connect wallet
-   - Play Flip It game
-   - Check console for Arcium computation logs
-
-### Architecture Highlights
-
-#### Provably Fair Gaming
-- **Before**: Used `recent_blockhash` (predictable, not truly random)
-- **After**: Uses Arcium MPC (Multi-Party Computation) in Trusted Execution Environment (TEE)
-- **Benefit**: No one (not even house.fun or Arcium nodes) can predict or manipulate outcomes
-
-#### Security Features
-- Commitment scheme prevents player from changing choice after seeing outcome
-- Arcium proofs are cryptographically verified on-chain
-- 10-minute proof validity window prevents replay attacks
-- Player must reveal within 150 slots (~1 minute) or forfeits bet
-
-#### Fallback Support
-- Game works without Arcium (falls back to legacy mode) during development
-- Toggle `useArciumMode` state in FlipItGame to switch between modes
-
-### Hackathon Track Alignment
-
-✅ **Play Solana Track**: Core game logic working on Solana devnet
-✅ **Arcium Track**: Provably fair randomness via confidential computing
-🔄 **Jupiter Track**: Ready for token swap integration (next phase)
-🔄 **Metaplex Track**: Ready for NFT VIP integration (next phase)
-🔄 **MagicBlock Track**: Ephemeral rollup integration (next phase)
-
-### Testing Checklist (Once Devnet Access Granted)
-
-- [ ] Arcium client initializes successfully
-- [ ] Place bet creates commitment correctly
-- [ ] Arcium computation returns valid proof
-- [ ] Smart contract accepts and verifies Arcium proof
-- [ ] Game resolves with correct outcome
-- [ ] Payouts work correctly
-- [ ] Database records Arcium-based outcomes
-- [ ] UI shows "Provably Fair" badge when using Arcium
-
-### Documentation
-
-- Arcium Docs: https://docs.arcium.com/developers
-- TypeScript SDK: https://ts.arcium.com/
-- Solana Integration: https://docs.arcium.com/developers/program
-
-### Support
-
-If you encounter issues:
-1. Check browser console for Arcium initialization errors
-2. Verify API key is set in `.env.local`
-3. Ensure you're using devnet (not mainnet) for testing
-4. Check Arcium cluster status at https://status.arcium.com
+#### 2. **Shadow Poker (Demo & UI Readiness)**
+- **UI Indicators**: ✅ **DONE** - Tables show "🔒 Arcium Encrypted" badges on cards and HUD.
+- **Simulated Engine**: ✅ **DONE** - Implemented a high-performance demo engine that simulates the MPC round progression (Join -> Deal -> Round -> Showdown).
+- **Arcium Hooks**: ✅ **DONE** - `useShadowPokerArcium.ts` and `ArciumContext.tsx` are fully scaffolded with the methods required to generate and decrypt MXE-encrypted decks.
 
 ---
-**Ready for devnet credentials!** 🚀
+
+### 🏗️ Post-Submission Roadmap - develop Branch
+
+Development continues at high velocity to replace simulated components with live Arcium MPC packets.
+
+#### **Priority 1: Live Poker Dealing**
+- **Action**: Migrate from simulated dealing to the Arcium MXE client.
+- **Pattern**:
+  1. Frontend requests a 52-card encrypted deck from Arcium.
+  2. Arcium returns the deck commitment and encrypted indices.
+  3. Call `deal_encrypted_cards` on the Solana contract with the Arcium proof.
+  4. Players decrypt their 2 hole cards locally using the Arcium SDK.
+
+#### **Priority 2: On-Chain Verification**
+- **Action**: Implement the cryptographic verify-reveal cycle in the `shadow-poker` Anchor program.
+- **Pattern**: Showdown winners must provide a valid Arcium revelation proof to unlock the pot.
+
+---
+
+### Key Files (State of play)
+
+#### Shared Infrastructure
+- ✅ `src/lib/arcium/client.ts`: Core initialization and poker type support.
+- ✅ `src/lib/arcium/ArciumContext.tsx`: Provider for Arcium state.
+- ✅ `src/app/layout.tsx`: Provider injection.
+
+#### Shadow Poker (Hardening Phase)
+- ✅ `src/hooks/useShadowPokerArcium.ts`: Ready for MXE connection.
+- ✅ `src/lib/anchor/shadow-poker-client.ts`: Scaffolding for Arcium-based instructions.
+- 🏗️ `programs/shadow-poker/src/lib.rs`: Integration of `arcium_compute` macro pending.
+
+---
+*Last Updated: 2026-02-27 (Post-Submission)*

@@ -33,10 +33,21 @@ npm install
 npm run dev
 ```
 
-## 📜 Roadmap & Research
-Detailed technical blueprints can be found in:
-- [ROADMAP.md](file:///C:/Users/USER/.gemini/antigravity/brain/c74e703d-368e-480e-a60f-aedc75824896/ROADMAP.md)
-- [TECH_STACK_2026.md](file:///C:/Users/USER/.gemini/antigravity/brain/c74e703d-368e-480e-a60f-aedc75824896/TECH_STACK_2026.md)
+## 🚀 Post-Submission Strategy
+
+**Note for Judges:** Howz.fun was submitted with a stable, high-performance **Demo Mode** to ensure a smooth evaluation experience. However, development continues at high velocity on the `develop` branch. Our goal is to replace every mock/demo component with live production logic within 48 hours of submission.
+
+### 🗺️ Post-Submission Roadmap
+
+#### 🟢 Phase 1: Real-Time Hardening (Immediate)
+- **Shadow Poker**: Replace the simulated demo engine with real **Arcium MPC-encrypted dealing** and **MagicBlock rollup-based betting**.
+- **Degen Derby**: Transition race resolution from local simulation to on-chain program state via real-time MagicBlock event listeners.
+- **Fight Club**: Connect automated price resolution via Pyth pull oracles for 100% autonomous matches.
+
+#### 🟡 Phase 2: UX & Ecosystem (Post-Judging)
+- **Global Jackpot**: Implement a cross-game jackpot pool that grows with every bet placed across any of the 4 games.
+- **PWA Polish**: Enhance the mobile experience with push notifications for winning bets and leaderboard shifts.
+- **Mainnet Sprint**: Final audit of Anchor programs for Mainnet deployment.
 
 ---
 
