@@ -14,6 +14,8 @@ import {
   type MatchSide,
   type MatchStatus
 } from './fight-club-utils';
+import { HermesClient } from '@pythnetwork/hermes-client';
+import { PythSolanaReceiver } from '@pythnetwork/pyth-solana-receiver';
 
 export interface BetResult {
   signature: string;
@@ -125,15 +127,25 @@ export function useFightClubProgram() {
     tokenA: string,
     tokenB: string,
     feedIdA: number[],
-    feedIdB: number[],
-    priceUpdateA: web3.PublicKey,
-    priceUpdateB: web3.PublicKey
+    feedIdB: number[]
   ): Promise<CreateMatchResult> => {
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
 
     try {
+      const hermes = new HermesClient("https://hermes.pyth.network");
+      const receiver = new PythSolanaReceiver({ connection, wallet });
+
+      // JIT: Fetch latest VAAs from Hermes
+      const [vaaA, vaaB] = await Promise.all([
+        hermes.getLatestPriceUpdates([Buffer.from(feedIdA).toString('hex')]),
+        hermes.getLatestPriceUpdates([Buffer.from(feedIdB).toString('hex')])
+      ]);
+
+      const [priceUpdateA] = await receiver.getVaaUpdateInstructions(vaaA.parsed);
+      const [priceUpdateB] = await receiver.getVaaUpdateInstructions(vaaB.parsed);
+
       const [housePDA] = getFightClubHousePDA();
       const houseAccount = await (program.account as any).FightClubHouse.fetchNullable(housePDA);
       const matchIndex = houseAccount ? houseAccount.totalMatches.toNumber() : 0;
@@ -145,10 +157,11 @@ export function useFightClubProgram() {
           fightMatch: matchPDA,
           house: housePDA,
           creator: wallet.publicKey,
-          priceUpdateA,
-          priceUpdateB,
+          priceUpdateA: priceUpdateA.keys[0].pubkey,
+          priceUpdateB: priceUpdateB.keys[0].pubkey,
           systemProgram: web3.SystemProgram.programId,
         } as any)
+        .preInstructions([priceUpdateA, priceUpdateB])
         .rpc();
 
       return {
@@ -290,15 +303,28 @@ export function useFightClubProgram() {
    * Resolve a match using Pyth Price Feeds
    */
   const resolveWithPyth = useCallback(async (
-    matchPDA: web3.PublicKey,
-    priceUpdateA: web3.PublicKey,
-    priceUpdateB: web3.PublicKey
+    matchPDA: web3.PublicKey
   ): Promise<MatchResult> => {
     if (!program || !wallet.publicKey) {
       throw new Error('Wallet not connected');
     }
 
     try {
+      const match = await fetchMatch(matchPDA);
+      if (!match) throw new Error("Match not found");
+
+      const hermes = new HermesClient("https://hermes.pyth.network");
+      const receiver = new PythSolanaReceiver({ connection, wallet });
+
+      // JIT: Fetch current prices for both tokens
+      const [vaaA, vaaB] = await Promise.all([
+        hermes.getLatestPriceUpdates([Buffer.from(match.feedIdA).toString('hex')]),
+        hermes.getLatestPriceUpdates([Buffer.from(match.feedIdB).toString('hex')])
+      ]);
+
+      const [priceUpdateA] = await receiver.getVaaUpdateInstructions(vaaA.parsed);
+      const [priceUpdateB] = await receiver.getVaaUpdateInstructions(vaaB.parsed);
+
       const [housePDA] = getFightClubHousePDA();
 
       const tx = await (program as any).methods
@@ -306,10 +332,11 @@ export function useFightClubProgram() {
         .accounts({
           fightMatch: matchPDA,
           house: housePDA,
-          priceUpdateA,
-          priceUpdateB,
+          priceUpdateA: priceUpdateA.keys[0].pubkey,
+          priceUpdateB: priceUpdateB.keys[0].pubkey,
           authority: wallet.publicKey,
         } as any)
+        .preInstructions([priceUpdateA, priceUpdateB])
         .rpc();
 
       const matchAccount = await fetchMatch(matchPDA);
