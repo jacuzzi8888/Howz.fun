@@ -174,6 +174,16 @@ pub mod fight_club {
 
         let winner_side = if perf_a >= perf_b { 0 } else { 1 };
 
+        // 2026 Hardening: Verify price confidence intervals
+        require!(
+            price_data_a.confidence < (price_data_a.price as u64 / 100), // 1% confidence threshold
+            FightClubError::LowPriceConfidence
+        );
+        require!(
+            price_data_b.confidence < (price_data_b.price as u64 / 100),
+            FightClubError::LowPriceConfidence
+        );
+
         // Calculate house fee from total pool
         let total_pool = fight_match.total_bet_a + fight_match.total_bet_b;
         let house_fee = total_pool * HOUSE_FEE_BPS as u64 / 10000;
@@ -648,4 +658,6 @@ pub enum FightClubError {
     UnauthorizedHouse,
     #[msg("Insufficient treasury balance")]
     InsufficientTreasury,
+    #[msg("Pyth price confidence interval is too wide")]
+    LowPriceConfidence,
 }
